@@ -9,10 +9,11 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>PokerConsole</RootNamespace>
     <AssemblyName>PokerConsole</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <Name>PokerConsole</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -48,6 +49,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Hands.fs" />
+    <Compile Include="Ranges.fs" />
     <Compile Include="Preflop.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />

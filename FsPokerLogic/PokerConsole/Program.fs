@@ -5,25 +5,58 @@ open System
 
 [<EntryPoint>]
 let main argv =   
-  Console.Write "Player A – 500 chips, Player B – 500 chips. Blind level 10/20. Hero is IP\n"
+  Console.Write "Please enter the hero stack (1-999): "
+  let heroStack = Console.ReadLine() |> int
+  let villainStack = 1000 - heroStack
+
+  Console.Write "Please enter the big blind (20-400): "
+  let bb = Console.ReadLine() |> int
+  let sb = bb / 2
+
+  let effectiveStack = (min heroStack villainStack) / bb
+
+  Console.Write "Is Hero IP or OOP (IP/OOP): "
+  let oop = Console.ReadLine() = "OOP"
+
+  printfn "Hero – %A chips, Villain – %A chips. Blind level %A/%A. Hero is %sP\n" heroStack villainStack sb bb (if oop then "OO" else "I")
+
+  let villainAction = 
+    if oop
+    then 
+      Console.Write "What was the Villain action (limp, raise xx): "
+      Console.ReadLine() |> Some
+    else
+      None
+
+  let printAction action =
+    match action with
+      | Some(r) -> printfn "%A" r
+      | None -> Console.WriteLine "Could not make a decision"
+
   while true do
-    Console.Write "\nPlease enter your hard value (e.g. AA, 87s, K2o): "
+    Console.Write "\nPlease enter your hand value (e.g. AA, 87s, K2o): "
     try
       let handString = Console.ReadLine()
       let parsed = parseHand handString
-      let result = decide parsed
-      printfn "%A" result
+      let result = decide effectiveStack [] parsed
+
+      printAction result
 
       match result with
-      | Call -> 
-        let minRaise = decideLimpMinRaise parsed
-        printfn "On a raise <= 60: %A" minRaise
-        let bigRaise = decideLimpBigRaise parsed
-        printfn "On a raise > 60: %A" bigRaise
-      | MinRaise ->
-        let minRaise = decideRaiseMinRaise parsed
-        printfn "On a raise 60-67: %A" minRaise
-        let raise4x = decideRaiseRaise4x parsed
+      | Some(Call) -> 
+        let minRaise = decide effectiveStack [Limp; Raise(2, 2)] parsed
+        Console.Write "On a raise <= 60: " 
+        printAction minRaise
+        let bigRaise = decide effectiveStack [Limp; Raise(4, 4)] parsed
+        Console.Write "On a raise > 60: " 
+        printAction bigRaise
+      | Some(MinRaise) ->
+        let minRaise = decide effectiveStack [Raise(2, 2); Raise(2, 2)] parsed
+        Console.Write "On a raise 60-67: " 
+        printAction minRaise
+        let raise4x = decide effectiveStack [Raise(4, 4); Raise(4, 4)] parsed
+        Console.Write "On a raise 68-101: " 
+        printAction raise4x
         printfn "On a raise 68-101: %A" raise4x
         let raise6x = decideRaiseRaise6x parsed
         printfn "On a raise 102-131: %A" raise6x

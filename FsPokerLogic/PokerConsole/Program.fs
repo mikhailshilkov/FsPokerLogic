@@ -1,10 +1,21 @@
-﻿open Hands
+﻿open System
+open Microsoft.Office.Interop
+
+open Hands
 open Ranges
 open Preflop
-open System
+
 
 [<EntryPoint>]
 let main argv =   
+  Console.Write "Importing excel files..."
+  let xlApp = new Excel.ApplicationClass()
+  let xlWorkBook = xlApp.Workbooks.Open(System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx")
+  let xlWorkSheet = xlWorkBook.Worksheets.["12BB"] :?> Excel.Worksheet
+  let firstValue = xlWorkSheet.Cells.Range("C1", "C1").Value2 :?> string
+
+  printfn "%A" firstValue
+
   Console.Write "Please enter the hero stack (1-999): "
   let heroStack = Console.ReadLine() |> int
   let villainStack = 1000 - heroStack

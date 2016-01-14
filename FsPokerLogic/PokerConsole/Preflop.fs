@@ -11,12 +11,11 @@ type Action =
 
 type HistoryItem = 
   | Limp
-  | Raise of int * int
+  | Raise of decimal * decimal
   | RaiseAllIn
 
 type DecisionRule = 
-  { StackMin: int
-    StackMax: int
+  { Stack : int
     Range : string
     History : HistoryItem seq
     Action : Action }
@@ -32,9 +31,10 @@ let isHistoryMatching ranges history =
 let decideOnRules rules stack history h = 
   let isMatching rule h = 
     let ranges = parseRanges rule.Range
+    let stackFloat = rule.Stack |> decimal
     isHandInRanges ranges h 
-      && rule.StackMin <= stack 
-      && stack <= rule.StackMax 
+      && stackFloat - 0.5m <= stack 
+      && stack <= stackFloat + 0.5m 
       && (isHistoryMatching rule.History history)
   rules
   |> Seq.filter (fun r -> isMatching r h)

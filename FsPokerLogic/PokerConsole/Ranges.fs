@@ -86,4 +86,6 @@ let parseRange (s : string) =
                   LowMin = low.Card2
                   SameSuit = same })
 
-let parseRanges (s : string) = Seq.map (fun x -> parseRange x) (s.Split(','))
+let parseRanges (s : string) = 
+  if s = null || s = "" then Seq.empty
+  else Seq.map (fun x -> parseRange x) (s.Split(','))

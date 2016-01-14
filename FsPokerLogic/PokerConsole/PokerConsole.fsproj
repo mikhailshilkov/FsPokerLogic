@@ -53,6 +53,7 @@
     <Compile Include="Hands.fs" />
     <Compile Include="Ranges.fs" />
     <Compile Include="Preflop.fs" />
+    <Compile Include="Import.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>

@@ -1,20 +1,17 @@
 ﻿open System
-open Microsoft.Office.Interop
 
 open Hands
 open Ranges
 open Preflop
-
+open Import
 
 [<EntryPoint>]
 let main argv =   
   Console.Write "Importing excel files..."
-  let xlApp = new Excel.ApplicationClass()
-  let xlWorkBook = xlApp.Workbooks.Open(System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx")
-  let xlWorkSheet = xlWorkBook.Worksheets.["12BB"] :?> Excel.Worksheet
-  let firstValue = xlWorkSheet.Cells.Range("C1", "C1").Value2 :?> string
-
-  printfn "%A" firstValue
+  let fileName = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
+  let rules = importRuleFromExcel fileName
+  let decide = decideOnRules rules
+  Console.Write " done!\n\n"
 
   Console.Write "Please enter the hero stack (1-999): "
   let heroStack = Console.ReadLine() |> int
@@ -61,21 +58,30 @@ let main argv =
         let bigRaise = decide effectiveStack [Limp; Raise(4, 4)] parsed
         Console.Write "On a raise > 60: " 
         printAction bigRaise
+
       | Some(MinRaise) ->
         let minRaise = decide effectiveStack [Raise(2, 2); Raise(2, 2)] parsed
         Console.Write "On a raise 60-67: " 
         printAction minRaise
-        let raise4x = decide effectiveStack [Raise(4, 4); Raise(4, 4)] parsed
+
+        let raise4x = decide effectiveStack [Raise(2, 2); Raise(4, 4)] parsed
         Console.Write "On a raise 68-101: " 
         printAction raise4x
-        printfn "On a raise 68-101: %A" raise4x
-        let raise6x = decideRaiseRaise6x parsed
-        printfn "On a raise 102-131: %A" raise6x
-        let raise8x = decideRaiseRaise8x parsed
-        printfn "On a raise 132+: %A" raise8x
-        let allIn = decideRaiseAllIn parsed
-        printfn "On all-in: %A" allIn
+
+        let raise6x = decide effectiveStack [Raise(2, 2); Raise(6, 6)] parsed
+        Console.Write "On a raise 102-131: " 
+        printAction raise6x
+
+        let raise8x = decide effectiveStack [Raise(2, 2); Raise(8, 8)] parsed
+        Console.Write "On a raise 132+: " 
+        printAction raise8x
+
+        let allIn = decide effectiveStack [Raise(2, 2); RaiseAllIn] parsed
+        Console.Write "On a all-in: " 
+        printAction allIn
       | _ -> ()
     with
-      | _ -> Console.WriteLine "Not a valid hand! Please enter a hand like 88, 98s or JTo..."    
+      | a -> 
+        Console.WriteLine a
+        Console.WriteLine "Not a valid hand! Please enter a hand like 88, 98s or JTo..."    
   0 // return an integer exit code

@@ -10,6 +10,14 @@ let (|Int|_|) str =
    | (true,int) -> Some(int)
    | _ -> None
 
+let (|RaiseInt|_|) (str : string) =
+  let parts = str.Split(' ')
+  if parts.Length = 2 && parts.[0] = "raise"
+  then match System.Int32.TryParse(parts.[1]) with
+   | (true,int) -> int |> decimal |> Some
+   | _ -> None
+  else None
+
 let rec enterNumber text min max =
   printf "%s (%A-%A): " text min max  
   let input = Console.ReadLine()
@@ -19,11 +27,34 @@ let rec enterNumber text min max =
     Console.WriteLine "Not a valid number!"
     enterNumber text min max
 
+let rec enterVillainAction () =
+  Console.Write "What was the Villain action (limp, raise xx): "
+  let actionString = Console.ReadLine()
+  match actionString.ToLowerInvariant() with
+  | "limp" -> Limp
+  | RaiseInt i -> Raise(i, i)
+  | _ -> 
+    Console.WriteLine "Not a valid action!"
+    enterVillainAction ()
+
+let rec enterPosition () =
+  Console.Write "Is Hero IP or OOP (IP/OOP): "
+  let input = Console.ReadLine()
+  match input.ToUpperInvariant() with
+  | "IP" -> IP
+  | "OOP" -> OOP
+  | _ ->
+    Console.WriteLine "Not a valid position!"
+    enterPosition()
+
 [<EntryPoint>]
 let main argv =   
   Console.Write "Importing excel files..."
-  let fileName = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rules = importRuleFromExcel fileName |> List.ofSeq
+  let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
+  let rulesIP = importRuleFromExcel importRulesIP fileNameIP |> List.ofSeq
+  let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
+  let rulesOOP = importRuleFromExcel importRulesOOP fileNameOOP |> List.ofSeq
+  let rules = Seq.concat [|rulesIP;rulesOOP|]
   let decide = decideOnRules rules
   Console.Write " done!\n\n"
 
@@ -34,24 +65,14 @@ let main argv =
     let bb = enterNumber "Please enter the big blind" 20 500
     let sb = bb / 2
     let stack = min heroStack villainStack
-    let effectiveStack = (stack |> decimal) / (bb |> decimal)
+    let effectiveStack = (decimal stack) / (decimal bb)
 
-    //Console.Write "Is Hero IP or OOP (IP/OOP): "
-    let oop = false//Console.ReadLine() = "OOP"
+    let position = enterPosition()
 
-    printfn "Hero – %A chips, Villain – %A chips. Blind level %A/%A. Hero is %sP\n" heroStack villainStack sb bb (if oop then "OO" else "I")
-
-    let villainAction = 
-      if oop
-      then 
-        Console.Write "What was the Villain action (limp, raise xx): "
-        Console.ReadLine() |> Some
-      else
-        None
+    printfn "Hero – %A chips, Villain – %A chips. Blind level %A/%A. Hero is %A\n" heroStack villainStack sb bb position
 
     let printAction action =
       match action with
-        | Some(MinRaise) -> printfn "Raise %A" (bb * 2)
         | Some(r) -> printfn "%A" r
         | None -> Console.WriteLine "Could not make a decision"
 
@@ -62,7 +83,9 @@ let main argv =
         let handString = Console.ReadLine()
         if not (String.IsNullOrWhiteSpace handString) then
           let parsed = parseHand handString
-          let result = decide effectiveStack [] parsed
+
+          let previous = if position = OOP then [enterVillainAction()] else []
+          let result = decide effectiveStack previous parsed
 
           printAction result
 
@@ -76,8 +99,9 @@ let main argv =
 
           | Some(MinRaise) ->
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 3) stack 
-            let x = (raiseSize / bb) |> decimal
-            let onRaise = decide effectiveStack [Raise(2m, 2m); Raise(x, x)] parsed
+            let x = (raiseSize |> decimal) / (bb |> decimal)
+            let allActions = if raiseSize = stack then List.append previous [Raise(2m, 2m); RaiseAllIn] else List.append previous [Raise(2m, 2m); Raise(x, x)]
+            let onRaise = decide effectiveStack allActions parsed
             printAction onRaise
 
           | _ -> ()
@@ -86,5 +110,6 @@ let main argv =
           sameHand <- false
       with
         | a -> 
+          Console.WriteLine a
           Console.WriteLine "Not a valid input! Please enter a hand like 88, 98s or JTo..."    
   0 // return an integer exit code

@@ -39,10 +39,15 @@ let oneBelow face =
 let parseFace s = 
   match (s) with
   | 'A' -> Ace
+  | 'a' -> Ace
   | 'K' -> King
+  | 'k' -> King
   | 'Q' -> Queen
+  | 'q' -> Queen
   | 'J' -> Jack
+  | 'j' -> Jack
   | 'T' -> Ten
+  | 't' -> Ten
   | '9' -> Nine
   | '8' -> Eight
   | '7' -> Seven
@@ -51,7 +56,7 @@ let parseFace s =
   | '4' -> Four
   | '3' -> Three
   | '2' -> Two
-  | _ -> failwith "Unknown face value"
+  | f -> failwith ("Unknown face value" + f.ToString())
 
 let parseHand (s : string) = 
   let card1 = parseFace s.[0]

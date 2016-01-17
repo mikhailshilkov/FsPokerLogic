@@ -7,7 +7,10 @@ type Action =
   | AllIn
   | MinRaise
   | Call
+  | Check
   | Fold
+
+type RelativePosition = IP | OOP
 
 type HistoryItem = 
   | Limp

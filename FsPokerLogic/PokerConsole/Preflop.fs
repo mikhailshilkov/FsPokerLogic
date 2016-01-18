@@ -40,6 +40,4 @@ let decideOnRules rules stack history h =
       && stack <= stackFloat + 0.5m 
       && (isHistoryMatching rule.History history)
   rules
-  |> Seq.filter (fun r -> isMatching r h)
-  |> Seq.map (fun r -> r.Action)
-  |> Seq.tryHead
+  |> Seq.tryPick (fun r -> if isMatching r (normalize h) then Some(r.Action) else None)

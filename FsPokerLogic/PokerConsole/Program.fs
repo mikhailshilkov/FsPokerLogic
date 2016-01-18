@@ -14,8 +14,8 @@ let (|RaiseInt|_|) (str : string) =
   let parts = str.Split(' ')
   if parts.Length = 2 && parts.[0] = "raise"
   then match System.Int32.TryParse(parts.[1]) with
-   | (true,int) -> int |> decimal |> Some
-   | _ -> None
+       | (true,int) -> int |> decimal |> Some
+       | _ -> None
   else None
 
 let rec enterNumber text min max =

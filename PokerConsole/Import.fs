@@ -3,6 +3,7 @@
 open System
 open Microsoft.Office.Interop.Excel
 open Preflop
+open System.Runtime.InteropServices
 
 let getCellValue (sheet : Worksheet) (name : string) = 
   let result = sheet.Cells.Range(name, name).Value2 :?> string
@@ -296,7 +297,10 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
 let importRuleFromExcel importRules fileName =
   let xlApp = new ApplicationClass()
   let xlWorkBook = xlApp.Workbooks.Open(fileName)
+  let res = ([1..25]
+    |> Seq.map (fun bb -> importRules xlWorkBook bb)
+    |> Seq.collect id
+    |> List.ofSeq)
 
-  [1..25]
-  |> Seq.map (fun bb -> importRules xlWorkBook bb)
-  |> Seq.collect id
+  Marshal.ReleaseComObject(xlWorkBook) |> ignore
+  res

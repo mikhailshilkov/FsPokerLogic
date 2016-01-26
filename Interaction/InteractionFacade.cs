@@ -17,7 +17,7 @@ namespace Interaction
 
     public static class InteractionFacade
     {
-        public static IEnumerable<WindowInfo> GetWindowList(params string[] searchStrings)
+        public static IEnumerable<WindowInfo> GetWindowList(Size size, params string[] searchStrings)
         {
             foreach (string searchString in searchStrings)
             {
@@ -28,9 +28,7 @@ namespace Interaction
                     Graphics graphics = Graphics.FromImage(bitmap as Image);
                     graphics.CopyFromScreen(window.Location.X, window.Location.Y, 0, 0, bitmap.Size);*/
 
-                    RECT rc;
-                    Win32.GetWindowRect(window.Hwnd, out rc);
-                    Bitmap bitmap = new Bitmap(rc.right - rc.left, rc.top - rc.bottom);//(975, 735);//window.Size.Width, window.Size.Height);
+                    Bitmap bitmap = new Bitmap(size.Width, size.Height);
                     Graphics memoryGraphics = Graphics.FromImage(bitmap);
                     IntPtr dc = memoryGraphics.GetHdc();
                     bool success = Win32.PrintWindow(window.Hwnd, dc, 0);

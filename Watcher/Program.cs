@@ -10,15 +10,16 @@ namespace Watcher
     {
         static void Main(string[] args)
         {
-            var image = new Bitmap(@"C:\Users\mshilkov\Downloads\TPC.bmp");
+            var image = new Bitmap(@"C:\Users\kiwo_000\Downloads\TPC.bmp");
             var result = Numbers.recognizeNumber(image);
 
-            var targetSize = new Size(650, 490);
+            var screenSize = new Size(650, 490);
+            var targetSize = new Size((int)(650 / 1.5), (int)(490 / 1.5));
             while (true)
             {
                 Console.Write("Press any key to get the list of open tables...");
                 Console.ReadKey();
-                var windows = InteractionFacade.GetWindowList("Heads Up ").ToArray();
+                var windows = InteractionFacade.GetWindowList(screenSize, "Heads Up ").ToArray();
                 Console.Write($"\n{windows.Length} tables found\n");
                 foreach (WindowInfo window in windows)
                 {

@@ -2,6 +2,7 @@
 using System;
 using System.Drawing;
 using System.Linq;
+using Recognition;
 
 namespace Watcher
 {
@@ -9,6 +10,9 @@ namespace Watcher
     {
         static void Main(string[] args)
         {
+            var image = new Bitmap(@"C:\Users\mshilkov\Downloads\TPC.bmp");
+            var result = Numbers.recognizeNumber(image);
+
             var targetSize = new Size(650, 490);
             while (true)
             {

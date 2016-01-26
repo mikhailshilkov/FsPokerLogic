@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Watcher", "Watcher\Watcher.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interaction", "Interaction\Interaction.csproj", "{E9F14821-12CC-409D-97C3-CA8062EBB085}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Recognition", "Recognition\Recognition.fsproj", "{B796289F-B004-4AB1-90FF-794BCF13BB07}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{E9F14821-12CC-409D-97C3-CA8062EBB085}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9F14821-12CC-409D-97C3-CA8062EBB085}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9F14821-12CC-409D-97C3-CA8062EBB085}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

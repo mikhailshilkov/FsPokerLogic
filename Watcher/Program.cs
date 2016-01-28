@@ -10,11 +10,13 @@ namespace Watcher
     {
         static void Main(string[] args)
         {
-            var image = new Bitmap(@"C:\Users\kiwo_000\Downloads\TPC.bmp");
-            var result = Numbers.recognizeNumber(image);
+            //var image = new Bitmap(@"C:\Users\kiwo_000\Downloads\4e6b7a.bmp");
+            //var result2 = ScreenRecognition.recognizeScreen(image);
 
+            //var screenSize = new Size(650, 490);
+            //var targetSize = new Size(433, 328);
             var screenSize = new Size(650, 490);
-            var targetSize = new Size((int)(650 / 1.5), (int)(490 / 1.5));
+            var targetSize = new Size(650, 490);
             while (true)
             {
                 Console.Write("Press any key to get the list of open tables...");
@@ -23,12 +25,43 @@ namespace Watcher
                 Console.Write($"\n{windows.Length} tables found\n");
                 foreach (WindowInfo window in windows)
                 {
-                    Console.WriteLine($"{window.Title} ({window.Size.Width}x{window.Size.Height})");
-                    var resized = InteractionFacade.EnsureWindowSize(window, targetSize);
-
-                    if (!resized)
+                    var parts = window.Title.Split('-').Select(s => s.Trim()).ToArray();
+                    if (parts.Length >= 3)
                     {
-                        window.Bitmap.Save(Guid.NewGuid().ToString().Substring(0, 6) + ".bmp");
+                        var blinds = parts[1];
+                        var tableNumber = parts[2];
+                        Console.WriteLine($"{tableNumber} ({window.Size.Width}x{window.Size.Height})");
+                        //Console.WriteLine($"Blinds: {blinds}");
+
+                        var resized = InteractionFacade.EnsureWindowSize(window, targetSize);
+
+                        if (!resized)
+                        {
+                            //try
+                            //{
+                            //    var result = ScreenRecognition.recognizeScreen(window.Bitmap);
+                            //    Console.WriteLine($"Total pot: {result.TotalPot}");
+                            //    Console.WriteLine($"Stacks: {result.HeroStack}/{result.VillainStack}");
+                            //}
+                            //catch
+                            //{
+                            for (int i = 50; i < 150; i++)
+                                for (int j = 1; j < 30; j++)
+                                    window.Bitmap.SetPixel(i, j, Color.White);
+                            for (int i = 77; i < 161; i++)
+                                for (int j = 328; j < 338; j++)
+                                    window.Bitmap.SetPixel(i, j, Color.White);
+                            window.Bitmap.Save($"{tableNumber}_{Guid.NewGuid().ToString().Substring(0, 4)}.bmp");
+                            //}
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Resizing...");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Error: strange table title: {window.Title}");
                     }
                 }
                 Console.Write("\n\n");

@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interaction", "Interaction\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Recognition", "Recognition\Recognition.fsproj", "{B796289F-B004-4AB1-90FF-794BCF13BB07}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Learner", "Learner\Learner.fsproj", "{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B796289F-B004-4AB1-90FF-794BCF13BB07}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

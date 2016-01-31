@@ -71,12 +71,15 @@ module StringRecognition =
     let removePadding pixels =
         let maxWidth = Array2D.length1 pixels - 1
         let maxHeight = Array2D.length2 pixels - 1
-        let first = [0..maxHeight] |> Seq.findIndex (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
-        let last = [0..maxHeight] |> Seq.findIndexBack (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
+        let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
+        let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
 
-        [0..maxWidth] 
-        |> Seq.map (fun x -> [first..last] |> Seq.map (fun y -> pixels.[x, y]) |> List.ofSeq)
-        |> removeVerticalPadding
+        match (first, last) with
+        | (Some f, Some l) ->
+          [0..maxWidth] 
+          |> Seq.map (fun x -> [f..l] |> Seq.map (fun y -> pixels.[x, y]) |> List.ofSeq)
+          |> removeVerticalPadding
+        | _ -> Seq.empty
 
 
     let splitIntoSymbols (e : list<BW>) (state: list<list<list<BW>>>) = 

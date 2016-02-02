@@ -5,82 +5,86 @@ open System.Drawing
 
 module StringRecognition =
   type BW = B | W
+  type CharPattern = {
+    Char: char
+    Pattern: BW list list
+  }
 
-  let zero  = [[B;W;W;W;W;W;W;B];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[B;W;W;W;W;W;W;B]]
-  let one   = [[B;W;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[B;B;B;B;B;B;B;W]]
-  let two   = [[B;W;B;B;B;B;W;W];[W;B;B;B;B;W;B;W];[W;B;B;B;W;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;B;B;B;W]]
-  let three = [[B;W;B;B;B;B;W;B];[W;B;B;B;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;W;W;W;B]]
-  let four  = [[B;B;B;W;W;B;B;B];[B;B;W;B;W;B;B;B];[B;W;B;B;W;B;B;B];[W;W;W;W;W;W;W;W];[B;B;B;B;W;B;B;B]]
-  let five  = [[W;W;W;W;B;B;W;B];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;W;W;W;B]]
-  let six   = [[B;B;W;W;W;W;W;B];[B;W;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;B;B;B;W;W;W;B]]
-  let seven = [[W;B;B;B;B;B;B;B];[W;B;B;B;B;B;W;W];[W;B;B;B;W;W;B;B];[W;B;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]]
-  let eight = [[B;W;W;B;W;W;W;B];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;W;W;W;B]]
-  let nine  = [[B;W;W;W;B;B;B;B];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;W;B];[B;W;W;W;W;W;B;B]]
+  let numberPatterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;B];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[B;W;W;W;W;W;W;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[B;B;B;B;B;B;B;W]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;B;W;W];[W;B;B;B;B;W;B;W];[W;B;B;B;W;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;W;B];[W;B;B;B;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;W;W;B;B;B];[B;B;W;B;W;B;B;B];[B;W;B;B;W;B;B;B];[W;W;W;W;W;W;W;W];[B;B;B;B;W;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;W;B];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;W;W;B];[B;W;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;B;B;B;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B];[W;B;B;B;B;B;W;W];[W;B;B;B;W;W;B;B];[W;B;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;B;W;W;W;B];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;B;B;B;B];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;W;B];[B;W;W;W;W;W;B;B]] }
+    { Char = ','; Pattern = [[B;B;B;B;B;B;B;B];[B;B;B;B;B;B;W;W]] }
+  |]
 
-  let comma = [[B;B;B;B;B;B;B;B];[B;B;B;B;B;B;W;W]]
+  let buttonPatterns = [|  
+    { Char = 'F'; Pattern = [[B;W;W;W;W;W;W;W;W];[B;W;W;W;W;W;W;W;W];[B;W;B;B;W;B;B;B;B];[B;W;B;B;W;B;B;B;B];[B;W;B;B;W;B;B;B;B];[B;W;B;B;W;B;B;B;B]] }
+    { Char = 'o'; Pattern = [[B;B;B;B;W;W;W;W;B];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;W];[B;B;B;W;B;B;B;B;W];[B;B;B;W;W;W;W;W;W];[B;B;B;B;W;W;W;W;B]] }
+    { Char = 'l'; Pattern = [[W;W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W;W]] }
+    { Char = 'd'; Pattern = [[B;B;B;B;W;W;W;W;B];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;W];[B;B;B;W;B;B;B;B;W];[W;W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W;W]] }
+    { Char = 'C'; Pattern = [[B;B;B;W;W;W;W;B;B];[B;B;W;W;W;W;W;W;B];[B;W;W;B;B;B;B;W;W];[B;W;B;B;B;B;B;B;W];[B;W;B;B;B;B;B;B;W];[B;W;B;B;B;B;B;B;W];[B;W;B;B;B;B;B;B;W]] }
+    { Char = 'a'; Pattern = [[B;B;B;B;B;B;W;W;B];[B;B;B;W;B;W;W;W;W];[B;B;B;W;B;W;B;B;W];[B;B;B;W;B;W;B;B;W];[B;B;B;W;W;W;W;W;W];[B;B;B;B;W;W;W;W;W]] }
+    { Char = 'R'; Pattern = [[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[W;B;B;B;W;B;B;B];[W;B;B;B;W;W;B;B];[W;W;W;W;W;W;W;B];[B;W;W;W;B;B;W;W];[B;B;B;B;B;B;B;W]] }    
+    { Char = 'a'; Pattern = [[B;B;B;B;B;W;W;B];[B;B;W;B;W;W;W;W];[B;B;W;B;W;B;B;W];[B;B;W;B;W;B;B;W];[B;B;W;W;W;W;W;W];[B;B;B;W;W;W;W;W]] }
+    { Char = 'i'; Pattern = [[W;B;W;W;W;W;W;W];[W;B;W;W;W;W;W;W]] }
+    { Char = 's'; Pattern = [[B;B;B;W;W;B;B;W];[B;B;W;W;W;B;B;W];[B;B;W;B;W;W;B;W];[B;B;W;B;B;W;W;W];[B;B;W;B;B;W;W;B]] }
+    { Char = 'e'; Pattern = [[B;B;B;W;W;W;W;B];[B;B;W;W;W;W;W;W];[B;B;W;B;W;B;B;W];[B;B;W;B;W;B;B;W];[B;B;W;W;W;B;W;W];[B;B;B;W;W;B;W;B]] }
+    { Char = 'T'; Pattern = [[W;B;B;B;B;B;B;B];[W;B;B;B;B;B;B;B];[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[W;B;B;B;B;B;B;B];[W;B;B;B;B;B;B;B]] }
+    { Char = 'o'; Pattern = [[B;B;B;W;W;W;W;B];[B;B;W;W;W;W;W;W];[B;B;W;B;B;B;B;W];[B;B;W;B;B;B;B;W];[B;B;W;W;W;W;W;W];[B;B;B;W;W;W;W;B]] }
+    { Char = 'h'; Pattern = [[W;W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;B];[B;B;B;W;B;B;B;B;B];[B;B;B;W;W;W;W;W;W];[B;B;B;B;W;W;W;W;W]] }
+    { Char = 'e'; Pattern = [[B;B;B;B;W;W;W;W;B];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;W;B;B;W];[B;B;B;W;B;W;B;B;W];[B;B;B;W;W;W;B;W;W];[B;B;B;B;W;W;B;W;B]] }
+    { Char = 'c'; Pattern = [[B;B;B;B;W;W;W;W;B];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;W];[B;B;B;W;B;B;B;B;W];[B;B;B;W;B;B;B;B;W]] }
+    { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W;W];[B;B;B;B;W;W;W;B;B];[B;B;B;W;W;B;W;W;B];[B;B;B;W;B;B;B;W;W];[B;B;B;B;B;B;B;B;W]] }
+    { Char = 'A'; Pattern = [[B;B;B;B;B;B;W;W;W];[B;B;B;W;W;W;W;W;W];[B;W;W;W;W;W;W;B;B];[B;W;W;B;B;B;W;B;B];[B;W;W;W;W;W;W;B;B];[B;B;B;W;W;W;W;W;W];[B;B;B;B;B;B;W;W;W]] }
+    { Char = 'I'; Pattern = [[B;W;B;B;B;B;B;B;W];[B;W;W;W;W;W;W;W;W];[B;W;W;W;W;W;W;W;W];[B;W;B;B;B;B;B;B;W]] }
+    { Char = 'n'; Pattern = [[B;B;B;W;W;W;W;W;W];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;B];[B;B;B;W;B;B;B;B;B];[B;B;B;W;W;W;W;W;W];[B;B;B;B;W;W;W;W;W]] }
+  |]
 
-  let compareToDigit (d : list<list<BW>>) (mask: list<list<BW>>) = 
-    let equal = 
-      mask.Length = d.Length &&
-      mask |> List.zip d |> List.forall (fun (x,y) -> Seq.zip x y |> Seq.forall (fun (e,i) -> e = i))
-    if equal then Some(1) else None
+  let getChar patterns bws =
+    let samePatterns h p =
+      Seq.zip h p
+      |> Seq.forall (fun (v1, v2) -> v1 = v2)
+    let matchingPattern = 
+      patterns 
+        |> Array.filter (fun p -> List.length p.Pattern = List.length bws)
+        |> Array.filter (fun p -> samePatterns bws p.Pattern)
+        |> Array.tryHead
+    defaultArg (Option.map (fun p -> p.Char) matchingPattern) '?'
 
-  let (|Zero|_|) (mask: list<list<BW>>) = compareToDigit zero mask
-  let (|One|_|) (mask: list<list<BW>>) = compareToDigit one mask
-  let (|Two|_|) (mask: list<list<BW>>) = compareToDigit two mask
-  let (|Three|_|) (mask: list<list<BW>>) = compareToDigit three mask
-  let (|Four|_|) (mask: list<list<BW>>) = compareToDigit four mask
-  let (|Five|_|) (mask: list<list<BW>>) = compareToDigit five mask
-  let (|Six|_|) (mask: list<list<BW>>) = compareToDigit six mask
-  let (|Seven|_|) (mask: list<list<BW>>) = compareToDigit seven mask
-  let (|Eight|_|) (mask: list<list<BW>>) = compareToDigit eight mask
-  let (|Nine|_|) (mask: list<list<BW>>) = compareToDigit nine mask
+  let removeTrailingSeparators l = Seq.skipWhile (fun x -> Seq.forall ((=) B) x) l
+  let removeVerticalPadding l = 
+    l
+    |> removeTrailingSeparators
+    |> Seq.rev
+    |> removeTrailingSeparators
+    |> Seq.rev
 
-  let (|Comma|_|) (mask: list<list<BW>>) = compareToDigit comma mask
+  let removePadding pixels =
+      let maxWidth = Array2D.length1 pixels - 1
+      let maxHeight = Array2D.length2 pixels - 1
+      let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
+      let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
 
-  let matchSymbol (mask: list<list<BW>>) =
-    match mask with
-    | Zero _ -> '0'
-    | One _ -> '1'
-    | Two _ -> '2'
-    | Three _ -> '3'
-    | Four _ -> '4'
-    | Five _ -> '5'
-    | Six _ -> '6'
-    | Seven _ -> '7'
-    | Eight _ -> '8'
-    | Nine _ -> '9'
-    | Comma _ -> ','
-    | _ -> '?'
+      match (first, last) with
+      | (Some f, Some l) ->
+        [0..maxWidth] 
+        |> Seq.map (fun x -> [f..l] |> Seq.map (fun y -> pixels.[x, y]) |> List.ofSeq)
+        |> removeVerticalPadding
+      | _ -> Seq.empty
 
-  let recognizeString getPixel width height =
-    let isWhite (c : Color) =
-      if c.B > 127uy && c.G > 127uy && c.R > 127uy then W
-      else B
+  let isWhite (c : Color) =
+    if c.B > 127uy && c.G > 127uy && c.R > 127uy then W
+    else B
 
+  let recognizeString (matchSymbol: BW list list -> char) getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
-
-    let removeTrailingSeparators l = Seq.skipWhile (fun x -> Seq.forall ((=) B) x) l
-    let removeVerticalPadding l = 
-      l
-      |> removeTrailingSeparators
-      |> Seq.rev
-      |> removeTrailingSeparators
-      |> Seq.rev
-
-    let removePadding pixels =
-        let maxWidth = Array2D.length1 pixels - 1
-        let maxHeight = Array2D.length2 pixels - 1
-        let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
-        let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
-
-        match (first, last) with
-        | (Some f, Some l) ->
-          [0..maxWidth] 
-          |> Seq.map (fun x -> [f..l] |> Seq.map (fun y -> pixels.[x, y]) |> List.ofSeq)
-          |> removeVerticalPadding
-        | _ -> Seq.empty
-
 
     let splitIntoSymbols (e : list<BW>) (state: list<list<list<BW>>>) = 
       match state with
@@ -100,3 +104,16 @@ module StringRecognition =
     |> List.map matchSymbol
     |> Array.ofSeq
     |> String.Concat
+
+  let recognizeNumber x =
+    recognizeString (getChar numberPatterns) x
+
+  let recognizeButton x =
+    recognizeString (getChar buttonPatterns) x
+
+  let parsePattern getPixel width height =
+    seq { for x in 0 .. width - 1 do
+            yield seq { for y in 0 .. height - 1 do yield isWhite (getPixel x y)} 
+        }
+    |> Seq.map (fun y -> "[" + (y|> Seq.map (fun x -> if x = B then "B" else "W") |> String.concat ";") + "]")
+    |> String.concat ";"

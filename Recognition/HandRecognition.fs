@@ -69,7 +69,16 @@ module HandRecognition =
     let suit = getCardSuit getPixel width height
     value + suit
 
+  let isButton getPixel width height =    
+    let isGreen (c : Color) = c.B < 127uy && c.G > 127uy && c.R < 127uy
+    seq { for x in 0 .. width - 1 do
+            for y in 0 .. height - 1 do
+              yield isGreen (getPixel x y)}
+    |> Seq.sumBy (fun x -> if x then 1 else 0)
+    |> (*) 3
+    |> (<) (width * height)
+
   let parsePattern getPixel width height =
     getCardPattern getPixel width height
     |> Seq.map (fun x -> if x = B then "B" else "W") 
-    |> String.concat ";"    
+    |> String.concat ";"

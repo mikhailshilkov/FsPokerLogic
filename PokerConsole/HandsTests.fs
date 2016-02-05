@@ -13,14 +13,6 @@ let ``oneBelow: Any face goes to Two after several calls`` f =
 
   isAbleToGoToTwo f
 
-//type Letters =
-//    static member Char() =
-//        Arb.Default.Char()
-//        |> Arb.filter (fun c -> 'A' <= c && c <= 'Z')
-//type PairHandGen =
-//    static member String () = Gen.elements ["2", "3", "4"] |> Arb.fromGen
-//[<Property(Arbitrary = [| typeof<PairHandGen> |])>]
-
 [<Property>]
 let ``faceToChar and them parseFace give the initial value`` f =
   f = (faceToChar f |> parseFace)

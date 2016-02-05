@@ -21,7 +21,7 @@ module StringRecognition =
     { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B];[W;B;B;B;B;B;W;W];[W;B;B;B;W;W;B;B];[W;B;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]] }
     { Char = '8'; Pattern = [[B;W;W;B;W;W;W;B];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[B;W;W;B;W;W;W;B]] }
     { Char = '9'; Pattern = [[B;W;W;W;B;B;B;B];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;B;W];[W;B;B;B;W;B;W;B];[B;W;W;W;W;W;B;B]] }
-    { Char = ','; Pattern = [[B;B;B;B;B;B;B;B];[B;B;B;B;B;B;W;W]] }
+    { Char = ','; Pattern = [[B;B;B;B;B;B;W;W]] }
   |]
 
   let buttonPatterns = [|  
@@ -66,11 +66,14 @@ module StringRecognition =
     |> removeTrailingSeparators
     |> Seq.rev
 
+  let lessThan2White seq =
+    (Seq.filter ((=) W) seq |> Seq.length) >= 2
+
   let removePadding pixels =
       let maxWidth = Array2D.length1 pixels - 1
       let maxHeight = Array2D.length2 pixels - 1
-      let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
-      let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> Array.exists ((=) W) pixels.[0..maxWidth, x])
+      let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> lessThan2White pixels.[0..maxWidth, x])
+      let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThan2White pixels.[0..maxWidth, x])
 
       match (first, last) with
       | (Some f, Some l) ->
@@ -108,8 +111,9 @@ module StringRecognition =
   let recognizeNumber x =
     recognizeString (getChar numberPatterns) x
 
-  let recognizeButton x =
-    recognizeString (getChar buttonPatterns) x
+  let recognizeButton x y z =
+    let b = recognizeString (getChar buttonPatterns) x y z
+    if b <> "?" then b else null
 
   let parsePattern getPixel width height =
     seq { for x in 0 .. width - 1 do

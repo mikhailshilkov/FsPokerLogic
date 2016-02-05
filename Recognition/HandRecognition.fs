@@ -53,21 +53,28 @@ module HandRecognition =
   let getCardValue patterns bws =
     let matchCount h p =
       Seq.zip h p
-      |> Seq.map (fun (v1, v2) -> if v1 = v2 then 1 else 0)
+      |> Seq.map (fun (v1, v2) -> if v1 = v2 then 1 else -2)
       |> Seq.sum
-      |> decimal
-    let maxPattern = patterns |> Array.maxBy (fun p -> matchCount bws p.Pattern)
-    maxPattern.Card
+    patterns 
+      |> Array.map (fun p -> (p, matchCount bws p.Pattern))
+      |> Array.filter (fun (p, m) -> m > 0)
+      |> Array.sortByDescending (fun (p_, m) -> m)
+      |> Array.tryHead
+      |> Option.map (fun (p, _) -> p)
 
   let getCardString getCardPattern getCardSuit =
     let value = getCardPattern |> getCardValue patterns
     let suit = getCardSuit
-    value + suit
+    match value with
+    | Some v -> v.Card + suit
+    | None -> null
 
   let recognizeCard getPixel width height = 
     let value = getCardPattern getPixel width height |> getCardValue patterns
     let suit = getCardSuit getPixel width height
-    value + suit
+    match value with
+    | Some v -> v.Card + suit
+    | None -> null
 
   let isButton getPixel width height =    
     let isGreen (c : Color) = c.B < 127uy && c.G > 127uy && c.R < 127uy
@@ -75,7 +82,7 @@ module HandRecognition =
             for y in 0 .. height - 1 do
               yield isGreen (getPixel x y)}
     |> Seq.sumBy (fun x -> if x then 1 else 0)
-    |> (*) 3
+    |> (*) 4
     |> (<) (width * height)
 
   let parsePattern getPixel width height =

@@ -6,7 +6,7 @@ open Recognition.ScreenRecognition
 
 [<EntryPoint>]
 let main argv = 
-    let image = new Bitmap(@"C:\Users\kiwo_000\Downloads\Pkr\Fold_AllIn.bmp");
+    let image = new Bitmap(@"C:\Work\FsPokerLogic\Recognition\TestCases\null.bmp");
 
     let getPixel offsetX offsetY x y = 
       image.GetPixel(offsetX + x, offsetY + y)

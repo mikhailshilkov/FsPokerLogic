@@ -24,7 +24,7 @@ let ``decide on IP import has value for any stack and hand`` bb h =
 let decideOnImported decide handString stack history expected =
   let hand = parseHand handString
   let actual = decide stack history hand
-  actual = 
+  Assert.Equal (
     (match expected with
       | "AllIn" -> AllIn
       | "Raise" -> MinRaise
@@ -32,7 +32,8 @@ let decideOnImported decide handString stack history expected =
       | "Call" -> Call
       | "Fold" -> Fold
       | _ -> failwith "Unknown expected"
-      |> Some)
+      |> Some),
+      actual)
 
 [<Theory>]
 [<InlineData("Q4o", 25, "Fold")>]
@@ -57,7 +58,7 @@ let ``decide on imported / limp raise`` handString stack raiseSize expected =
 [<InlineData("KK", 16, 3.2, "Raise")>]
 [<InlineData("A5o", 15, 3.2, "AllIn")>]
 [<InlineData("T5s", 14, 3.9, "Fold")>]
-[<InlineData("T5s", 13, 3.9, "Call")>]
+[<InlineData("T7o", 13, 3.9, "Call")>]
 [<InlineData("A6s", 25, 3.9, "AllIn")>]
 [<InlineData("K7s", 24, 5.5, "Fold")>]
 [<InlineData("76s", 23, 5.5, "Call")>]
@@ -80,7 +81,7 @@ let decideOOP = decideOnRules rulesOOP
 [<Property(Arbitrary = [| typeof<BigBets> |])>]
 let ``decide on OOP import has value for any stack and hand`` bb history h =
   let action = decideOOP bb [history] h
-  not (action = None)
+  Assert.NotEqual(None, action)
 
 [<Theory>]
 [<InlineData("Q9s", 7, "Check")>]

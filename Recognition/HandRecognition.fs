@@ -16,7 +16,8 @@ module HandRecognition =
     { Card = "5"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;B;B;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
     { Card = "6"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;W;B;B;B;B;B;B;B;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;W;W;W;W;B;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;B;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
     { Card = "7"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "8"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    //{ Card = "8"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "8"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;W;B;B;B;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;W;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;B;B;B;B;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
     { Card = "9"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;B;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;B;B;W;W;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
     { Card = "T"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;W;W;B;B;B;B;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W|] }
     { Card = "J"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
@@ -24,6 +25,12 @@ module HandRecognition =
     { Card = "K"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;W;W;B;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
     { Card = "A"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
   |]
+
+  let findCardStart getPixel width height = 
+    let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
+    let firstX = [0..width] |> Seq.tryFindIndex (fun x -> [0..height] |> List.map (fun y -> getPixel x y |> isWhite)  |> Seq.exists id)
+    let firstY = [0..height] |> Seq.tryFindIndex (fun y -> [0..width] |> List.map (fun x -> getPixel x y |> isWhite) |> Seq.exists id)
+    (Option.map ((+) 1) firstX, Option.map ((+) 1) firstY)
 
   let getCardPattern getPixel width height =
     let isWhite (c : Color) =
@@ -55,10 +62,12 @@ module HandRecognition =
       Seq.zip h p
       |> Seq.map (fun (v1, v2) -> if v1 = v2 then 1 else -2)
       |> Seq.sum
-    patterns 
+    let rating = 
+      patterns 
       |> Array.map (fun p -> (p, matchCount bws p.Pattern))
       |> Array.filter (fun (p, m) -> m > 0)
       |> Array.sortByDescending (fun (p_, m) -> m)
+    rating
       |> Array.tryHead
       |> Option.map (fun (p, _) -> p)
 
@@ -82,7 +91,7 @@ module HandRecognition =
             for y in 0 .. height - 1 do
               yield isGreen (getPixel x y)}
     |> Seq.sumBy (fun x -> if x then 1 else 0)
-    |> (*) 4
+    |> (*) 5
     |> (<) (width * height)
 
   let parsePattern getPixel width height =

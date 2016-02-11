@@ -10,7 +10,7 @@ let test actual folderName =
     let image = new Bitmap(name)
 
     let result = recognizeScreen image
-    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "")
+    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
     if expected <> "null" then
       Assert.Equal(expected, actual result)
     else
@@ -33,3 +33,7 @@ let ``recognize bet sizes from predefined file`` () =
 [<Fact>]
 let ``recognize position and actions from predefined file`` () =
   test (fun r -> System.String.Format("{0}-{1}", r.Actions.Replace("|", "-"), match r.Button with | Hero -> "H" | Villain -> "V" | Unknown -> "?")) "ActionsButtons"
+
+[<Fact>]
+let ``recognize blinds from predefined file`` () =
+  test (fun r -> r.Blinds.Replace("/", "-")) "Blinds"

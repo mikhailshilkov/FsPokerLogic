@@ -13,6 +13,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Recognition", "Recognition\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Learner", "Learner\Learner.fsproj", "{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Player", "Player\Player.fsproj", "{16FBA94C-CB44-4825-8C90-33326980DF16}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7651FF09-E4B2-4C7E-9008-6092EC5DFA76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{16FBA94C-CB44-4825-8C90-33326980DF16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{16FBA94C-CB44-4825-8C90-33326980DF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{16FBA94C-CB44-4825-8C90-33326980DF16}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{16FBA94C-CB44-4825-8C90-33326980DF16}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

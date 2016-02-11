@@ -58,29 +58,21 @@ module StringRecognition =
         |> Array.tryHead
     defaultArg (Option.map (fun p -> p.Char) matchingPattern) '?'
 
-  let removeTrailingSeparators l = Seq.skipWhile (fun x -> Seq.forall ((=) B) x) l
-  let removeVerticalPadding l = 
-    l
-    |> removeTrailingSeparators
-    |> Seq.rev
-    |> removeTrailingSeparators
-    |> Seq.rev
 
-  let lessThan2White seq =
-    (Seq.filter ((=) W) seq |> Seq.length) >= 2
+  let lessThanWhite t seq =
+    (Seq.filter ((=) W) seq |> Seq.length) >= t
 
   let removePadding pixels =
       let maxWidth = Array2D.length1 pixels - 1
       let maxHeight = Array2D.length2 pixels - 1
-      let first = [0..maxHeight] |> Seq.tryFindIndex (fun x -> lessThan2White pixels.[0..maxWidth, x])
-      let last = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThan2White pixels.[0..maxWidth, x])
+      let firstX = [0..maxWidth] |> Seq.tryFindIndex (fun y -> lessThanWhite 1 pixels.[y, 0..maxHeight])
+      let lastX = [0..maxWidth] |> Seq.tryFindIndexBack (fun y -> lessThanWhite 1 pixels.[y, 0..maxHeight])
+      let firstY = [0..maxHeight] |> Seq.tryFindIndex (fun x -> lessThanWhite 2 pixels.[0..maxWidth, x])
+      let lastY = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThanWhite 2 pixels.[0..maxWidth, x])
 
-      match (first, last) with
-      | (Some f, Some l) ->
-        [0..maxWidth] 
-        |> Seq.map (fun x -> [f..l] |> Seq.map (fun y -> pixels.[x, y]) |> List.ofSeq)
-        |> removeVerticalPadding
-      | _ -> Seq.empty
+      match (firstX, lastX, firstY, lastY) with
+      | (Some fx, Some lx, Some fy, Some ly) -> pixels.[fx..lx, fy..ly]
+      | _ -> Array2D.init 0 0 (fun _ _ -> B)
 
   let isWhite (c : Color) =
     if c.B > 127uy && c.G > 127uy && c.R > 127uy then W
@@ -89,7 +81,7 @@ module StringRecognition =
   let recognizeString (matchSymbol: BW list list -> char) getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
-    let splitIntoSymbols (e : list<BW>) (state: list<list<list<BW>>>) = 
+    let splitIntoSymbols (e : BW list) (state: BW list list list) = 
       match state with
       | cur::rest ->
           if isSeparator e then
@@ -99,9 +91,13 @@ module StringRecognition =
           else (e::cur)::rest   // add e to current list
       | _ -> [[e]]
 
-    let pixelColumns = 
+    let pixels = 
       Array2D.init width height (fun x y -> isWhite (getPixel x y))
       |> removePadding
+
+    let pixelColumns =
+      [0..Array2D.length1 pixels - 1] 
+      |> Seq.map (fun x -> pixels.[x, 0..Array2D.length2 pixels - 1] |> List.ofArray)      
 
     Seq.foldBack splitIntoSymbols pixelColumns []
     |> List.map matchSymbol

@@ -40,7 +40,7 @@ module ScreenRecognition =
         | e -> None
 
     let chooseGoodString (s1 : string) (s2 : string) =
-      if s1.Length > 2 && not(s1.Contains("?")) then s1
+      if s1 <> null && s1.Length > 2 && not(s1.Contains("?")) then s1
       else s2
     
     let totalPot = recognizeNumber (getPixel 302 133) 35 15 |> parseNumber

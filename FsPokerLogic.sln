@@ -15,6 +15,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Learner", "Learner\Learner.
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Player", "Player\Player.fsproj", "{16FBA94C-CB44-4825-8C90-33326980DF16}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "MouseTest", "MouseTest\MouseTest.fsproj", "{5C19A419-096B-47B8-B0FE-784AED6CD3F7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlideShow2", "SlideShow2\SlideShow2.csproj", "{01D44807-7717-4286-9591-CCA7751C4797}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,6 +49,14 @@ Global
 		{16FBA94C-CB44-4825-8C90-33326980DF16}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{16FBA94C-CB44-4825-8C90-33326980DF16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{16FBA94C-CB44-4825-8C90-33326980DF16}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C19A419-096B-47B8-B0FE-784AED6CD3F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C19A419-096B-47B8-B0FE-784AED6CD3F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C19A419-096B-47B8-B0FE-784AED6CD3F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C19A419-096B-47B8-B0FE-784AED6CD3F7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{01D44807-7717-4286-9591-CCA7751C4797}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{01D44807-7717-4286-9591-CCA7751C4797}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{01D44807-7717-4286-9591-CCA7751C4797}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{01D44807-7717-4286-9591-CCA7751C4797}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

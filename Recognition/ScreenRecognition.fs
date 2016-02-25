@@ -10,6 +10,16 @@ module ScreenRecognition =
 
   type ButtonPosition = Hero | Villain | Unknown
 
+  type Blinds = {
+    SB: int
+    BB: int
+  }
+
+  type ActionButton = {
+    Name: string
+    Region: (int * int * int * int)
+  }
+
   type Screen = {
     TotalPot: int option
     HeroStack: int option
@@ -17,18 +27,18 @@ module ScreenRecognition =
     HeroBet: int option
     VillainBet: int option
     HeroHand: string
-    Actions: string
-    Blinds: string
+    Actions: ActionButton[]
+    Blinds: Blinds option
     Button: ButtonPosition
   }
 
   let print screen =
     [sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
-     sprintf "Blinds: %s" screen.Blinds;
+     sprintf "Big Blind: %A" screen.Blinds;
      sprintf "Stacks: %A/%A" (Option.toNullable screen.HeroStack) (Option.toNullable screen.VillainStack);
      sprintf "Bets: %A/%A" (Option.toNullable screen.HeroBet) (Option.toNullable screen.VillainBet);
      sprintf "Hand: %s (%s)" screen.HeroHand (match screen.Button with | Hero -> "IP" | Villain -> "OOP" | Unknown -> "?");
-     sprintf "Actions: %s" screen.Actions]
+     sprintf "Actions: %A" screen.Actions]
 
   let recognizeScreen (bitmap : Bitmap) =
     
@@ -41,11 +51,20 @@ module ScreenRecognition =
       with
         | e -> None
 
+    let parseBlinds (s : string) =
+      try
+        let parts = s.Split('/')
+        let sb = parseNumber parts.[0]
+        let bb = parseNumber parts.[1]
+        Option.bind (fun v -> Option.map (fun vb -> { SB = v; BB = vb }) bb ) sb
+      with
+        | e -> None
+
     let chooseGoodString minLength (s1 : string) (s2 : string) =
       if s1 <> null && s1.Length >= minLength && not(s1.Contains("?")) then s1
       else s2
 
-    let blinds = recognizeBlinds (getPixel 308 7) 70 16    
+    let blinds = recognizeBlinds (getPixel 308 7) 70 16  |> parseBlinds
     let totalPot = 
       chooseGoodString 2 (recognizeNumber (getPixel 302 133) 35 15) (recognizeNumber (getPixel 302 77) 35 15) |> parseNumber
     let heroStack = recognizeNumber (getPixel 100 342) 50 14 |> parseNumber
@@ -54,11 +73,11 @@ module ScreenRecognition =
     let villainBet = recognizeNumber (getPixel 462 301) 50 15 |> parseNumber
     
     let actions = 
-      [recognizeButton (getPixel 360 433) 70 20;
-       chooseGoodString 3 (recognizeButton (getPixel 450 427) 70 17) (recognizeButton (getPixel 450 433) 70 20);
-       recognizeButton (getPixel 540 427) 70 17]
-      |> List.filter (fun x -> not (String.IsNullOrEmpty x))
-      |> String.concat "|"
+      [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]
+      |> Seq.map (fun (x, y, w, h) -> (recognizeButton (getPixel x y) w h), (x, y, w, h))
+      |> Seq.filter (fun (x, _) -> not (String.IsNullOrEmpty x) && not(x.Contains("?")))
+      |> Seq.map (fun (x, r) -> { Name = x; Region = r })
+      |> Array.ofSeq      
 
     let button = 
       if isButton (getPixel 159 314) 17 17 then Hero

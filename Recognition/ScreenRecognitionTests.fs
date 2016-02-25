@@ -32,8 +32,11 @@ let ``recognize bet sizes from predefined file`` () =
 
 [<Fact>]
 let ``recognize position and actions from predefined file`` () =
-  test (fun r -> System.String.Format("{0}-{1}", r.Actions.Replace("|", "-"), match r.Button with | Hero -> "H" | Villain -> "V" | Unknown -> "?")) "ActionsButtons"
+  let formatActions a =
+    let names = a |> Array.map (fun x -> x.Name)
+    System.String.Join("-", names)
+  test (fun r -> System.String.Format("{0}-{1}", r.Actions |> formatActions, match r.Button with | Hero -> "H" | Villain -> "V" | Unknown -> "?")) "ActionsButtons"
 
 [<Fact>]
 let ``recognize blinds from predefined file`` () =
-  test (fun r -> r.Blinds.Replace("/", "-")) "Blinds"
+  test (fun r ->  sprintf "%A-%A" r.Blinds.Value.SB r.Blinds.Value.BB) "Blinds"

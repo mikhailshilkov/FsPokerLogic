@@ -90,7 +90,7 @@ module StringRecognition =
       | _ -> Array2D.init 0 0 (fun _ _ -> B)
 
   let isWhite (c : Color) =
-    if c.B > 127uy && c.G > 127uy && c.R > 127uy then W
+    if c.B > 180uy && c.G > 180uy && c.R > 180uy then W
     else B
 
   let recognizeString (matchSymbol: BW list list -> char) threshold getPixel width height =

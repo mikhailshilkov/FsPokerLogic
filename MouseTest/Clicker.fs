@@ -36,8 +36,15 @@ module Clicker =
       do! Async.Sleep 3
     }
 
-  let clickRegion (minX, minY, maxX, maxY) =
+  let moveToRegion (minX, minY, maxX, maxY) =
     let r = new Random()
     let p = (r.Next(minX, maxX), r.Next(minY, maxY))
     moveToWorkflow sinStep p |> Async.RunSynchronously
+
+  let clickRegion (minX, minY, maxX, maxY) =
+    moveToRegion(minX, minY, maxX, maxY)
     simulator.Mouse.LeftButtonClick()
+
+  let shiftBy (minX, minY, maxX, maxY) =
+    let (fromX, fromY) = currentPosition()
+    moveToRegion(fromX + minX, fromY + minY, fromX + maxX, fromY + maxY)

@@ -45,7 +45,7 @@ namespace Watcher
                         {
                             Console.WriteLine(ex.Message);
                             Console.WriteLine(ex.StackTrace);
-                            SaveBitmap(window.Bitmap, tableNumber);
+                            Dumper.SaveBitmap(window.Bitmap, tableNumber);
                         }
                     }
                 }
@@ -58,24 +58,10 @@ namespace Watcher
                     {
                         var parts = window.Title.Split('-').Select(s => s.Trim()).ToArray();
                         if (parts.Length >= 3)
-                            SaveBitmap(window.Bitmap, parts[2]);
+                            Dumper.SaveBitmap(window.Bitmap, parts[2]);
                     }
                 }
             }
-        }
-
-        private static void SaveBitmap(Bitmap bitmap, string tableName)
-        {
-            for (int i = 50; i < 150; i++)
-                for (int j = 1; j < 30; j++)
-                    bitmap.SetPixel(i, j, Color.White);
-            for (int i = 77; i < 161; i++)
-                for (int j = 328; j < 338; j++)
-                    bitmap.SetPixel(i, j, Color.White);
-            for (int i = 495; i < 161; i++)
-                for (int j = 328; j < 338; j++)
-                    bitmap.SetPixel(i, j, Color.White);
-            bitmap.Save($"{tableName}_{Guid.NewGuid().ToString().Substring(0, 4)}.bmp");
         }
     }
 }

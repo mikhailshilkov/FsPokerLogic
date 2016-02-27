@@ -30,11 +30,12 @@ module ScreenRecognition =
     Actions: ActionButton[]
     Blinds: Blinds option
     Button: ButtonPosition
+    HasFlop: bool
   }
 
   let print screen =
     [sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
-     sprintf "Big Blind: %A" screen.Blinds;
+     sprintf "Blinds: %A" screen.Blinds;
      sprintf "Stacks: %A/%A" (Option.toNullable screen.HeroStack) (Option.toNullable screen.VillainStack);
      sprintf "Bets: %A/%A" (Option.toNullable screen.HeroBet) (Option.toNullable screen.VillainBet);
      sprintf "Hand: %s (%s)" screen.HeroHand (match screen.Button with | Hero -> "IP" | Villain -> "OOP" | Unknown -> "?");
@@ -83,6 +84,8 @@ module ScreenRecognition =
       if isButton (getPixel 159 314) 17 17 then Hero
       else if isButton (getPixel 476 326) 17 17 then Villain else Unknown
 
+    let hasFlop = isFlop (getPixel 212 178) 131 60
+
     let (dxo, dyo) = findCardStart (getPixel 78 274) 13 17
     let heroHand = 
       match (dxo, dyo) with 
@@ -90,12 +93,13 @@ module ScreenRecognition =
         (recognizeCard (getPixel (78+dx) (274+dy)) 13 17) + (recognizeCard (getPixel (115+dx) (274+dy)) 13 17)
       | _, _ -> null
 
-    { TotalPot = totalPot; 
-      HeroStack = heroStack; 
-      VillainStack = villainStack; 
-      HeroBet = heroBet; 
-      VillainBet = villainBet; 
-      HeroHand = if heroHand = "" then null else heroHand;
-      Button = button;
-      Actions = actions;
-      Blinds = blinds }
+    { TotalPot = totalPot
+      HeroStack = heroStack
+      VillainStack = villainStack
+      HeroBet = heroBet
+      VillainBet = villainBet
+      HeroHand = if heroHand = "" then null else heroHand
+      Button = button
+      Actions = actions
+      Blinds = blinds
+      HasFlop = hasFlop }

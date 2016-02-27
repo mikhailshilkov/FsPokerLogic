@@ -20,7 +20,7 @@ namespace SlideShow2
             this.Text = $"Heads Up - 10/20 - {Guid.NewGuid().ToString().Substring(0, 6)}";
             this.Load += (s, ea) => {
                 var r = new Random();
-                this.Location = new Point(r.Next(500), r.Next(300));
+                this.Location = new Point(r.Next(500), r.Next(200));
             };
         }
 
@@ -31,8 +31,8 @@ namespace SlideShow2
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
-        {
-            index = (index + 1) % 3;
+        {            
+            index = (index + 1) % 5;
             pictureBox1.ImageLocation = $@"C:\Work\FsPokerLogic\SlideShow2\bin\Debug\{index + 1}.png";
         }
     }

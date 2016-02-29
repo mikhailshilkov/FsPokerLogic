@@ -6,11 +6,11 @@ open WindowsInput
 
 module Clicker =
 
-  let simulator = new InputSimulator()
   let currentPosition () = 
-    let mp = Control.MousePosition;
+    let mp = Control.MousePosition
     (mp.X, mp.Y)
 
+  let simulator = new InputSimulator()
   let moveTo x y =
     let toX = 65535. * x / (Screen.PrimaryScreen.Bounds.Width |> float)
     let toY = 65535. * y / (Screen.PrimaryScreen.Bounds.Height |> float)
@@ -29,7 +29,7 @@ module Clicker =
   let moveToWorkflow step (toX, toY) = async {
     let (fromX, fromY) = currentPosition()
     let count = Math.Max(10, (Math.Abs (toX - fromX) + Math.Abs (toY - fromY)) / 20)
-    for i = 0 to count do
+    for i = 0 to count do 
       let x = step fromX toX count i |> float
       let y = step fromY toY count i |> float
       moveTo x y

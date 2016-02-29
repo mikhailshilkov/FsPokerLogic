@@ -303,4 +303,6 @@ let importRuleFromExcel importRules fileName =
     |> List.ofSeq)
 
   Marshal.ReleaseComObject(xlWorkBook) |> ignore
+  xlApp.Quit()
+  Marshal.ReleaseComObject(xlApp) |> ignore
   res

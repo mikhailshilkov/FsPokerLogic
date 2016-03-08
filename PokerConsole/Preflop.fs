@@ -6,6 +6,7 @@ open Ranges
 type Action = 
   | AllIn
   | MinRaise
+  | RaiseX of int
   | Call
   | Check
   | Fold

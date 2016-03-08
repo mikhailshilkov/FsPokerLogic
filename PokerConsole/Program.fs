@@ -27,15 +27,16 @@ let rec enterNumber text min max =
     Console.WriteLine "Not a valid number!"
     enterNumber text min max
 
-let rec enterVillainAction () =
+let rec enterVillainAction bb stack =
   Console.Write "What was the Villain action (limp, raise xx): "
   let actionString = Console.ReadLine()
   match actionString.ToLowerInvariant() with
   | "limp" -> Limp
-  | RaiseInt i -> Raise(i, i)
+  | RaiseInt i when i >= stack -> RaiseAllIn
+  | RaiseInt i -> Raise(i / bb, i / bb)
   | _ -> 
     Console.WriteLine "Not a valid action!"
-    enterVillainAction ()
+    enterVillainAction bb stack
 
 let rec enterPosition () =
   Console.Write "Is Hero IP or OOP (IP/OOP): "
@@ -84,7 +85,7 @@ let main argv =
         if not (String.IsNullOrWhiteSpace handString) then
           let parsed = parseHand handString
 
-          let previous = if position = OOP then [enterVillainAction()] else []
+          let previous = if position = OOP then [enterVillainAction (decimal bb) (decimal stack)] else []
           let result = decide effectiveStack previous parsed
 
           printAction result

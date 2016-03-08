@@ -135,7 +135,9 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
     let index = name.Substring(1) |> Int32.Parse
     gValues.[index - 1]
   let getCellValuesBB names = 
-    String.Join(",", names |> Seq.map (fun name -> getCellValueBB name))
+    String.Join(",", names 
+                     |> Seq.map (fun name -> (getCellValueBB name).Replace(" ", "")) 
+                     |> Seq.filter (fun x -> x <> ""))
   if bb <= 7 then
      [| { Stack = bb
           History = [Limp]
@@ -180,7 +182,7 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
         { Stack = bb
           History = [Raise(0m, 100m)]
           Range = getCellValueBB "G14"
-          Action = MinRaise } 
+          Action = RaiseX 2.5m } 
         { Stack = bb
           History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
           Range = getCellValueBB "G15"

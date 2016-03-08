@@ -53,8 +53,12 @@ let isHandInRanges ranges hand = Seq.exists (fun r -> isHandInRange r hand) rang
 
 let parseRange (s : string) = 
   try
-    let high = parseHand s.[0..2]
-    if s.[2] = '+' then 
+    let firstString = if s.Length >= 3 then  s.Substring(0, 3) else s
+    let high = parseHand firstString
+    if firstString.Length = 2 then
+      Pair({ High = high.Card1
+             Low = high.Card1 })
+    else if s.[2] = '+' then 
       Pair({ High = Ace
              Low = high.Card1 })
     else if s.Length = 3 then 
@@ -92,4 +96,4 @@ let parseRange (s : string) =
 
 let parseRanges (s : string) = 
   if s = null || s = "" then Seq.empty
-  else Seq.map (fun x -> parseRange x) (s.Split(','))
+  else Seq.map (fun x -> parseRange x) (s.Replace(" ", "").Split(','))

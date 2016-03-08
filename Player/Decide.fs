@@ -1,11 +1,15 @@
 ﻿namespace Player
 
+open Akka.FSharp
+open Click
 open Import
 open Preflop
+open System.Drawing
 open Hands
 open Recognition.ScreenRecognition
 
 module Decide =
+  open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
   let rulesIP = importRuleFromExcel importRulesIP fileNameIP |> List.ofSeq
@@ -55,3 +59,75 @@ module Decide =
       decidePre effectiveStack history fullHand
     | _ -> None
 
+  type DecisionMessage = {
+    WindowTitle: string
+    TableName: string
+    Screen: Screen
+    Bitmap: Bitmap
+  }
+
+  let mapAction action buttons : ClickAction[] =
+    let findButton names =
+      buttons |> Array.tryFind (fun x -> Seq.exists (fun y -> x.Name = y) names)
+    let button =
+      match action with
+      | Fold -> ["Check"; "Fold"]
+      | Check -> ["Check"]
+      | Call -> ["Call"; "AllIn"]
+      | MinRaise -> ["RaiseTo"; "Bet"]
+      | RaiseX _ -> ["RaiseTo"; "Bet"]
+      | AllIn -> ["RaiseTo"; "Bet"]
+      |> findButton
+
+    match (action, button) with
+    | (AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
+    | (RaiseX x, Some b) -> [| Amount(x); Click(b.Region)|]
+    | (_, Some b) -> [|Click(b.Region)|]
+    | (_, None) -> failwith "Could not find an appropriate button"
+
+  let actor2 clickerRef =
+    let mutable lastScreen = None
+    let imp (mailbox : Actor<'a>) msg =
+      let screen = msg.Screen
+      match lastScreen with
+      | Some s when s = screen -> ()
+      | _ ->
+        lastScreen <- Some screen
+        print screen |> Seq.iter (printfn "%s: %s" "Hand")
+        let decision = decide' screen
+        match decision with
+        | Some d ->
+          printfn "Decision is: %A" d
+          let action = mapAction d screen.Actions
+          printfn "Action is: %A" action
+          clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action }
+        | None ->
+          printfn "Could not make a decision, dumping the screenshot..."
+          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+    imp
+
+  let decideActor clickerRef (mailbox : Actor<DecisionMessage>) =
+    let rec imp lastScreen =
+      actor {
+        let! msg = mailbox.Receive()
+
+        let screen = msg.Screen
+        match lastScreen with
+        | Some s when s = screen -> ()
+        | _ ->
+          print screen |> Seq.iter (printfn "%s: %s" "Hand")
+          let decision = decide' screen
+          match decision with
+          | Some d ->
+            printfn "Decision is: %A" d
+            let action = mapAction d screen.Actions
+            printfn "Action is: %A" action
+            clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action }
+          | None ->
+            printfn "Could not make a decision, dumping the screenshot..."
+            Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+
+        return! imp (Some screen)
+      }
+
+    imp None

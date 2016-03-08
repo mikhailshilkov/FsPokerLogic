@@ -49,14 +49,32 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' screen : Action option =
+  type Action = 
+  | AllIn
+  | MinRaise
+  | RaiseToAmount of int
+  | Call
+  | Check
+  | Fold
+
+  let mapPatternToAction vb (pattern : ActionPattern) =
+    match pattern with
+    | ActionPattern.AllIn -> AllIn
+    | ActionPattern.MinRaise -> MinRaise
+    | ActionPattern.RaiseX x -> RaiseToAmount ((x * (vb |> decimal)) |> int)
+    | ActionPattern.Call -> Call
+    | ActionPattern.Check -> Check
+    | ActionPattern.Fold -> Fold
+
+  let decide' screen =
     match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
     | Some hs, Some hb, Some vs, Some vb, Some b -> 
       let stack = min (hs + hb) (vs + vb)
       let effectiveStack = decimal stack / decimal b.BB
       let fullHand = parseFullHand screen.HeroHand
       let history = understandHistory screen
-      decidePre effectiveStack history fullHand
+      let actionPattern = decidePre effectiveStack history fullHand
+      Option.map (mapPatternToAction vb) actionPattern  
     | _ -> None
 
   type DecisionMessage = {
@@ -71,17 +89,17 @@ module Decide =
       buttons |> Array.tryFind (fun x -> Seq.exists (fun y -> x.Name = y) names)
     let button =
       match action with
-      | Fold -> ["Check"; "Fold"]
-      | Check -> ["Check"]
-      | Call -> ["Call"; "AllIn"]
-      | MinRaise -> ["RaiseTo"; "Bet"]
-      | RaiseX _ -> ["RaiseTo"; "Bet"]
-      | AllIn -> ["RaiseTo"; "Bet"]
+      | Action.Fold -> ["Check"; "Fold"]
+      | Action.Check -> ["Check"]
+      | Action.Call -> ["Call"; "AllIn"]
+      | Action.MinRaise -> ["RaiseTo"; "Bet"]
+      | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"]
+      | Action.AllIn -> ["RaiseTo"; "Bet"]
       |> findButton
 
     match (action, button) with
-    | (AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
-    | (RaiseX x, Some b) -> [| Amount(x); Click(b.Region)|]
+    | (Action.AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
+    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b.Region)|]
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 

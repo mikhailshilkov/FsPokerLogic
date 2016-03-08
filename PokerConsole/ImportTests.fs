@@ -28,7 +28,7 @@ let decideOnImported decide handString stack history expected =
     (match expected with
       | "AllIn" -> AllIn
       | "Raise" -> MinRaise
-      | "Check" -> Action.Check
+      | "Check" -> ActionPattern.Check
       | "Call" -> Call
       | "Fold" -> Fold
       | _ -> failwith "Unknown expected"

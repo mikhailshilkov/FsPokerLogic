@@ -3,10 +3,10 @@
 open Hands
 open Ranges
 
-type Action = 
+type ActionPattern = 
   | AllIn
   | MinRaise
-  | RaiseX of int
+  | RaiseX of decimal
   | Call
   | Check
   | Fold
@@ -22,7 +22,7 @@ type DecisionRule =
   { Stack : int
     Range : string
     History : HistoryItem seq
-    Action : Action }
+    Action : ActionPattern }
 
 let isHistoryMatching ranges history =
   (Seq.compareWith (fun r h -> 

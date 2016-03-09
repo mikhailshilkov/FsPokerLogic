@@ -107,3 +107,15 @@ let parseHand (s : string) =
   { Card1 = card1
     Card2 = card2
     SameSuit = sameSuit }
+
+let parseFullHand (s : string) =
+  let card1 = parseFace s.[0]
+  let card2 = parseFace s.[2]
+  
+  let sameSuit = 
+    if card1 = card2 then false
+    else s.[1] = s.[3]
+
+  { Card1 = card1
+    Card2 = card2
+    SameSuit = sameSuit }

@@ -15,12 +15,13 @@ module Click =
   type ClickerMessage = {
     WindowTitle: string
     Clicks: ClickAction[]
+    IsInstant: bool
   }
 
   let executeClickAction window (x, y, w, h) =
-    Thread.Sleep(300)
     let l = InteractionFacade.Focus(window)
     Clicker.clickRegion (l.X + x, l.Y + y, l.X + x + w, l.Y + y + h)
+    Thread.Sleep(300)
 
   let executeAction window action =
     match action with
@@ -29,10 +30,9 @@ module Click =
 
   let r = new Random()
   let click' msg =
-    Thread.Sleep(r.Next(700, 2400))
+    if not msg.IsInstant then Thread.Sleep(r.Next(1000, 2700))
     msg.Clicks |> Array.iter (executeAction msg.WindowTitle)
     // Move to random place below
-    Thread.Sleep(300)
     Clicker.shiftBy (100, 50, 150, 100)
 
   let clickActor () =

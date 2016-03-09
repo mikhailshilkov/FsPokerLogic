@@ -28,6 +28,8 @@ let decideOnImported decide handString stack history expected =
     (match expected with
       | "AllIn" -> AllIn
       | "Raise" -> MinRaise
+      | "RaiseX2.5" -> RaiseX 2.5m
+      | "RaiseX3" -> RaiseX 3m
       | "Check" -> ActionPattern.Check
       | "Call" -> Call
       | "Fold" -> Fold
@@ -55,7 +57,7 @@ let ``decide on imported / limp raise`` handString stack raiseSize expected =
 [<Theory>]
 [<InlineData("95s", 18, 3.2, "Fold")>]
 [<InlineData("T5s", 17, 3.2, "Call")>]
-[<InlineData("KK", 16, 3.2, "Raise")>]
+[<InlineData("KK", 16, 3.2, "RaiseX2.5")>]
 [<InlineData("A5o", 15, 3.2, "AllIn")>]
 [<InlineData("T5s", 14, 3.9, "Fold")>]
 [<InlineData("T7o", 13, 3.9, "Call")>]
@@ -85,7 +87,7 @@ let ``decide on OOP import has value for any stack and hand`` bb history h =
 
 [<Theory>]
 [<InlineData("Q9s", 7, "Check")>]
-[<InlineData("JTo", 6, "Raise")>]
+[<InlineData("JTo", 6, "RaiseX3")>]
 [<InlineData("22", 5, "AllIn")>]
 let ``decide on imported / limp`` handString stack expected =
   decideOnImported decideOOP handString stack [Limp] expected
@@ -93,7 +95,7 @@ let ``decide on imported / limp`` handString stack expected =
 [<Theory>]
 [<InlineData("94s", 4, "Fold")>]
 [<InlineData("Q2s", 3, "Call")>]
-[<InlineData("88", 2, "Raise")>]
+[<InlineData("88", 2, "RaiseX2.5")>]
 [<InlineData("66", 1, "AllIn")>]
 let ``decide on imported / raise`` handString stack expected =
   decideOnImported decideOOP handString stack [Raise(2.5m, 2.5m)] expected

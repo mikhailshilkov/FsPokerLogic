@@ -6,6 +6,7 @@ open Import
 open Preflop
 open System.Drawing
 open Hands
+open Actions
 open Recognition.ScreenRecognition
 
 module Decide =
@@ -17,18 +18,6 @@ module Decide =
   let rulesOOP = importRuleFromExcel importRulesOOP fileNameOOP |> List.ofSeq
   let rules = Seq.concat [|rulesIP;rulesOOP|]
   let decidePre stack = decideOnRules rules stack
-
-  let parseFullHand (s : string) =
-    let card1 = parseFace s.[0]
-    let card2 = parseFace s.[2]
-  
-    let sameSuit = 
-      if card1 = card2 then false
-      else s.[1] = s.[3]
-
-    { Card1 = card1
-      Card2 = card2
-      SameSuit = sameSuit }
 
   let understandHistory screen =
     let raise bet bb = 
@@ -49,32 +38,16 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  type Action = 
-  | AllIn
-  | MinRaise
-  | RaiseToAmount of int
-  | Call
-  | Check
-  | Fold
-
-  let mapPatternToAction vb (pattern : ActionPattern) =
-    match pattern with
-    | ActionPattern.AllIn -> AllIn
-    | ActionPattern.MinRaise -> MinRaise
-    | ActionPattern.RaiseX x -> RaiseToAmount ((x * (vb |> decimal)) |> int)
-    | ActionPattern.Call -> Call
-    | ActionPattern.Check -> Check
-    | ActionPattern.Fold -> Fold
-
   let decide' screen =
-    match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
-    | Some hs, Some hb, Some vs, Some vb, Some b -> 
+    match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
+    | true, _, _, _, _, _ -> Some MinRaise
+    | _, Some hs, Some hb, Some vs, Some vb, Some b -> 
       let stack = min (hs + hb) (vs + vb)
       let effectiveStack = decimal stack / decimal b.BB
       let fullHand = parseFullHand screen.HeroHand
       let history = understandHistory screen
       let actionPattern = decidePre effectiveStack history fullHand
-      Option.map (mapPatternToAction vb) actionPattern  
+      Option.map (mapPatternToAction vb stack) actionPattern  
     | _ -> None
 
   type DecisionMessage = {
@@ -103,27 +76,6 @@ module Decide =
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let actor2 clickerRef =
-    let mutable lastScreen = None
-    let imp (mailbox : Actor<'a>) msg =
-      let screen = msg.Screen
-      match lastScreen with
-      | Some s when s = screen -> ()
-      | _ ->
-        lastScreen <- Some screen
-        print screen |> Seq.iter (printfn "%s: %s" "Hand")
-        let decision = decide' screen
-        match decision with
-        | Some d ->
-          printfn "Decision is: %A" d
-          let action = mapAction d screen.Actions
-          printfn "Action is: %A" action
-          clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action }
-        | None ->
-          printfn "Could not make a decision, dumping the screenshot..."
-          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
-    imp
-
   let decideActor clickerRef (mailbox : Actor<DecisionMessage>) =
     let rec imp lastScreen =
       actor {
@@ -140,7 +92,7 @@ module Decide =
             printfn "Decision is: %A" d
             let action = mapAction d screen.Actions
             printfn "Action is: %A" action
-            clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action }
+            clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.IsVillainSitout }
           | None ->
             printfn "Could not make a decision, dumping the screenshot..."
             Dumper.SaveBitmap(msg.Bitmap, msg.TableName)

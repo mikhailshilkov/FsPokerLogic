@@ -25,7 +25,7 @@ let enablerActor finderRef =
 let main argv = 
 
   printfn "Loading rules..."
-  //let rc = Seq.head Decide.rules
+  let rc = Seq.head Decide.rules
 
   let system = Configuration.defaultConfig() |> System.create "my-system"
   

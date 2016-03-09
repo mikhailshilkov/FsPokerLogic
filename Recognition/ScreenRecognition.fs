@@ -31,6 +31,7 @@ module ScreenRecognition =
     Blinds: Blinds option
     Button: ButtonPosition
     HasFlop: bool
+    IsVillainSitout: bool
   }
 
   let print screen =
@@ -86,6 +87,8 @@ module ScreenRecognition =
 
     let hasFlop = isFlop (getPixel 212 178) 131 60
 
+    let isVillainSitout = isVillainSitout (getPixel 570 319) 12 11
+
     let (dxo, dyo) = findCardStart (getPixel 78 274) 13 17
     let heroHand = 
       match (dxo, dyo) with 
@@ -102,4 +105,5 @@ module ScreenRecognition =
       Button = button
       Actions = actions
       Blinds = blinds
-      HasFlop = hasFlop }
+      HasFlop = hasFlop
+      IsVillainSitout = isVillainSitout }

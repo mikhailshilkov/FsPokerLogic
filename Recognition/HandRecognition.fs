@@ -101,6 +101,10 @@ module HandRecognition =
     let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
     hasSpecialColor isWhite x
 
+  let isVillainSitout x = 
+    let isRed (c : Color) = c.B < 127uy && c.G < 127uy && c.R > 127uy
+    hasSpecialColor isRed x
+
   let parsePattern getPixel width height =
     getCardPattern getPixel width height
     |> Seq.map (fun x -> if x = B then "B" else "W") 

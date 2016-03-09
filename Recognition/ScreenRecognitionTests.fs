@@ -40,3 +40,7 @@ let ``recognize position and actions from predefined file`` () =
 [<Fact>]
 let ``recognize blinds from predefined file`` () =
   test (fun r ->  sprintf "%A-%A" r.Blinds.Value.SB r.Blinds.Value.BB) "Blinds"
+
+[<Fact>]
+let ``recognize sitout from predefined file`` () =
+  test (fun r ->  if r.IsVillainSitout then "Yes" else "No") "Sitout"

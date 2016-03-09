@@ -32,7 +32,7 @@ module Find =
       actorRef <! window
     let imp (mailbox : Actor<'a>) msg =
       if msg > 0 then 
-        printfn "Searching tables..."
+        //printfn "Searching tables..."
         findWindows' ()
           |> Seq.iter (sendToRecognition mailbox.Context)
     imp

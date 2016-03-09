@@ -66,6 +66,8 @@
     <Compile Include="Preflop.fs" />
     <Compile Include="Import.fs" />
     <Compile Include="ImportTests.fs" />
+    <Compile Include="Actions.fs" />
+    <Compile Include="ActionsTests.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />

@@ -56,6 +56,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="ActorPatterns.fs" />
     <Compile Include="Click.fs" />
     <Compile Include="Decide.fs" />
     <Compile Include="Recognize.fs" />

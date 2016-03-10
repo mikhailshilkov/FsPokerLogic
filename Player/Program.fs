@@ -7,6 +7,7 @@ open Decide
 open Recognize
 open Find
 open Interaction
+open ActorPatterns
 
 let enablerActor finderRef =
   let mutable i = 1
@@ -25,21 +26,21 @@ let enablerActor finderRef =
 let main argv = 
 
   printfn "Loading rules..."
-  let rc = Seq.head Decide.rules
+  //let rc = Seq.head Decide.rules
 
   let system = Configuration.defaultConfig() |> System.create "my-system"
+  let spawnChild childActor name (mailbox : Actor<'a>) = 
+    spawn mailbox.Context name childActor
   
-  let clickerRef = 
-    clickActor () 
-    |> actorOf2 
-    |> spawn system "clicker-actor"
-  
-  let tableFinderRef = 
-    decideActor clickerRef 
-    |> convertActor recognizeActor
-    |> findActor
-    |> actorOf2
-    |> spawn system "table-finder-actor"
+  let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
+
+  let decider = actorOfStatefulConvert decisionConvert clickerRef
+
+  let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider "decider")
+
+  let tableFinder = actorOfConvertToChildren findActor (spawnChild recognizer)
+
+  let tableFinderRef = tableFinder |> spawn system "table-finder-actor"
 
   let enablerRef = actorOf2 (enablerActor tableFinderRef) |> spawn system "enabler-actor"
   

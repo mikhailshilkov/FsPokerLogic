@@ -76,28 +76,21 @@ module Decide =
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decideActor clickerRef (mailbox : Actor<DecisionMessage>) =
-    let rec imp lastScreen =
-      actor {
-        let! msg = mailbox.Receive()
-
-        let screen = msg.Screen
-        match lastScreen with
-        | Some s when s = screen -> ()
-        | _ ->
-          print screen |> Seq.iter (printfn "%s: %s" "Hand")
-          let decision = decide' screen
-          match decision with
-          | Some d ->
-            printfn "Decision is: %A" d
-            let action = mapAction d screen.Actions
-            printfn "Action is: %A" action
-            clickerRef <! { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.IsVillainSitout }
-          | None ->
-            printfn "Could not make a decision, dumping the screenshot..."
-            Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
-
-        return! imp (Some screen)
-      }
-
-    imp None
+  let decisionConvert msg lastScreen =
+    let screen = msg.Screen
+    match lastScreen with
+    | Some s when s = screen -> (None, lastScreen)
+    | _ ->
+      print screen |> Seq.iter (printfn "%s: %s" "Hand")
+      let decision = decide' screen
+      match decision with
+      | Some d ->
+        printfn "Decision is: %A" d
+        let action = mapAction d screen.Actions
+        printfn "Action is: %A" action
+        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.IsVillainSitout }
+        (Some outMsg, Some screen)
+      | None ->
+        printfn "Could not make a decision, dumping the screenshot..."
+        Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+        (None, Some screen)

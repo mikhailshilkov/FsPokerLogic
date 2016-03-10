@@ -34,7 +34,3 @@ module Click =
     msg.Clicks |> Array.iter (executeAction msg.WindowTitle)
     // Move to random place below
     Clicker.shiftBy (100, 50, 150, 100)
-
-  let clickActor () =
-    let imp _ (msg: ClickerMessage) = click' msg
-    imp

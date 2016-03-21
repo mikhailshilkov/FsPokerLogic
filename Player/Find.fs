@@ -10,6 +10,7 @@ module Find =
   let findWindows' () =
     let screenSize = new Size(650, 490)
     let targetSize = new Size(650, 490)
+    //let targetSize = new Size(433, 328)
     InteractionFacade.GetWindowList(screenSize, targetSize, "Heads Up ")
 
   let findWindowsMock () =
@@ -17,7 +18,7 @@ module Find =
 
   let findActor msg = 
     if msg > 0 then 
-      printfn "Searching tables..."
-      findWindowsMock ()
-        |> Seq.map (fun x -> ("recognizer-actor-" + x.Title, x))
+      //printfn "Finding tables..."
+      findWindows' ()
+        |> Seq.map (fun x -> ("recognizer-actor-" + x.TableName, x))
     else Seq.empty

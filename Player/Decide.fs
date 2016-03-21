@@ -72,11 +72,11 @@ module Decide =
 
     match (action, button) with
     | (Action.AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
-    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b.Region)|]
+    | (Action.RaiseToAmount x, Some b) -> [| Click(599, 407, 18, 9); Amount(x); Click(b.Region)|]
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decisionConvert msg lastScreen =
+  let decisionActor msg lastScreen =
     let screen = msg.Screen
     match lastScreen with
     | Some s when s = screen -> (None, lastScreen)

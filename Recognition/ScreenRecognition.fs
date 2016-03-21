@@ -62,17 +62,23 @@ module ScreenRecognition =
       with
         | e -> None
 
-    let chooseGoodString minLength (s1 : string) (s2 : string) =
-      if s1 <> null && s1.Length >= minLength && not(s1.Contains("?")) then s1
-      else s2
+    let chooseGoodNumber minLength (ss : string list) =
+      ss 
+      |> List.filter (fun (s : string) -> s <> null && s.Length >= minLength && not(s.Contains("?")))
+      |> List.map parseNumber
+      |> List.filter Option.isSome
+      |> List.map Option.get
+      |> List.tryHead
 
     let blinds = recognizeBlinds (getPixel 308 7) 70 16  |> parseBlinds
     let totalPot = 
-      chooseGoodString 2 (recognizeNumber (getPixel 302 133) 35 15) (recognizeNumber (getPixel 302 77) 35 15) |> parseNumber
+      chooseGoodNumber 2 [recognizeNumber (getPixel 302 133) 35 15; recognizeNumber (getPixel 302 77) 35 15; recognizeNumber (getPixel 278 93) 50 15] 
     let heroStack = recognizeNumber (getPixel 100 342) 50 14 |> parseNumber
     let villainStack = recognizeNumber (getPixel 500 342) 50 14 |> parseNumber
-    let heroBet = recognizeNumber (getPixel 82 245) 50 15 |> parseNumber
-    let villainBet = recognizeNumber (getPixel 462 301) 50 15 |> parseNumber
+    let heroBet = 
+      chooseGoodNumber 2 [recognizeNumber (getPixel 82 245) 50 15; recognizeNumber (getPixel 82 231) 50 15] 
+    let villainBet = 
+      chooseGoodNumber 2 [recognizeNumber (getPixel 462 301) 50 15; recognizeNumber (getPixel 517 231) 50 15] 
     
     let actions = 
       [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]

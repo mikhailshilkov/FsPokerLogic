@@ -5,6 +5,7 @@ open System.Windows.Forms
 open WindowsInput
 
 module Clicker =
+  open System.Threading
 
   let currentPosition () = 
     let mp = Control.MousePosition
@@ -48,3 +49,14 @@ module Clicker =
   let shiftBy (minX, minY, maxX, maxY) =
     let (fromX, fromY) = currentPosition()
     moveToRegion(fromX + minX, fromY + minY, fromX + maxX, fromY + maxY)
+
+  let backspace count =
+    for i = 1 to count do 
+      simulator.Keyboard.KeyPress(Native.VirtualKeyCode.BACK)
+      Thread.Sleep(40)
+    Thread.Sleep(60)
+
+  let enterText (t: string) = 
+    t |> Seq.iter (fun c ->
+      simulator.Keyboard.TextEntry(c.ToString())
+      Thread.Sleep(150))

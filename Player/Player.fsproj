@@ -61,6 +61,7 @@
     <Compile Include="Decide.fs" />
     <Compile Include="Recognize.fs" />
     <Compile Include="Find.fs" />
+    <Compile Include="Enable.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />

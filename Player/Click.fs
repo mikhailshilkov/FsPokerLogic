@@ -20,13 +20,17 @@ module Click =
 
   let executeClickAction window (x, y, w, h) =
     let l = InteractionFacade.Focus(window)
-    Clicker.clickRegion (l.X + x, l.Y + y, l.X + x + w, l.Y + y + h)
+    Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
     Thread.Sleep(300)
+
+  let enterAmount i =
+    Clicker.backspace 3
+    Clicker.enterText <| i.ToString()
 
   let executeAction window action =
     match action with
     | Click x -> executeClickAction window x
-    | Amount x -> failwith "not implemented"
+    | Amount x -> enterAmount x
 
   let r = new Random()
   let click' msg =

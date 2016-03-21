@@ -22,7 +22,13 @@ let main argv =
   
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
 
-  let decider = actorOfStatefulConvert decisionActor None clickerRef
+<<<<<<< b497ef380f05338e81406f71ea372c3289d8c598
+  let decider = actorOfStatefulConvert decisionConvert None clickerRef
+
+  let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider "decider")
+=======
+  let decider = actorOfStatefulConvert decisionActor clickerRef
+>>>>>>> Latest changes to player
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 

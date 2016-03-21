@@ -7,7 +7,7 @@ module ActorPatterns =
   let actorOfSink f =
     actorOf2 (fun _ msg -> f msg)
 
-  let actorOfStatefulSink f (mailbox : Actor<'a>) =
+  let actorOfStatefulSink f initialState (mailbox : Actor<'a>) =
 
     let rec imp lastState =
       actor {
@@ -16,12 +16,13 @@ module ActorPatterns =
         return! imp newState
       }
 
-    imp None
+    imp initialState
+
 
   let actorOfConvert f outputRef =
     actorOf2 (fun _ msg -> outputRef <! f msg)
 
-  let actorOfStatefulConvert f outputRef (mailbox : Actor<'a>) =
+  let actorOfStatefulConvert f initialState outputRef (mailbox : Actor<'a>) =
 
     let rec imp lastState =
       actor {
@@ -31,7 +32,7 @@ module ActorPatterns =
         return! imp newState
       }
 
-    imp None  
+    imp initialState  
 
   let actorOfConvertToChild f spawnChild (mailbox : Actor<'a>) =
 

@@ -59,8 +59,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Hands.fs" />
-    <Compile Include="HandsTests.fs" />
     <Compile Include="Ranges.fs" />
     <Compile Include="RangesTests.fs" />
     <Compile Include="Preflop.fs" />
@@ -106,6 +104,13 @@
       <HintPath>..\packages\xunit.extensibility.execution.2.1.0\lib\net45\xunit.execution.desktop.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Hands\Cards.fsproj">
+      <Name>Cards</Name>
+      <Project>{a1b0af49-be85-4678-8bb2-3bcb46392a9f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -105,6 +105,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Hands\Cards.fsproj">
+      <Name>Cards</Name>
+      <Project>{a1b0af49-be85-4678-8bb2-3bcb46392a9f}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Interaction\Interaction.csproj">
       <Name>Interaction</Name>
       <Project>{e9f14821-12cc-409d-97c3-ca8062ebb085}</Project>

@@ -10,7 +10,7 @@ module Decision =
     | AllIn
 
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int
-  type OnDonk = FVStackOff | CallRaisePet
+  type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int
 
   type Options = {
     CbetFactor: int option
@@ -34,12 +34,13 @@ module Decision =
   let reraise villainBet = villainBet * 9 / 4 |> roundTo5
 
   let callEQ heroBet villainBet pot threshold = 
-    if (villainBet - heroBet) * 100 / (pot + heroBet) < threshold
+    let betToMake = villainBet - heroBet
+    if betToMake * 100 / (pot + betToMake) < threshold
     then Action.Call
     else Action.Fold
 
   let stackOffDonk s =
-    if s.VillainBet <= s.BB * 3 / 2 then 
+    if s.VillainBet = s.BB then 
       4 * s.VillainBet |> Bet
     else
       let potPre = s.Pot - s.HeroBet - s.VillainBet
@@ -48,20 +49,25 @@ module Decision =
       max raiseSize (9 * s.VillainBet / 4) |> roundTo5 |> Bet
 
   let raisePetDonk s =
-    if s.VillainBet <= s.BB * 3 / 2 then 
+    if s.VillainBet = s.BB then 
       4 * s.VillainBet |> Bet
-    else
-      3 * s.VillainBet |> roundTo5 |> Bet
+    else 
+      let potPre = s.Pot - s.HeroBet - s.VillainBet
+      if s.VillainBet < potPre / 2 then
+        3 * s.VillainBet |> roundTo5 |> Bet
+      else
+        Action.Call
 
   let decide snapshot options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk with
-      | FVStackOff -> stackOffDonk snapshot
+      | ForValueStackOff -> stackOffDonk snapshot
       | CallRaisePet -> raisePetDonk snapshot
+      | CallEQ eq -> callEQ 0 snapshot.VillainBet snapshot.Pot eq
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with
       | StackOff -> reraise snapshot.VillainBet |> Bet
-      | CallEQ eq -> callEQ snapshot.HeroBet snapshot.VillainBet snapshot.Pot eq
+      | OnCheckRaise.CallEQ eq -> callEQ snapshot.HeroBet snapshot.VillainBet snapshot.Pot eq
       | Call -> Action.Call
       | AllIn -> Action.AllIn
     else

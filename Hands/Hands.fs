@@ -119,3 +119,42 @@ let parseFullHand (s : string) =
   { Card1 = card1
     Card2 = card2
     SameSuit = sameSuit }
+
+type Suit = | Hearts | Diamonds | Clubs | Spades
+
+let parseSuit s = 
+  match s with
+  | 's' -> Spades
+  | 'c' -> Clubs
+  | 'd' -> Diamonds
+  | 'h' -> Hearts
+  | f -> failwith ("Unknown suit" + f.ToString())
+
+let suitToChar s = 
+  match s with
+  | Spades -> 's'
+  | Clubs -> 'c'
+  | Diamonds -> 'd'
+  | Hearts -> 'h'
+
+type SuitedCard = { Face: Face; Suit: Suit }
+
+type Board = SuitedCard[]
+
+let chunkBySize n s =
+    seq {
+        let r = ResizeArray<_>()
+        for x in s do
+            r.Add(x)
+            if r.Count = n then
+                yield r.ToArray()
+                r.Clear()
+        if r.Count <> 0 then
+            yield r.ToArray()
+    }
+
+let parseBoard (s: string) : Board =
+  s.ToCharArray()
+  |> chunkBySize 2 // Seq.chunkBySize only works in F# 4
+  |> Seq.map (fun x -> { Face = parseFace x.[0]; Suit = parseSuit x.[1] })
+  |> Array.ofSeq

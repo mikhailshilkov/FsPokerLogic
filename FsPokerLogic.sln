@@ -23,6 +23,10 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PostFlop", "PostFlop\PostFl
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Cards", "Hands\Cards.fsproj", "{A1B0AF49-BE85-4678-8BB2-3BCB46392A9F}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PostFlopConsole", "PostFlopConsole\PostFlopConsole.fsproj", "{47914F73-E584-4729-914C-9E19C65C0D2D}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Excel", "Excel\Excel.fsproj", "{9FA0DB48-55AA-47AD-B1F5-933BF8C59F41}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +73,14 @@ Global
 		{A1B0AF49-BE85-4678-8BB2-3BCB46392A9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B0AF49-BE85-4678-8BB2-3BCB46392A9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B0AF49-BE85-4678-8BB2-3BCB46392A9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47914F73-E584-4729-914C-9E19C65C0D2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47914F73-E584-4729-914C-9E19C65C0D2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47914F73-E584-4729-914C-9E19C65C0D2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47914F73-E584-4729-914C-9E19C65C0D2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9FA0DB48-55AA-47AD-B1F5-933BF8C59F41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9FA0DB48-55AA-47AD-B1F5-933BF8C59F41}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9FA0DB48-55AA-47AD-B1F5-933BF8C59F41}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9FA0DB48-55AA-47AD-B1F5-933BF8C59F41}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

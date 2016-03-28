@@ -67,12 +67,14 @@ module Decision =
       | CallEQ eq -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq
+      | Undefined -> failwith "Donk behavior is not defined"
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with
       | OnCheckRaise.StackOff -> reraise snapshot
       | OnCheckRaise.CallEQ eq -> callEQ snapshot eq
       | OnCheckRaise.Call -> callraise snapshot
       | OnCheckRaise.AllIn -> Action.AllIn
+      | OnCheckRaise.Undefined -> failwith "Check/raise behavior is not defined"
     else
       match options.CbetFactor with
       | Some f -> cbet snapshot.Pot f |> Bet

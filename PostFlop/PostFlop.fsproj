@@ -9,10 +9,11 @@
     <OutputType>Library</OutputType>
     <RootNamespace>PostFlop</RootNamespace>
     <AssemblyName>PostFlop</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <TargetFSharpCoreVersion>4.4.0.0</TargetFSharpCoreVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Name>PostFlop</Name>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -94,6 +95,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Excel\Excel.fsproj">
+      <Name>Excel</Name>
+      <Project>{9fa0db48-55aa-47ad-b1f5-933bf8c59f41}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Hands\Cards.fsproj">
       <Name>Cards</Name>
       <Project>{a1b0af49-be85-4678-8bb2-3bcb46392a9f}</Project>

@@ -15,11 +15,11 @@ module Import =
   let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) = 
     Console.Write "."
     let toArray (arr:_[,]) = 
-      Array.init arr.Length (fun i -> arr.[i+1, 1])
+      Array.init arr.Length (fun i -> arr.[1, i+1])
     let result = sheet.Cells.Range(name1, name2).Value2 :?> Object[,]
     result
       |> toArray 
-      |> Seq.cast<string> 
+      |> Seq.map (fun x -> x |> string)
       |> Seq.map (fun x -> if x = null then "" else x)
       |> Array.ofSeq
 
@@ -39,14 +39,14 @@ module Import =
     | "call", _ -> OnCheckRaise.Call
     | "all in", _ -> OnCheckRaise.AllIn
     | "no", Int i -> OnCheckRaise.CallEQ i
-    | _ -> failwith ("Unknown value in G column " + g)
+    | _ -> OnCheckRaise.Undefined
 
   let parseDonk (i: string) (j: string) =
     match i.ToLowerInvariant(), j with
     | "fv & stack off", _ -> OnDonk.ForValueStackOff
     | "call/raise + pet", _ -> OnDonk.CallRaisePet
     | "no raise", Int i -> OnDonk.CallEQ i
-    | _ -> failwith ("Unknown value in I column " + i)
+    | _ -> OnDonk.Undefined
 
   let parseDonkFD (k: string) =
     match k.ToLowerInvariant() with
@@ -64,9 +64,10 @@ module Import =
     >> Seq.sum 
     >> (+) 6
 
-  let importOptions (xlWorkBook : Workbook) hand board =
-    let xlWorkSheet = xlWorkBook.Worksheets.[hand] :?> Worksheet
-    let index = rowIndex board |> string
+  let importOptions (xlWorkBook : Workbook) (hand: Hand) (board: Board) =
+    let worksheetName = [hand.Card1; hand.Card2] |> List.map faceToChar |> String.Concat
+    let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
+    let index = board |> Array.map (fun x -> x.Face) |> rowIndex |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("K" + index)
     { CbetFactor = parseInt cellValues.[0]
       CheckRaise = parseCheckRaise cellValues.[1] cellValues.[2]

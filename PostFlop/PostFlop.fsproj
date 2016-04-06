@@ -57,6 +57,8 @@
     <Compile Include="DecisionTests.fs" />
     <Compile Include="Import.fs" />
     <Compile Include="ImportTests.fs" />
+    <Compile Include="Texture.fs" />
+    <Compile Include="TextureTests.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

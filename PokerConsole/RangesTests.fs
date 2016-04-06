@@ -7,5 +7,5 @@ open Ranges
 
 [<Property>]
 let ``isHandInRange returns false for pair range and non-pair hand`` (r : PairRange) h =
-  not (h.Card1 = h.Card2) ==>
+  not (h.Face1 = h.Face2) ==>
   not (isHandInRange (Pair r) h)

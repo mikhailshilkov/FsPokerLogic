@@ -4,6 +4,7 @@ open Hands
 open PostFlop.Options
 open PostFlop.Decision
 open PostFlop.Import
+open PostFlop.Texture
 
 let (|Int|_|) str =
    match System.Int32.TryParse(str) with
@@ -41,6 +42,7 @@ let main argv =
   Console.Write "\nPlease enter your hand (e.g. AsAc, 8d7h, Kh2h): "
   let handString = Console.ReadLine()
   let hand = parseFullHand handString
+  let suitedHand = parseSuitedHand handString
 
   printf "\nPot preflop is %A. Please enter flop (e.g. 9s8c7d): " (bb*2)
   let flopString = Console.ReadLine()
@@ -50,7 +52,7 @@ let main argv =
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
   let s = { Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2; HeroStack = heroStack - bb*2; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let o = importOptions (fst xl) hand flop
+  let o = importOptions (fst xl) hand flop |> toFlopOptions (isFlushDraw suitedHand flop) (canBeFlushDraw flop)
 
   try
     let d = decide s o

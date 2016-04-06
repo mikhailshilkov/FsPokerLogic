@@ -16,8 +16,8 @@ type Face =
   | Two
 
 type Hand = 
-  { Card1 : Face
-    Card2 : Face
+  { Face1 : Face
+    Face2 : Face
     SameSuit : bool }
 
 let faceValue face = 
@@ -37,10 +37,10 @@ let faceValue face =
   | Two -> 2
 
 let normalize hand =
-  let v1 = faceValue hand.Card1
-  let v2 = faceValue hand.Card2
+  let v1 = faceValue hand.Face1
+  let v2 = faceValue hand.Face2
   if v1 >= v2 then hand
-  else { Card1 = hand.Card2; Card2 = hand.Card1; SameSuit = hand.SameSuit }
+  else { Face1 = hand.Face2; Face2 = hand.Face1; SameSuit = hand.SameSuit }
 
 let oneBelow face = 
   match face with
@@ -104,8 +104,8 @@ let parseHand (s : string) =
     if card1 = card2 then false
     else s.[2] = 's'
 
-  { Card1 = card1
-    Card2 = card2
+  { Face1 = card1
+    Face2 = card2
     SameSuit = sameSuit }
 
 let parseFullHand (s : string) =
@@ -116,8 +116,8 @@ let parseFullHand (s : string) =
     if card1 = card2 then false
     else s.[1] = s.[3]
 
-  { Card1 = card1
-    Card2 = card2
+  { Face1 = card1
+    Face2 = card2
     SameSuit = sameSuit }
 
 type Suit = | Hearts | Diamonds | Clubs | Spades
@@ -139,6 +139,13 @@ let suitToChar s =
 
 type SuitedCard = { Face: Face; Suit: Suit }
 
+type SuitedHand = { Card1: SuitedCard; Card2: SuitedCard }
+
+let parseSuitedHand (s : string) =
+  { Card1 = { Face = parseFace s.[0]; Suit = parseSuit s.[1] }
+    Card2 = { Face = parseFace s.[2]; Suit = parseSuit s.[3] } 
+  }
+
 type Board = SuitedCard[]
 
 let chunkBySize n s =
@@ -158,3 +165,10 @@ let parseBoard (s: string) : Board =
   |> chunkBySize 2 // Seq.chunkBySize only works in F# 4
   |> Seq.map (fun x -> { Face = parseFace x.[0]; Suit = parseSuit x.[1] })
   |> Array.ofSeq
+
+let isFlushDraw hand flop =
+  hand.Card1.Suit = hand.Card2.Suit 
+  && Array.filter (fun x -> x.Suit = hand.Card1.Suit) flop |> Array.length = 2
+
+let canBeFlushDraw flop =
+  Seq.countBy (fun x -> x.Suit) flop |> Seq.length = 2

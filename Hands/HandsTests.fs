@@ -1,5 +1,6 @@
 ﻿module HandsTests
 
+open Xunit
 open FsCheck
 open FsCheck.Xunit
 open Hands
@@ -26,14 +27,14 @@ let ``parseHand parses pairs correctly`` f =
   let c = faceToChar f
   let s = c.ToString() + c.ToString()
   let hand = parseHand s
-  hand.Card1 = hand.Card2 && not hand.SameSuit
+  hand.Face1 = hand.Face2 && not hand.SameSuit
 
 [<Property>]
 let ``parseHand parses non-pairs correctly`` f1 f2 same =
   not (f1 = f2) ==>
     let s = (faceToChar f1).ToString() + (faceToChar f2).ToString() + (if same then "s" else "o")
     let hand = parseHand s
-    hand.Card1 = f1 && hand.Card2 = f2 && hand.SameSuit = same
+    hand.Face1 = f1 && hand.Face2 = f2 && hand.SameSuit = same
 
 [<Property>]
 let ``parseBoard parses boards correctly`` f1 s1 f2 s2 f3 s3 =
@@ -46,3 +47,27 @@ let ``parseBoard parses boards correctly`` f1 s1 f2 s2 f3 s3 =
   && board.[0].Face = f1 && board.[0].Suit = s1
   && board.[1].Face = f2 && board.[1].Suit = s2
   && board.[2].Face = f3 && board.[2].Suit = s3
+
+[<Theory>]
+[<InlineData("AcKc", "QcJcTs", true)>]
+[<InlineData("AcKc", "QcTs8c", true)>]
+[<InlineData("AcKc", "Ts8c2c", true)>]
+[<InlineData("AcKc", "Tc8c2c", false)>]
+[<InlineData("AcKc", "Tc8s2s", false)>]
+[<InlineData("AcKs", "Ts8s2s", false)>]
+[<InlineData("AcKs", "Ts8d2h", false)>]
+let ``isFlashDraw returns true for flush draw`` handS flopS expected =
+  let hand = parseSuitedHand handS
+  let board = parseBoard flopS
+  let actual = isFlushDraw hand board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("QcJcTs", true)>]
+[<InlineData("QsJcTs", true)>]
+[<InlineData("QsJsTs", false)>]
+[<InlineData("QcJsTd", false)>]
+let ``canBeFlashDraw returns true for two cards of same suit`` flopS expected =
+  let board = parseBoard flopS
+  let actual = canBeFlushDraw board
+  Assert.Equal(expected, actual)

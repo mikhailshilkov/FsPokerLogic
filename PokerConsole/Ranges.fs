@@ -44,9 +44,9 @@ let isHandInRange range hand =
     | _, Three -> false
     | Two, Two -> true
   match (range) with
-  | Pair p -> hand.Card1 = hand.Card2 && biggerThan p.High hand.Card1 && biggerThan hand.Card1 p.Low
+  | Pair p -> hand.Face1 = hand.Face2 && biggerThan p.High hand.Face1 && biggerThan hand.Face1 p.Low
   | NonPair r -> 
-    r.High = hand.Card1 && biggerThan r.LowMax hand.Card2 && biggerThan hand.Card2 r.LowMin 
+    r.High = hand.Face1 && biggerThan r.LowMax hand.Face2 && biggerThan hand.Face2 r.LowMin 
     && r.SameSuit = hand.SameSuit
 
 let isHandInRanges ranges hand = Seq.exists (fun r -> isHandInRange r hand) ranges
@@ -56,39 +56,39 @@ let parseRange (s : string) =
     let firstString = if s.Length >= 3 then  s.Substring(0, 3) else s
     let high = parseHand firstString
     if firstString.Length = 2 then
-      Pair({ High = high.Card1
-             Low = high.Card1 })
+      Pair({ High = high.Face1
+             Low = high.Face1 })
     else if s.[2] = '+' then 
       Pair({ High = Ace
-             Low = high.Card1 })
+             Low = high.Face1 })
     else if s.Length = 3 then 
       let same = s.[2] = 's'
-      NonPair({ High = high.Card1
-                LowMax = high.Card2
-                LowMin = high.Card2
+      NonPair({ High = high.Face1
+                LowMax = high.Face2
+                LowMin = high.Face2
                 SameSuit = same })
     else 
       let allUp = s.[3] = '+'
-      if high.Card1 = high.Card2 then 
+      if high.Face1 = high.Face2 then 
         if allUp then 
           Pair({ High = Ace
-                 Low = high.Card1 })
+                 Low = high.Face1 })
         else 
           let low = parseHand s.[3..4]
-          Pair({ High = high.Card1
-                 Low = low.Card1 })
+          Pair({ High = high.Face1
+                 Low = low.Face1 })
       else 
         let same = s.[2] = 's'
         if allUp then 
-          NonPair({ High = high.Card1
-                    LowMax = (oneBelow high.Card1)
-                    LowMin = high.Card2
+          NonPair({ High = high.Face1
+                    LowMax = (oneBelow high.Face1)
+                    LowMin = high.Face2
                     SameSuit = same })
         else 
           let low = parseHand s.[4..6]
-          NonPair({ High = high.Card1
-                    LowMax = high.Card2
-                    LowMin = low.Card2
+          NonPair({ High = high.Face1
+                    LowMax = high.Face2
+                    LowMin = low.Face2
                     SameSuit = same  })
   with e ->
     printf "Failed to parse the range [%s]" s

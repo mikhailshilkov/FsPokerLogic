@@ -6,7 +6,7 @@ module DecisionTests =
   open Decision
   open Xunit
 
-  let defaultOptions = { CbetFactor = None; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff; DonkFlashDraw = None  }
+  let defaultOptions = { CbetFactor = None; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff  }
   let defaultSnapshot = { Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 
   [<Theory>]
@@ -147,3 +147,10 @@ module DecisionTests =
     let snapshot = { defaultSnapshot with Pot = 110; VillainBet = 30 }
     let actual = Decision.decide snapshot options
     Assert.Equal(actual, Action.Fold)
+
+  [<Fact>]
+  let ``Special condition 5: check raised with FD`` () =
+    let options = { defaultOptions with CheckRaise = StackOff }
+    let snapshot = { defaultSnapshot with Pot = 237; VillainBet = 117; HeroBet = 40; VillainStack = 293 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Action.AllIn, actual)

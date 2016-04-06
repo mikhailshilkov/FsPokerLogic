@@ -9,5 +9,4 @@ module Options =
     CbetFactor: int option
     CheckRaise: OnCheckRaise
     Donk: OnDonk
-    DonkFlashDraw: OnDonk option
   }

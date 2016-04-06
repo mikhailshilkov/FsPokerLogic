@@ -31,7 +31,7 @@ module ImportTests =
   let ``importOptions returns correct options for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
     let xl = openExcel fileName
-    let actual = importOptions (fst xl) { Card1 = Ace; Card2 = Two; SameSuit = false } [|{Face = Three; Suit = Clubs};{Face = Four; Suit = Spades};{Face = Five; Suit = Diamonds}|]
+    let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } [|{Face = Three; Suit = Clubs};{Face = Four; Suit = Spades};{Face = Five; Suit = Diamonds}|]
     let expected = { CbetFactor = Some 50; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
     Assert.Equal(expected, actual)
     closeExcel xl

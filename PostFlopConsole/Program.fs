@@ -23,7 +23,7 @@ let rec enterNumber text min max =
 [<EntryPoint>]
 let main argv =   
 
-  Console.Write "Reading excel file..."
+  Console.Write "Opening excel file..."
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
   let xl = openExcel fileName
   Console.Write "\n"
@@ -44,15 +44,21 @@ let main argv =
   let hand = parseFullHand handString
   let suitedHand = parseSuitedHand handString
 
-  printf "\nPot preflop is %A. Please enter flop (e.g. 9s8c7d): " (bb*2)
+  printf "\nPot preflop is %A. Please enter flop/turn (e.g. 9s8c7d): " (bb*4)
   let flopString = Console.ReadLine()
   let flop = parseBoard flopString
 
-  let villainBet = enterNumber "Please enter the villain bet (0 for check)" 0 (villainStack - 40)
+  let villainBet = if flop.Length = 3 then enterNumber "Please enter the villain bet (0 for check)" 0 (villainStack - 40) else 0
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
   let s = { Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2; HeroStack = heroStack - bb*2; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let o = importOptions (fst xl) hand flop |> toFlopOptions (isFlushDraw suitedHand flop) (canBeFlushDraw flop)
+  let eo = importOptions (fst xl) hand flop 
+  let o = 
+    if flop.Length = 4 then 
+      let turnFace = flop.[3].Face
+      toTurnOptions turnFace (isFlushDraw suitedHand flop) eo
+    else
+      toFlopOptions (isFlushDraw suitedHand flop) (canBeFlushDraw flop) eo
 
   try
     let d = decide s o

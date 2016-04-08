@@ -27,11 +27,14 @@ module ImportTests =
     let actual = rowIndex hand
     Assert.Equal(expected, actual)
 
-  [<Fact>]
-  let ``importOptions returns correct options for a sample cell`` () =
+  [<Theory>]
+  [<InlineData("3c4s5d")>]
+  [<InlineData("3c4s5dQd")>]
+  let ``importOptions returns correct options for a sample cell`` boardString =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
     let xl = openExcel fileName
-    let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } [|{Face = Three; Suit = Clubs};{Face = Four; Suit = Spades};{Face = Five; Suit = Diamonds}|]
-    let expected = { CbetFactor = Some 50; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
+    let board = parseBoard boardString
+    let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } board
+    let expected = { CbetFactor = Some 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff; TurnFVCbetCards = "8,Q"; TurnFVCbetFactor = Some 62.5m; TurnFBCbetCards = "T,J,K,A"; TurnFBCbetFactor = Some 62.5m; TurnFDCbetCards = "8,T,J,Q"; TurnFDCbetFactor = Some 62.5m }
     Assert.Equal(expected, actual)
     closeExcel xl

@@ -6,7 +6,7 @@ module Options =
   type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int | Undefined
 
   type Options = {
-    CbetFactor: int option
+    CbetFactor: decimal option
     CheckRaise: OnCheckRaise
     Donk: OnDonk
   }

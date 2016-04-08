@@ -7,12 +7,19 @@ open Options
 open Hands
 
 module Import =
+  open System.Globalization
 
   type ExcelOptions = {
-    CbetFactor: int option
+    CbetFactor: decimal option
     CheckRaise: OnCheckRaise
     Donk: OnDonk
     DonkFlashDraw: OnDonk option
+    TurnFVCbetCards: string
+    TurnFVCbetFactor: decimal option
+    TurnFBCbetCards: string
+    TurnFBCbetFactor: decimal option
+    TurnFDCbetCards: string
+    TurnFDCbetFactor: decimal option
   }
 
   let getCellValue (sheet : Worksheet) (name : string) = 
@@ -38,6 +45,16 @@ module Import =
   let parseInt (s: string) = 
     match s with
     | Int i -> Some i
+    | _ -> None
+
+  let (|Decimal|_|) (str: string) =
+   match System.Decimal.TryParse(str.Replace(",", "."), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) with
+   | (true,f) -> Some(f)
+   | _ -> None
+
+  let parseDecimal (s: string) = 
+    match s with
+    | Decimal f -> Some f
     | _ -> None
 
   let parseCheckRaise (g: string) (h: string) =
@@ -74,10 +91,15 @@ module Import =
   let importOptions (xlWorkBook : Workbook) (hand: Hand) (board: Board) =
     let worksheetName = [hand.Face1; hand.Face2] |> List.map faceToChar |> String.Concat
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
-    let index = board |> Array.map (fun x -> x.Face) |> rowIndex |> string
-    let cellValues = getCellValues xlWorkSheet ("F" + index) ("K" + index)
-    { CbetFactor = parseInt cellValues.[0]
+    let index = board |> Seq.take 3 |> Seq.map (fun x -> x.Face) |> rowIndex |> string
+    let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
+    { CbetFactor = parseDecimal cellValues.[0]
       CheckRaise = parseCheckRaise cellValues.[1] cellValues.[2]
       Donk = parseDonk cellValues.[3] cellValues.[4]
-      DonkFlashDraw = parseDonkFD cellValues.[5] }
-  
+      DonkFlashDraw = parseDonkFD cellValues.[5]
+      TurnFVCbetCards = cellValues.[6].Replace(" ", "")
+      TurnFVCbetFactor = parseDecimal cellValues.[7]
+      TurnFBCbetCards = cellValues.[9].Replace(" ", "")
+      TurnFBCbetFactor = parseDecimal cellValues.[10]
+      TurnFDCbetCards = cellValues.[11].Replace(" ", "")
+      TurnFDCbetFactor = parseDecimal cellValues.[12] }

@@ -166,9 +166,9 @@ let parseBoard (s: string) : Board =
   |> Seq.map (fun x -> { Face = parseFace x.[0]; Suit = parseSuit x.[1] })
   |> Array.ofSeq
 
-let isFlushDraw hand flop =
+let isFlushDraw hand board =
   hand.Card1.Suit = hand.Card2.Suit 
-  && Array.filter (fun x -> x.Suit = hand.Card1.Suit) flop |> Array.length = 2
+  && Array.filter (fun x -> x.Suit = hand.Card1.Suit) board |> Array.length = 2
 
 let canBeFlushDraw flop =
   Seq.countBy (fun x -> x.Suit) flop |> Seq.length = 2

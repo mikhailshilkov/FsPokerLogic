@@ -26,7 +26,6 @@ module DecisionTests =
 
   [<Theory>]
   [<InlineData(100, 225)>]
-//  [<InlineData(110, 245)>]
   [<InlineData(90, 200)>]
   let ``Condition 3: Stack off on check-raise`` raise reraise =
     let options = { defaultOptions with CheckRaise = StackOff }

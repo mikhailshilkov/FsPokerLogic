@@ -28,7 +28,7 @@ module Decision =
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
   let potOdds s = (callSize s) * 100 / (s.Pot + (callSize s))
 
-  let cbet pot cbetf = pot * cbetf / 100
+  let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
 
   let reraise s = 
     let size = s.VillainBet * 9 / 4 |> roundTo5 

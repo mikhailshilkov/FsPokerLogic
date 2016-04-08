@@ -32,3 +32,10 @@ let ``toFlopOptions when FD Cbets 50 instead of None and Stacks Off`` () =
   let actual = toFlopOptions true true eo
   let expected = { Options.CbetFactor = Some 50; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff }
   Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``toFlopOptions when FD but Donk FD is not defined`` () =
+  let eo = { CbetFactor = None; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = None }
+  let actual = toFlopOptions true true eo
+  let expected = { Options.CbetFactor = Some 50; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.CallEQ 17 }
+  Assert.Equal(expected, actual)

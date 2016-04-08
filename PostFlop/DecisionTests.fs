@@ -7,6 +7,7 @@ module DecisionTests =
   open Xunit
 
   let defaultOptions = { CbetFactor = None; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff  }
+  let defaultTurnOptions = { TurnOptions.CbetFactor = None; CheckRaise = OnCheckRaise.Undefined }
   let defaultSnapshot = { Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 
   [<Theory>]
@@ -26,7 +27,6 @@ module DecisionTests =
 
   [<Theory>]
   [<InlineData(100, 225)>]
-//  [<InlineData(110, 245)>]
   [<InlineData(90, 200)>]
   let ``Condition 3: Stack off on check-raise`` raise reraise =
     let options = { defaultOptions with CheckRaise = StackOff }
@@ -154,3 +154,26 @@ module DecisionTests =
     let snapshot = { defaultSnapshot with Pot = 237; VillainBet = 117; HeroBet = 40; VillainStack = 293 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Action.AllIn, actual)
+
+  [<Fact>]
+  let ``decideTurn CBet is None -> Check`` () =
+    let options = { defaultTurnOptions with CbetFactor = None }
+    let snapshot = defaultSnapshot
+    let actual = Decision.decideTurn snapshot options
+    Assert.Equal(Action.Check, actual)
+
+  [<Fact>]
+  let ``decideTurn CBet is Some -> CBet`` () =
+    let options = { defaultTurnOptions with CbetFactor = Some 62 }
+    let snapshot = defaultSnapshot
+    let actual = Decision.decideTurn snapshot options
+    Assert.Equal(Action.Bet 49, actual)
+
+  [<Theory>]
+  [<InlineData(100, 225)>]
+  [<InlineData(90, 200)>]
+  let ``decideTurn: Stack off on check-raise`` raise reraise =
+    let options = { defaultTurnOptions with CheckRaise = OnCheckRaise.StackOff }
+    let snapshot = { defaultSnapshot with VillainBet = raise; HeroBet = 40 }
+    let actual = Decision.decideTurn snapshot options
+    Assert.Equal(actual, Bet(reraise))

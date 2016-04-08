@@ -23,7 +23,7 @@ let rec enterNumber text min max =
 [<EntryPoint>]
 let main argv =   
 
-  Console.Write "Reading excel file..."
+  Console.Write "Opening excel file..."
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
   let xl = openExcel fileName
   Console.Write "\n"

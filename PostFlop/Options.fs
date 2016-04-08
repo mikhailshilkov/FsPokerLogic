@@ -10,3 +10,8 @@ module Options =
     CheckRaise: OnCheckRaise
     Donk: OnDonk
   }
+
+  type TurnOptions = {
+    CbetFactor: int option
+    CheckRaise: OnCheckRaise
+  }

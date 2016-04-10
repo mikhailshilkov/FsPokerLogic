@@ -2,11 +2,12 @@
 
 module Options =
 
-  type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Undefined
+  type CBet = ForValue of decimal | ForBluff of decimal | NoCBet
+  type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
   type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int | Undefined
 
   type Options = {
-    CbetFactor: decimal option
+    CbetFactor: CBet
     CheckRaise: OnCheckRaise
     Donk: OnDonk
   }

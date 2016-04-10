@@ -35,6 +35,6 @@ module ImportTests =
     let xl = openExcel fileName
     let board = parseBoard boardString
     let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } board
-    let expected = { CbetFactor = Some 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff; TurnFVCbetCards = "8,Q"; TurnFVCbetFactor = Some 62.5m; TurnFBCbetCards = "T,J,K,A"; TurnFBCbetFactor = Some 62.5m; TurnFDCbetCards = "8,T,J,Q"; TurnFDCbetFactor = Some 62.5m }
+    let expected = { CbetFactor = ForValue 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff; TurnFVCbetCards = "8,Q"; TurnFVCbetFactor = ForValue 62.5m; TurnCheckRaise = OnCheckRaise.StackOff; TurnFBCbetCards = "T,J,K,A"; TurnFBCbetFactor = ForBluff 62.5m; TurnFDCbetCards = "8,T,J,Q"; TurnFDCbetFactor = ForValue 62.5m }
     Assert.Equal(expected, actual)
     closeExcel xl

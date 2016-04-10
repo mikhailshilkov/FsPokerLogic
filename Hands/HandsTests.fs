@@ -49,6 +49,19 @@ let ``parseBoard parses boards correctly`` f1 s1 f2 s2 f3 s3 =
   && board.[2].Face = f3 && board.[2].Suit = s3
 
 [<Theory>]
+[<InlineData("AcKc", "QcJcTc", true)>]
+[<InlineData("AcKc", "QcTs8c2c", true)>]
+[<InlineData("AcKc", "Ts8c2cJc", true)>]
+[<InlineData("AcKc", "Tc8c2s", false)>]
+[<InlineData("AcKc", "Tc8s2s", false)>]
+[<InlineData("AcKs", "Ts8s2s", false)>]
+let ``isFlush returns true for flush`` handS flopS expected =
+  let hand = parseSuitedHand handS
+  let board = parseBoard flopS
+  let actual = isFlush hand board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
 [<InlineData("AcKc", "QcJcTs", true)>]
 [<InlineData("AcKc", "QcTs8c", true)>]
 [<InlineData("AcKc", "Ts8c2c", true)>]
@@ -56,7 +69,7 @@ let ``parseBoard parses boards correctly`` f1 s1 f2 s2 f3 s3 =
 [<InlineData("AcKc", "Tc8s2s", false)>]
 [<InlineData("AcKs", "Ts8s2s", false)>]
 [<InlineData("AcKs", "Ts8d2h", false)>]
-let ``isFlashDraw returns true for flush draw`` handS flopS expected =
+let ``isFlushDraw returns true for flush draw`` handS flopS expected =
   let hand = parseSuitedHand handS
   let board = parseBoard flopS
   let actual = isFlushDraw hand board
@@ -67,7 +80,7 @@ let ``isFlashDraw returns true for flush draw`` handS flopS expected =
 [<InlineData("QsJcTs", true)>]
 [<InlineData("QsJsTs", false)>]
 [<InlineData("QcJsTd", false)>]
-let ``canBeFlashDraw returns true for two cards of same suit`` flopS expected =
+let ``canBeFlushDraw returns true for two cards of same suit`` flopS expected =
   let board = parseBoard flopS
   let actual = canBeFlushDraw board
   Assert.Equal(expected, actual)

@@ -51,12 +51,13 @@ let main argv =
   let villainBet = if flop.Length = 3 then enterNumber "Please enter the villain bet (0 for check)" 0 (villainStack - 40) else 0
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
-  let s = { Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2; HeroStack = heroStack - bb*2; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
+  let street = if flop.Length = 4 then Turn else Flop
+  let s = { Street = street; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2; HeroStack = heroStack - bb*2; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
   let eo = importOptions (fst xl) hand flop 
   let o = 
-    if flop.Length = 4 then 
+    if street = Turn then 
       let turnFace = flop.[3].Face
-      toTurnOptions turnFace (isFlushDraw suitedHand flop) eo
+      toTurnOptions turnFace (isFlush suitedHand flop) (isFlushDraw suitedHand flop) eo
     else
       toFlopOptions (isFlushDraw suitedHand flop) (canBeFlushDraw flop) eo
 

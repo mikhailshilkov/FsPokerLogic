@@ -10,16 +10,17 @@ module Import =
   open System.Globalization
 
   type ExcelOptions = {
-    CbetFactor: decimal option
+    CbetFactor: CBet
     CheckRaise: OnCheckRaise
     Donk: OnDonk
     DonkFlashDraw: OnDonk option
     TurnFVCbetCards: string
-    TurnFVCbetFactor: decimal option
+    TurnFVCbetFactor: CBet
+    TurnCheckRaise: OnCheckRaise
     TurnFBCbetCards: string
-    TurnFBCbetFactor: decimal option
+    TurnFBCbetFactor: CBet
     TurnFDCbetCards: string
-    TurnFDCbetFactor: decimal option
+    TurnFDCbetFactor: CBet
   }
 
   let getCellValue (sheet : Worksheet) (name : string) = 
@@ -57,6 +58,16 @@ module Import =
     | Decimal f -> Some f
     | _ -> None
 
+  let parseCBetFV (s: string) =
+    match parseDecimal s with
+    | Some n -> ForValue n
+    | None -> NoCBet
+
+  let parseCBetFB (s: string) =
+    match parseDecimal s with
+    | Some n -> ForBluff n
+    | None -> NoCBet
+
   let parseCheckRaise (g: string) (h: string) =
     match g.ToLowerInvariant(), h with
     | "stack off", _ -> OnCheckRaise.StackOff
@@ -93,13 +104,14 @@ module Import =
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
     let index = board |> Seq.take 3 |> Seq.map (fun x -> x.Face) |> rowIndex |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
-    { CbetFactor = parseDecimal cellValues.[0]
+    { CbetFactor = parseCBetFV cellValues.[0]
       CheckRaise = parseCheckRaise cellValues.[1] cellValues.[2]
       Donk = parseDonk cellValues.[3] cellValues.[4]
       DonkFlashDraw = parseDonkFD cellValues.[5]
       TurnFVCbetCards = cellValues.[6].Replace(" ", "")
-      TurnFVCbetFactor = parseDecimal cellValues.[7]
+      TurnFVCbetFactor = parseCBetFV cellValues.[7]
+      TurnCheckRaise = parseCheckRaise cellValues.[8] "100"
       TurnFBCbetCards = cellValues.[9].Replace(" ", "")
-      TurnFBCbetFactor = parseDecimal cellValues.[10]
+      TurnFBCbetFactor = parseCBetFB cellValues.[10]
       TurnFDCbetCards = cellValues.[11].Replace(" ", "")
-      TurnFDCbetFactor = parseDecimal cellValues.[12] }
+      TurnFDCbetFactor = parseCBetFV cellValues.[12] }

@@ -32,8 +32,16 @@ module Decision =
   let callSize s = s.VillainBet - s.HeroBet
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
   let potOdds s = (callSize s) * 100 / (s.Pot + (callSize s))
+  let times i d = ((i |> decimal) * d) |> int
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
+
+  let cbetOr s f defaultAction =
+    let size = cbet s.Pot f.Factor
+    if times size f.IfStackFactorLessThan < stack s
+      && effectiveStackPre s > f.IfPreStackLessThan 
+    then size |> Bet 
+    else defaultAction
 
   let reraise s = 
     let size = s.VillainBet * 9 / 4 |> roundTo5 
@@ -81,18 +89,9 @@ module Decision =
       | OnCheckRaise.AllIn -> Action.AllIn
       | OnCheckRaise.Fold -> Action.Fold
       | OnCheckRaise.Undefined -> failwith "Check/raise behavior is not defined"
-    else if snapshot.Street = Turn then
-      let effStack = effectiveStackPre snapshot
+    else 
       match options.CbetFactor with
-      | ForValue f when effStack <= 14 -> AllIn
-      | ForValue f -> 
-        let size = cbet snapshot.Pot f
-        if size * 2 < stack snapshot then size |> Bet else AllIn
-      | ForBluff f when effStack <= 18 -> Check
-      | ForBluff f -> cbet snapshot.Pot f |> Bet
-      | CBet.NoCBet -> Check
-    else
-      match options.CbetFactor with
-      | ForValue f -> cbet snapshot.Pot f |> Bet
-      | ForBluff f -> cbet snapshot.Pot f |> Bet
-      | CBet.NoCBet -> Check
+      | Always f -> cbet snapshot.Pot f |> Bet
+      | OrAllIn f -> cbetOr snapshot f AllIn
+      | OrCheck f -> cbetOr snapshot f Check
+      | Never -> Check

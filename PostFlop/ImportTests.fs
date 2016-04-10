@@ -35,6 +35,18 @@ module ImportTests =
     let xl = openExcel fileName
     let board = parseBoard boardString
     let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } board
-    let expected = { CbetFactor = ForValue 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff; TurnFVCbetCards = "8,Q"; TurnFVCbetFactor = ForValue 62.5m; TurnCheckRaise = OnCheckRaise.StackOff; TurnFBCbetCards = "T,J,K,A"; TurnFBCbetFactor = ForBluff 62.5m; TurnFDCbetCards = "8,T,J,Q"; TurnFDCbetFactor = ForValue 62.5m }
+    let expected = { 
+      CbetFactor = Always 50m
+      CheckRaise = OnCheckRaise.CallEQ 1
+      Donk = OnDonk.CallEQ 17
+      DonkFlashDraw = Some OnDonk.ForValueStackOff
+      TurnFVCbetCards = "8,Q"
+      TurnFVCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 1.35m; IfPreStackLessThan = 14 }
+      TurnCheckRaise = OnCheckRaise.StackOff
+      TurnFBCbetCards = "T,J,K,A"
+      TurnFBCbetFactor = OrCheck { Factor = 62.5m; IfStackFactorLessThan = 2.8m; IfPreStackLessThan = 18 }
+      TurnFDCbetCards = "8,T,J,Q"
+      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
+    }
     Assert.Equal(expected, actual)
     closeExcel xl

@@ -58,15 +58,10 @@ module Import =
     | Decimal f -> Some f
     | _ -> None
 
-  let parseCBetFV (s: string) =
+  let parseCBet (s: string) =
     match parseDecimal s with
-    | Some n -> ForValue n
-    | None -> NoCBet
-
-  let parseCBetFB (s: string) =
-    match parseDecimal s with
-    | Some n -> ForBluff n
-    | None -> NoCBet
+    | Some n -> Always n
+    | None -> Never
 
   let parseCheckRaise (g: string) (h: string) =
     match g.ToLowerInvariant(), h with
@@ -104,14 +99,24 @@ module Import =
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
     let index = board |> Seq.take 3 |> Seq.map (fun x -> x.Face) |> rowIndex |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
-    { CbetFactor = parseCBetFV cellValues.[0]
+    { CbetFactor = parseCBet cellValues.[0]
       CheckRaise = parseCheckRaise cellValues.[1] cellValues.[2]
       Donk = parseDonk cellValues.[3] cellValues.[4]
       DonkFlashDraw = parseDonkFD cellValues.[5]
       TurnFVCbetCards = cellValues.[6].Replace(" ", "")
-      TurnFVCbetFactor = parseCBetFV cellValues.[7]
+      TurnFVCbetFactor = 
+        match parseDecimal cellValues.[7] with
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 1.35m; IfPreStackLessThan = 14 }
+        | None -> Never 
       TurnCheckRaise = parseCheckRaise cellValues.[8] "100"
       TurnFBCbetCards = cellValues.[9].Replace(" ", "")
-      TurnFBCbetFactor = parseCBetFB cellValues.[10]
+      TurnFBCbetFactor =
+        match parseDecimal cellValues.[10] with
+        | Some n -> OrCheck { Factor = n; IfStackFactorLessThan = 2.8m; IfPreStackLessThan = 18 }
+        | None -> Never 
       TurnFDCbetCards = cellValues.[11].Replace(" ", "")
-      TurnFDCbetFactor = parseCBetFV cellValues.[12] }
+      TurnFDCbetFactor = 
+        match parseDecimal cellValues.[12] with
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
+        | None -> Never 
+    }

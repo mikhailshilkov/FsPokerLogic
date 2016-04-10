@@ -2,7 +2,12 @@
 
 module Options =
 
-  type CBet = ForValue of decimal | ForBluff of decimal | NoCBet
+  type CBetOr = {
+    Factor: decimal
+    IfStackFactorLessThan: decimal
+    IfPreStackLessThan: int
+  }
+  type CBet = Always of decimal | OrAllIn of CBetOr | OrCheck of CBetOr | Never
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
   type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int | Undefined
 

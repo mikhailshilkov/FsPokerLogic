@@ -176,3 +176,6 @@ let isFlushDraw hand board =
 
 let canBeFlushDraw flop =
   Seq.countBy (fun x -> x.Suit) flop |> Seq.length = 2
+
+let isMonoboard flop =
+  Seq.countBy (fun x -> x.Suit) flop |> Seq.length = 1

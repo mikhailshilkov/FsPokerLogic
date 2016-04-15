@@ -84,3 +84,13 @@ let ``canBeFlushDraw returns true for two cards of same suit`` flopS expected =
   let board = parseBoard flopS
   let actual = canBeFlushDraw board
   Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("QsJsTs", true)>]
+[<InlineData("QcJcTs", false)>]
+[<InlineData("QsJcTs", false)>]
+[<InlineData("QcJsTd", false)>]
+let ``isMonoboard returns true for two cards of same suit`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isMonoboard board
+  Assert.Equal(expected, actual)

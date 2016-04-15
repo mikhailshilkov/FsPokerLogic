@@ -5,13 +5,13 @@ module Texture =
   open Options
   open Import
 
-  let toFlopOptions isFlushDraw isFlopFlushDraw eo =
-    if isFlushDraw then
+  let toFlopOptions isMonoboard isFlushDraw isFlopFlushDraw eo =
+    if isMonoboard then 
+      { Options.CbetFactor = CBet.Undefined; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
+    else if isFlushDraw then
       let donk = if eo.DonkFlashDraw.IsSome then eo.DonkFlashDraw.Value else eo.Donk
-      if eo.CbetFactor = Never then
-        { Options.CbetFactor = Always 50m; CheckRaise = StackOff; Donk = donk }
-      else
-        { Options.CbetFactor = eo.CbetFactor; CheckRaise = eo.CheckRaise; Donk = donk }
+      let cbetFactor = if eo.CbetFactor = Never then Always 50m else eo.CbetFactor
+      { Options.CbetFactor = cbetFactor; CheckRaise = StackOff; Donk = donk }
     else if isFlopFlushDraw && eo.CbetFactor = Always 75m then
       { Options.CbetFactor = Always 100m; CheckRaise = eo.CheckRaise; Donk = eo.Donk }
     else
@@ -28,4 +28,4 @@ module Texture =
     else if eo.TurnFBCbetCards.Contains(turn) then
       { Options.CbetFactor = eo.TurnFBCbetFactor; CheckRaise = OnCheckRaise.Fold; Donk = OnDonk.Undefined }
     else
-      { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
+      { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }

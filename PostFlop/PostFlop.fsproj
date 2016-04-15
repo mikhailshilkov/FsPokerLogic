@@ -59,6 +59,8 @@
     <Compile Include="ImportTests.fs" />
     <Compile Include="Texture.fs" />
     <Compile Include="TextureTests.fs" />
+    <Compile Include="HandValue.fs" />
+    <Compile Include="HandValueTests.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

@@ -31,7 +31,7 @@ module Decision =
   let effectiveStackPre s = (stackPre s + s.BB / 2 - 1) / s.BB
   let callSize s = s.VillainBet - s.HeroBet
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
-  let potOdds s = (callSize s) * 100 / (s.Pot + (callSize s))
+  let potOdds s = (callSize s |> decimal) * 100m / (s.Pot + (callSize s) |> decimal) |> ceil |> int
   let times i d = ((i |> decimal) * d) |> int
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
@@ -54,14 +54,19 @@ module Decision =
     else Action.Call
 
   let callEQ s threshold = 
-    if potOdds s < threshold then Action.Call else Action.Fold
+    if potOdds s <= threshold then Action.Call else Action.Fold
 
   let stackOffDonk s =
     if s.VillainBet = s.BB then 
       4 * s.VillainBet |> Bet
     else
-      let raiseSize = ((stackPre s) - 85 * (potPre s) / 100) * 10 / 27
-      max raiseSize (9 * s.VillainBet / 4) |> roundTo5 |> Bet
+      let calculatedRaiseSize = ((stackPre s) - 85 * (potPre s) / 100) * 10 / 27
+      let raiseSize =
+        if calculatedRaiseSize > s.VillainBet * 2 then calculatedRaiseSize
+        else (9 * s.VillainBet / 4)
+        |> roundTo5 
+      if raiseSize < s.HeroStack then Bet raiseSize
+      else AllIn
 
   let raisePetDonk s =
     if s.VillainBet = s.BB then 
@@ -69,29 +74,30 @@ module Decision =
     else 
       if s.VillainBet < betPre s then
         3 * s.VillainBet |> roundTo5 |> Bet
-      else if s.VillainBet * 2 > stackPre s then Action.AllIn
+      else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
       else Action.Call
 
   let decide snapshot options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk with
-      | ForValueStackOff -> stackOffDonk snapshot
-      | CallRaisePet -> raisePetDonk snapshot
+      | ForValueStackOff -> stackOffDonk snapshot |> Some
+      | CallRaisePet -> raisePetDonk snapshot |> Some
       | CallEQ eq -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
-        callEQ snapshot modifiedEq
-      | Undefined -> failwith "Donk behavior is not defined"
+        callEQ snapshot modifiedEq |> Some
+      | Undefined -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with
-      | OnCheckRaise.StackOff -> reraise snapshot
-      | OnCheckRaise.CallEQ eq -> callEQ snapshot eq
-      | OnCheckRaise.Call -> callraise snapshot
-      | OnCheckRaise.AllIn -> Action.AllIn
-      | OnCheckRaise.Fold -> Action.Fold
-      | OnCheckRaise.Undefined -> failwith "Check/raise behavior is not defined"
+      | OnCheckRaise.StackOff -> reraise snapshot |> Some
+      | OnCheckRaise.CallEQ eq -> callEQ snapshot eq |> Some
+      | OnCheckRaise.Call -> callraise snapshot |> Some
+      | OnCheckRaise.AllIn -> Some Action.AllIn
+      | OnCheckRaise.Fold -> Some Action.Fold
+      | OnCheckRaise.Undefined -> None
     else 
       match options.CbetFactor with
-      | Always f -> cbet snapshot.Pot f |> Bet
-      | OrAllIn f -> cbetOr snapshot f AllIn
-      | OrCheck f -> cbetOr snapshot f Check
-      | Never -> Check
+      | Always f -> cbet snapshot.Pot f |> Bet |> Some
+      | OrAllIn f -> cbetOr snapshot f AllIn |> Some
+      | OrCheck f -> cbetOr snapshot f Check |> Some
+      | Never -> Check |> Some
+      | CBet.Undefined -> None

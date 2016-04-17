@@ -2,6 +2,7 @@
 
 module DecisionTests =
 
+  open Cards
   open Options
   open Decision
   open Xunit
@@ -17,7 +18,7 @@ module DecisionTests =
     let options = { defaultOptions with CbetFactor = Always f }
     let snapshot = { defaultFlop with Pot = pot }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Bet cbet |> Some, actual)
+    Assert.Equal(RaiseToAmount cbet |> Some, actual)
 
   [<Fact>]
   let ``Condition 2: No CBet IP on flop if size is undefined`` () =
@@ -32,7 +33,7 @@ module DecisionTests =
     let options = { defaultOptions with CheckRaise = StackOff }
     let snapshot = { defaultFlop with VillainBet = raise; HeroBet = 40 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Bet reraise |> Some, actual)
+    Assert.Equal(RaiseToAmount reraise |> Some, actual)
 
   [<Fact>]
   let ``Stack off on check-raise - allin if raise is more than 53% of stack`` () =
@@ -98,25 +99,25 @@ module DecisionTests =
     Assert.Equal(Some Action.Fold, actual)
 
   [<Fact>]
-  let ``FV & stack off flop donk bet`` () =
+  let ``FV & stack off flop donk RaiseToAmount`` () =
     let options = { defaultOptions with Donk = ForValueStackOff }
     let snapshot = { defaultFlop with HeroStack = 460; Pot = 140; VillainStack = 400; VillainBet = 75 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Action.Bet 160 |> Some, actual)
+    Assert.Equal(Action.RaiseToAmount 160 |> Some, actual)
 
   [<Fact>]
-  let ``FV & stack off 1 BB flop donk bet`` () =
+  let ``FV & stack off 1 BB flop donk RaiseToAmount`` () =
     let options = { defaultOptions with Donk = ForValueStackOff }
     let snapshot = { defaultFlop with HeroStack = 430; Pot = 100; VillainStack = 470; VillainBet = 20 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Action.Bet 80 |> Some, actual)
+    Assert.Equal(Action.RaiseToAmount 80 |> Some, actual)
 
   [<Fact>]
-  let ``FV & stack off flop donk bet not smaller than minimal`` () =
+  let ``FV & stack off flop donk RaiseToAmount not smaller than minimal`` () =
     let options = { defaultOptions with Donk = ForValueStackOff }
     let snapshot = { defaultFlop with HeroStack = 430; Pot = 140; VillainStack = 410; VillainBet = 80 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(actual, Action.Bet 180 |> Some)
+    Assert.Equal(actual, Action.RaiseToAmount 180 |> Some)
 
   [<Fact>]
   let ``FV & stack off flop donk to all-in`` () =
@@ -126,23 +127,23 @@ module DecisionTests =
     Assert.Equal(Some Action.AllIn, actual)
 
   [<Fact>]
-  let ``Call/raise + Pet: 1 BB flop donk bet`` () =
+  let ``Call/raise + Pet: 1 BB flop donk RaiseToAmount`` () =
     let options = { defaultOptions with Donk = CallRaisePet }
     let snapshot = { defaultFlop with Pot = 100; VillainBet = 20 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(actual, Action.Bet 80 |> Some)
+    Assert.Equal(actual, Action.RaiseToAmount 80 |> Some)
 
   [<Theory>]
   [<InlineData(30, 90)>]
   [<InlineData(34, 100)>]
-  let ``Call/raise + Pet: flop donk bet b/w 2 BB and 50% preflop pot`` bet raise =
+  let ``Call/raise + Pet: flop donk RaiseToAmount b/w 2 BB and 50% preflop pot`` bet raise =
     let options = { defaultOptions with Donk = CallRaisePet }
     let snapshot = { defaultFlop with Pot = 80 + bet; VillainBet = bet }
     let actual = Decision.decide snapshot options
-    Assert.Equal(actual, Action.Bet raise |> Some)
+    Assert.Equal(actual, Action.RaiseToAmount raise |> Some)
 
   [<Fact>]
-  let ``Call/raise + Pet: flop donk bet more than 50% preflop pot`` () =
+  let ``Call/raise + Pet: flop donk RaiseToAmount more than 50% preflop pot`` () =
     let options = { defaultOptions with Donk = CallRaisePet }
     let snapshot = { defaultFlop with Pot = 120; VillainBet = 40 }
     let actual = Decision.decide snapshot options
@@ -195,7 +196,7 @@ module DecisionTests =
     let options = { defaultOptions with CbetFactor = Always 50m }
     let snapshot = { defaultTurn with HeroStack = 210; VillainStack = 610 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Action.Bet 90 |> Some, actual)
+    Assert.Equal(Action.RaiseToAmount 90 |> Some, actual)
 
   [<Fact>]
   let ``Turn: Cbet all-in for value with effective stack 14bb or less`` () =
@@ -216,7 +217,7 @@ module DecisionTests =
     let options = { defaultOptions with CbetFactor = Always 50m }
     let snapshot = { defaultTurn with HeroStack = 288; VillainStack = 532 }
     let actual = Decision.decide snapshot options
-    Assert.Equal(Action.Bet 90 |> Some, actual)
+    Assert.Equal(Action.RaiseToAmount 90 |> Some, actual)
 
   [<Fact>]
   let ``Turn: Do not cbet for bluff with effective stack 18bb or less`` () =

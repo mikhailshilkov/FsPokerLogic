@@ -1,14 +1,7 @@
 ﻿module Actions
 
 open Preflop
-
-type Action = 
-| AllIn
-| MinRaise
-| RaiseToAmount of int
-| Call
-| Check
-| Fold
+open Cards
 
 let raiseSize x villainBet stack =
   let rawSize = villainBet |> decimal |> (*) x |> int

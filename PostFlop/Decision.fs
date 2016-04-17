@@ -1,15 +1,9 @@
 ﻿namespace PostFlop
 
+open Cards
 open Options
 
 module Decision =
-
-  type Action = 
-    | Fold
-    | Check
-    | Call
-    | Bet of int
-    | AllIn
 
   type Street = Flop | Turn
 
@@ -40,13 +34,13 @@ module Decision =
     let size = cbet s.Pot f.Factor
     if times size f.IfStackFactorLessThan < stack s
       && effectiveStackPre s > f.IfPreStackLessThan 
-    then size |> Bet 
+    then size |> RaiseToAmount
     else defaultAction
 
   let reraise s = 
     let size = s.VillainBet * 9 / 4 |> roundTo5 
     if size > (stackPre s) * 53 / 100 then Action.AllIn
-    else size |> Bet
+    else size |> RaiseToAmount
 
   let callraise s =
     if (stackIfCall s) * 5 < (s.Pot + (callSize s)) 
@@ -58,22 +52,22 @@ module Decision =
 
   let stackOffDonk s =
     if s.VillainBet = s.BB then 
-      4 * s.VillainBet |> Bet
+      4 * s.VillainBet |> RaiseToAmount
     else
       let calculatedRaiseSize = ((stackPre s) - 85 * (potPre s) / 100) * 10 / 27
       let raiseSize =
         if calculatedRaiseSize > s.VillainBet * 2 then calculatedRaiseSize
         else (9 * s.VillainBet / 4)
         |> roundTo5 
-      if raiseSize < s.HeroStack then Bet raiseSize
-      else AllIn
+      if raiseSize < s.HeroStack then RaiseToAmount raiseSize
+      else Action.AllIn
 
   let raisePetDonk s =
     if s.VillainBet = s.BB then 
-      4 * s.VillainBet |> Bet
+      4 * s.VillainBet |> RaiseToAmount
     else 
       if s.VillainBet < betPre s then
-        3 * s.VillainBet |> roundTo5 |> Bet
+        3 * s.VillainBet |> roundTo5 |> RaiseToAmount
       else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
       else Action.Call
 
@@ -96,8 +90,8 @@ module Decision =
       | OnCheckRaise.Undefined -> None
     else 
       match options.CbetFactor with
-      | Always f -> cbet snapshot.Pot f |> Bet |> Some
-      | OrAllIn f -> cbetOr snapshot f AllIn |> Some
+      | Always f -> cbet snapshot.Pot f |> RaiseToAmount |> Some
+      | OrAllIn f -> cbetOr snapshot f Action.AllIn |> Some
       | OrCheck f -> cbetOr snapshot f Check |> Some
       | Never -> Check |> Some
       | CBet.Undefined -> None

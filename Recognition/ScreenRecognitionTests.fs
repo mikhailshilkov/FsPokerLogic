@@ -44,3 +44,7 @@ let ``recognize blinds from predefined file`` () =
 [<Fact>]
 let ``recognize sitout from predefined file`` () =
   test (fun r ->  if r.IsVillainSitout then "Yes" else "No") "Sitout"
+
+[<Fact>]
+let ``recognize board from predefined file`` () =
+  test (fun r -> r.Flop) "Flop"

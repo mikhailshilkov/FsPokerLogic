@@ -1,5 +1,6 @@
 ﻿module ActionsTests
 
+open Cards
 open Actions
 open Xunit
 

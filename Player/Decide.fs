@@ -1,6 +1,7 @@
 ﻿namespace Player
 
 open Akka.FSharp
+open Cards
 open Click
 open Import
 open Preflop
@@ -8,6 +9,11 @@ open System.Drawing
 open Hands
 open Actions
 open Recognition.ScreenRecognition
+open PostFlop.Options
+open PostFlop.Import
+open PostFlop.Texture
+open PostFlop.HandValue
+open PostFlop.Decision
 
 module Decide =
   open Interaction
@@ -19,7 +25,7 @@ module Decide =
   let rules = Seq.concat [|rulesIP;rulesOOP|]
   let decidePre stack = decideOnRules rules stack
 
-  let understandHistory screen =
+  let understandHistory (screen: Screen) =
     let raise bet bb = 
       let b = (bet |> decimal) / (bb |> decimal)
       Raise(b, b)
@@ -38,17 +44,43 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' screen =
-    match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
-    | true, _, _, _, _, _ -> Some MinRaise
-    | _, Some hs, Some hb, Some vs, Some vb, Some b -> 
-      let stack = min (hs + hb) (vs + vb)
-      let effectiveStack = decimal stack / decimal b.BB
-      let fullHand = parseFullHand screen.HeroHand
-      let history = understandHistory screen
-      let actionPattern = decidePre effectiveStack history fullHand
-      Option.map (mapPatternToAction vb stack) actionPattern  
-    | _ -> None
+  let decide' xl (screen: Screen): Action option =
+    let decidePre (screen: Screen): Action option =
+      match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
+      | true, _, _, _, _, _ -> Some Action.MinRaise
+      | _, Some hs, Some hb, Some vs, Some vb, Some b -> 
+        let stack = min (hs + hb) (vs + vb)
+        let effectiveStack = decimal stack / decimal b.BB
+        let fullHand = parseFullHand screen.HeroHand
+        let history = understandHistory screen
+        let actionPattern = decidePre effectiveStack history fullHand
+        Option.map (mapPatternToAction vb stack) actionPattern  
+      | _ -> None
+    let decidePost (screen: Screen) =
+      match screen.IsVillainSitout, screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
+      | true, _, _, _, _ -> Some Action.MinRaise
+      | _, Some tp, Some hs, Some vs, Some b -> 
+        let hand = screen.HeroHand |> parseFullHand
+        let suitedHand = screen.HeroHand |> parseSuitedHand
+        let flop = screen.Flop |> parseBoard
+        let street = if flop.Length = 4 then Turn else Flop
+        let eo = importOptions (fst xl) hand flop 
+        let vb = defaultArg screen.VillainBet 0
+        let hb = defaultArg screen.HeroBet 0
+        let s = { Street = street; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
+        let o = 
+          if street = Turn then 
+            let turnFace = flop.[3].Face
+            toTurnOptions turnFace (isFlush suitedHand flop) (isFlushDraw suitedHand flop) eo
+          else
+            toFlopOptions (isMonoboard flop) (isFlushDraw suitedHand flop) (canBeFlushDraw flop) eo
+          |> augmentOptions suitedHand flop s
+        PostFlop.Decision.decide s o
+      | _ -> None
+
+    match screen.Flop with
+    | null -> decidePre screen
+    | _ -> decidePost screen
 
   type DecisionMessage = {
     WindowTitle: string
@@ -76,13 +108,13 @@ module Decide =
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decisionActor msg lastScreen =
+  let decisionActor xl msg lastScreen =
     let screen = msg.Screen
     match lastScreen with
     | Some s when s = screen -> (None, lastScreen)
     | _ ->
       print screen |> Seq.iter (printfn "%s: %s" "Hand")
-      let decision = decide' screen
+      let decision = decide' xl screen
       match decision with
       | Some d ->
         printfn "Decision is: %A" d

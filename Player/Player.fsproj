@@ -68,11 +68,11 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Akka">
-      <HintPath>..\packages\Akka.1.0.6\lib\net45\Akka.dll</HintPath>
+      <HintPath>..\packages\Akka.1.0.7\lib\net45\Akka.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Akka.FSharp">
-      <HintPath>..\packages\Akka.FSharp.1.0.6\lib\net45\Akka.FSharp.dll</HintPath>
+      <HintPath>..\packages\Akka.FSharp.1.0.7\lib\net45\Akka.FSharp.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="FSharp.PowerPack">
@@ -84,7 +84,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="FsPickler">
-      <HintPath>..\packages\FsPickler.1.2.21\lib\net45\FsPickler.dll</HintPath>
+      <HintPath>..\packages\FsPickler.2.1.0\lib\net45\FsPickler.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.Office.Interop.Excel, Version=15.0.0.0, Culture=neutral, PublicKeyToken=71e9bce111e9429c" />
@@ -93,10 +93,14 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>..\packages\Newtonsoft.Json.7.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\packages\Newtonsoft.Json.8.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\System.Collections.Immutable.1.1.37\lib\dotnet\System.Collections.Immutable.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Numerics" />
@@ -105,6 +109,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Excel\Excel.fsproj">
+      <Name>Excel</Name>
+      <Project>{9fa0db48-55aa-47ad-b1f5-933bf8c59f41}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Hands\Cards.fsproj">
       <Name>Cards</Name>
       <Project>{a1b0af49-be85-4678-8bb2-3bcb46392a9f}</Project>
@@ -123,6 +132,11 @@
     <ProjectReference Include="..\PokerConsole\PokerConsole.fsproj">
       <Name>PokerConsole</Name>
       <Project>{281918a1-713f-4931-8f0b-7557b4ca8534}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\PostFlop\PostFlop.fsproj">
+      <Name>PostFlop</Name>
+      <Project>{537d79d1-3ad0-4679-b460-bdf7deddec7f}</Project>
       <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\Recognition\Recognition.fsproj">

@@ -32,7 +32,7 @@ namespace SlideShow2
 
         private void pictureBox1_Click(object sender, EventArgs e)
         {            
-            index = (index + 1) % 6;
+            index = (index + 1) % 12;
             pictureBox1.ImageLocation = $@"C:\Work\FsPokerLogic\SlideShow2\bin\Debug\{index + 1}.png";
         }
     }

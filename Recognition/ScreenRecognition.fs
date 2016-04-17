@@ -30,7 +30,7 @@ module ScreenRecognition =
     Actions: ActionButton[]
     Blinds: Blinds option
     Button: ButtonPosition
-    HasFlop: bool
+    Flop: string
     IsVillainSitout: bool
   }
 
@@ -102,6 +102,15 @@ module ScreenRecognition =
         (recognizeCard (getPixel (78+dx) (274+dy)) 13 17) + (recognizeCard (getPixel (115+dx) (274+dy)) 13 17)
       | _, _ -> null
 
+    let (dxo, dyo) = findCardStart (getPixel 223 185) 13 17
+    let flop = 
+      match (dxo, dyo) with 
+      | Some dx, Some dy ->
+        [222; 260; 297; 334; 372]
+        |> Seq.map (fun x -> recognizeCard (getPixel (x+dx) (185+dy)) 13 17)
+        |> String.concat ""
+      | _, _ -> null
+
     { TotalPot = totalPot
       HeroStack = heroStack
       VillainStack = villainStack
@@ -111,5 +120,5 @@ module ScreenRecognition =
       Button = button
       Actions = actions
       Blinds = blinds
-      HasFlop = hasFlop
+      Flop = flop
       IsVillainSitout = isVillainSitout }

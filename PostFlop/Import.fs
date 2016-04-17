@@ -95,7 +95,7 @@ module Import =
     >> (+) 6
 
   let importOptions (xlWorkBook : Workbook) (hand: Hand) (board: Board) =
-    let worksheetName = [hand.Face1; hand.Face2] |> List.map faceToChar |> String.Concat
+    let worksheetName = [hand.Face1; hand.Face2] |> List.sortByDescending faceValue |> List.map faceToChar |> String.Concat
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
     let index = board |> Seq.take 3 |> Seq.map (fun x -> x.Face) |> rowIndex |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)

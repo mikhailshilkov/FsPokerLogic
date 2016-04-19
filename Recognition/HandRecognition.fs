@@ -49,13 +49,14 @@ module HandRecognition =
       | _ when c.B < 127uy && c.G > 127uy && c.R < 127uy -> Some "c"
       | _ when c.B < 127uy && c.G < 127uy && c.R < 127uy -> Some "s"
       | _ -> None
-    seq { for x in 0 .. width - 1 do
-            for y in 0 .. height - 1 do
-              yield getSuit (getPixel x y)}
-    |> Seq.choose id
-    |> Seq.countBy id
-    |> Seq.maxBy (fun (v, c) -> c)
-    |> fst
+    let suits = 
+      seq { for x in 0 .. width - 1 do
+              for y in 0 .. height - 1 do
+                yield getSuit (getPixel x y)}
+      |> Seq.choose id
+      |> Seq.countBy id
+    if Seq.isEmpty suits then None
+    else suits |> Seq.maxBy snd|> fst |> Some
 
   let getCardValue patterns bws =
     let matchCount h p =
@@ -81,9 +82,9 @@ module HandRecognition =
   let recognizeCard getPixel width height = 
     let value = getCardPattern getPixel width height |> getCardValue patterns
     let suit = getCardSuit getPixel width height
-    match value with
-    | Some v -> v.Card + suit
-    | None -> null
+    match value, suit with
+    | Some v, Some s -> v.Card + s
+    | _ -> null
 
   let hasSpecialColor isColor getPixel width height =    
     seq { for x in 0 .. width - 1 do

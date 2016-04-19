@@ -56,6 +56,8 @@
     <Compile Include="HandsTests.fs" />
     <Content Include="packages.config" />
     <Compile Include="Actions.fs" />
+    <Compile Include="MadeHandValue.fs" />
+    <Compile Include="MadeHandValueTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">

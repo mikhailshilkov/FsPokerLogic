@@ -56,3 +56,29 @@ let ``Fourth pair`` handS flopS =
 [<InlineData("6h6c", "KdJhTh8c5d")>]
 let ``Fifth pair`` handS flopS =
   Pair(Fifth) |> test handS flopS
+
+[<Theory>]
+[<InlineData("Kc3c", "Th8cKdJh3h")>]
+let ``Two pairs`` handS flopS =
+  TwoPair |> test handS flopS
+
+[<Theory>]
+[<InlineData("3d3c", "Th8cKdJh3h")>]
+[<InlineData("Kd3c", "Th8c3dJh3h")>]
+let ``Three of kind`` handS flopS =
+  ThreeOfKind |> test handS flopS
+
+[<Theory>]
+[<InlineData("2d3c", "4h5c6d")>]
+[<InlineData("KdTc", "Jh2cQd9h3h")>]
+[<InlineData("KdTc", "Jh3cQd9h3h")>]
+let ``Straight`` handS flopS =
+  Straight |> test handS flopS
+
+[<Theory>]
+[<InlineData("2d3d", "Ad5d6d")>]
+[<InlineData("Kd3d", "2c4dJdAc6d")>]
+[<InlineData("Kd3c", "2c4cKhAc6c")>]
+[<InlineData("Kc3c", "2c4cJcAc6c")>]
+let ``Flush`` handS flopS =
+  Flush |> test handS flopS

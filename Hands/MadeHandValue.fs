@@ -20,6 +20,9 @@ module MadeHandValue =
     | ThreeOfKind
     | Straight
     | Flush
+    | FullHouse
+    | FourOfKind
+    | StraightFlush
 
   let isStraight (cards: SuitedCard list) =
     let figs = cards |> List.map (fun x -> x.Face) |> List.distinct |> List.sort
@@ -28,8 +31,23 @@ module MadeHandValue =
     let c = b|> Seq.length >= 4
     c
 
+  let cardValueGroups cards = cards |> Seq.countBy (fun x -> x.Face) |> Seq.map snd |> Seq.sortDescending 
+
+  let isFullHouse (cards : SuitedCard list) =
+    let sameSequence a b = Seq.compareWith Operators.compare a b = 0
+    cards |> cardValueGroups |> Seq.take 2 |> sameSequence (seq [3; 2])
+
+  let isFourOfKind (cards : SuitedCard list) =
+    cards |> cardValueGroups |> Seq.head = 4
+
   let isFlush (cards : SuitedCard list) =
     cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.exists (fun x -> x >= 5)
+
+  let isStraightFlush (cards : SuitedCard list) =
+    let flushSuit = cards |> Seq.countBy (fun x -> x.Suit) |> Seq.filter (fun (x, count) -> count >= 5) |> Seq.map fst |> Seq.tryHead
+    match flushSuit with
+    | Some s -> cards |> List.filter (fun x -> x.Suit = s) |> isStraight
+    | None -> false
 
   let handValue hand board =
     let combined = List.concat [List.ofArray board; [hand.Card1; hand.Card2]]
@@ -54,7 +72,10 @@ module MadeHandValue =
 
     let isPairedHand = hand.Card1.Face = hand.Card2.Face
 
-    if isFlush combined then Flush
+    if isStraightFlush combined then StraightFlush
+    else if isFourOfKind combined then FourOfKind
+    else if isFullHouse combined then FullHouse
+    else if isFlush combined then Flush
     else if isStraight combined then Straight
     else if Seq.length pairs = 2 then 
       if fst pairs.[0] = fst pairs.[1] then ThreeOfKind else TwoPair

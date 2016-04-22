@@ -82,3 +82,21 @@ let ``Straight`` handS flopS =
 [<InlineData("Kc3c", "2c4cJcAc6c")>]
 let ``Flush`` handS flopS =
   Flush |> test handS flopS
+
+[<Theory>]
+[<InlineData("JdTd", "AdJhTs2sTc")>]
+[<InlineData("TdTh", "AdJhTs2sJc")>]
+let ``Full house`` handS flopS =
+  FullHouse |> test handS flopS
+
+[<Theory>]
+[<InlineData("TdTh", "AdJhTs2sTc")>]
+[<InlineData("TdJd", "AdJhJs2sJc")>]
+let ``Four of kind`` handS flopS =
+  FourOfKind |> test handS flopS
+
+[<Theory>]
+[<InlineData("2d3d", "4d5d6d")>]
+[<InlineData("KcTc", "Jc2cQc9c3h")>]
+let ``Straight flush`` handS flopS =
+  StraightFlush |> test handS flopS

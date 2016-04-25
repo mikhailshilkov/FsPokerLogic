@@ -138,37 +138,37 @@ module Import =
     let xlWorkSheet = xlWorkBook.Worksheets.["turn vs donkbet"] :?> Worksheet
     let index = 
       (match handValue.Made with
-      | StraightFlush | FourOfKind -> 18
-      | FullHouse -> 17
-      | Flush -> 16
+      | StraightFlush | FourOfKind -> 19
+      | FullHouse -> 18
+      | Flush -> 17
       | Straight(Normal) -> 15
-      | Straight(Weak) -> 15 // TODO
+      | Straight(Weak) -> 16
       | ThreeOfKind -> 14
       | TwoPair -> 13
       | Pair(x) -> 
         let highKicker k = k = Ace || k = King || k = Queen || k = Jack
         match x, handValue.FD, handValue.SD with
         | Over, _, _ -> 6 
-        | Top(_), Draw, _ -> 30
-        | Top(_), _, OpenEnded -> 25
-        | Top(_), _, GutShot -> 21
+        | Top(_), Draw, _ -> 31
+        | Top(_), _, OpenEnded -> 26
+        | Top(_), _, GutShot -> 22
         | Top(k), NoFD, NoSD when highKicker k -> 7
         | Top(_), NoFD, NoSD -> 8
-        | Second(_), Draw, _ | Third, Draw, _ | Fourth, Draw, _ -> 31
-        | Second(_), _, OpenEnded | Third, _, OpenEnded | Fourth, _, OpenEnded -> 26
-        | Second(_), _, GutShot | Third, _, GutShot | Fourth, _, GutShot -> 22
+        | Second(_), Draw, _ | Third, Draw, _ | Fourth, Draw, _ -> 32
+        | Second(_), _, OpenEnded | Third, _, OpenEnded | Fourth, _, OpenEnded -> 27
+        | Second(_), _, GutShot | Third, _, GutShot | Fourth, _, GutShot -> 23
         | Second(k), NoFD, NoSD when highKicker k -> 9
         | Second(_), NoFD, NoSD -> 10
         | Third, NoFD, NoSD | Fourth, NoFD, NoSD -> 11
         | Fifth, _, _ -> failwith "Fifth pair impossible on turn"
-        | Under, _, OpenEnded -> 27
+        | Under, _, OpenEnded -> 28
         | Under, _, _ -> 12
       | Nothing ->
         match handValue.FD, handValue.SD with
-        | Draw, OpenEnded | Draw, GutShot -> 30
-        | Draw, NoSD -> 29
-        | NoFD, OpenEnded -> 24
-        | NoFD, GutShot -> 20
+        | Draw, OpenEnded | Draw, GutShot -> 31
+        | Draw, NoSD -> 30
+        | NoFD, OpenEnded -> 25
+        | NoFD, GutShot -> 21
         | NoFD, NoSD -> 4
       )|> string
     let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)

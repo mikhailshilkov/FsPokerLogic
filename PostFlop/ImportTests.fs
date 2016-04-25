@@ -4,6 +4,7 @@ module ImportTests =
 
   open Import
   open Hands
+  open Cards.HandValues
   open Options
   open Xunit
   open Microsoft.Office.Interop.Excel
@@ -49,4 +50,31 @@ module ImportTests =
       TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
     }
     Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importTurnDonk returns correct option for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = false; DoublePairedBoard = false }
+    let actual = importTurnDonk (fst xl) special { Made = Pair(Over); FD = NoFD; SD = NoSD }
+    Assert.Equal(OnDonk.ForValueStackOff, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importTurnDonk returns correct option when special conditions apply`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = true; DoublePairedBoard = false }
+    let actual = importTurnDonk (fst xl) special { Made = Pair(Third); FD = NoFD; SD = NoSD }
+    Assert.Equal(OnDonk.Fold, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importTurnDonk returns correct option when special conditions apply but no special action defined`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = true; DoublePairedBoard = true }
+    let actual = importTurnDonk (fst xl) special { Made = Flush; FD = NoFD; SD = NoSD }
+    Assert.Equal(OnDonk.ForValueStackOff, actual)
     closeExcel xl

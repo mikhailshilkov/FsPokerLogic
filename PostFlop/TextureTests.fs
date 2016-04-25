@@ -63,68 +63,68 @@ let ``toFlopOptions on monoboard is not defined`` () =
 [<Fact>]
 let ``toTurnOptions Cbet FV card`` () =
   let eo = { defaultOptions with TurnFVCbetCards = "2,3,4"; TurnFVCbetFactor = Always 62.5m }
-  let actual = toTurnOptions Face.Three false false eo
+  let actual = toTurnOptions Face.Three false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions no Cbet not FV card`` () =
   let eo = { defaultOptions with TurnFVCbetCards = "2,3,4"; TurnFVCbetFactor = Always 62.5m }
-  let actual = toTurnOptions Face.Five false false eo
+  let actual = toTurnOptions Face.Five false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions Cbet FB card`` () =
   let eo = { defaultOptions with TurnFBCbetCards = "5,6,7"; TurnFBCbetFactor = Always 50m }
-  let actual = toTurnOptions Face.Seven false false eo
+  let actual = toTurnOptions Face.Seven false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.Fold; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions no Cbet not FB card`` () =
   let eo = { defaultOptions with TurnFBCbetCards = "5,6,7"; TurnFBCbetFactor = Always 50m }
-  let actual = toTurnOptions Face.Eight false false eo
+  let actual = toTurnOptions Face.Eight false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions Cbet FD card`` () =
   let eo = { defaultOptions with TurnFDCbetCards = "8,9,T"; TurnFDCbetFactor = Always 70m }
-  let actual = toTurnOptions Face.Eight false true eo
+  let actual = toTurnOptions Face.Eight false true OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 70m; CheckRaise = OnCheckRaise.AllIn; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions no Cbet not FD card`` () =
   let eo = { defaultOptions with TurnFDCbetCards = "8,9,T"; TurnFVCbetFactor = Always 70m }
-  let actual = toTurnOptions Face.Jack false true eo
+  let actual = toTurnOptions Face.Jack false true OnDonk.Undefined eo
   let expected = { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions FV Check Raise`` () =
   let eo = { defaultOptions with TurnFVCbetCards = "J"; TurnFVCbetFactor = Always 50m; TurnCheckRaise = OnCheckRaise.StackOff }
-  let actual = toTurnOptions Face.Jack false false eo
+  let actual = toTurnOptions Face.Jack false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions FB Check Raise`` () =
   let eo = { defaultOptions with TurnFBCbetCards = "Q"; TurnFBCbetFactor = Always 50m; TurnCheckRaise = OnCheckRaise.StackOff }
-  let actual = toTurnOptions Face.Queen false false eo
+  let actual = toTurnOptions Face.Queen false false OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.Fold; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions FD Check Raise`` () =
   let eo = { defaultOptions with TurnFDCbetCards = "A"; TurnFDCbetFactor = Always 50m; TurnCheckRaise = OnCheckRaise.StackOff }
-  let actual = toTurnOptions Face.Ace false true eo
+  let actual = toTurnOptions Face.Ace false true OnDonk.Undefined eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.AllIn; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toTurnOptions Flush`` () =
-  let actual = toTurnOptions Face.Two true false defaultOptions
+  let actual = toTurnOptions Face.Two true false OnDonk.Undefined defaultOptions
   let expected = { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)

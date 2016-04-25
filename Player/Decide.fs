@@ -7,6 +7,7 @@ open Import
 open Preflop
 open System.Drawing
 open Hands
+open Cards.HandValues
 open Actions
 open Recognition.ScreenRecognition
 open PostFlop.Options
@@ -44,7 +45,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' xl (screen: Screen): Action option =
+  let decide' xlFlopTurn xlTurnDonk (screen: Screen): Action option =
     let decidePre (screen: Screen): Action option =
       match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | true, _, _, _, _, _ -> Some Action.MinRaise
@@ -64,16 +65,19 @@ module Decide =
         let suitedHand = screen.HeroHand |> parseSuitedHand
         let flop = screen.Flop |> parseBoard
         let street = if flop.Length = 4 then Turn else Flop
-        let eo = importOptions (fst xl) hand flop 
+        let value = handValueWithDraws suitedHand flop
+        let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
+        let turnDonkOption = importTurnDonk (fst xlTurnDonk) special value
+        let eo = importOptions (fst xlFlopTurn) hand flop 
         let vb = defaultArg screen.VillainBet 0
         let hb = defaultArg screen.HeroBet 0
         let s = { Street = street; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         let o = 
           if street = Turn then 
             let turnFace = flop.[3].Face
-            toTurnOptions turnFace (isFlush suitedHand flop) (isFlushDraw suitedHand flop) eo
+            toTurnOptions turnFace (value.Made = Flush) (isFlushDrawWith2 suitedHand flop) turnDonkOption eo
           else
-            toFlopOptions (isMonoboard flop) (isFlushDraw suitedHand flop) (canBeFlushDraw flop) eo
+            toFlopOptions (isMonoboard flop) (isFlushDrawWith2 suitedHand flop) (canBeFlushDraw flop) eo
           |> augmentOptions suitedHand flop s
         PostFlop.Decision.decide s o
       | _ -> None
@@ -108,13 +112,13 @@ module Decide =
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decisionActor xl msg lastScreen =
+  let decisionActor xlFlopTurn xlTurnDonk msg lastScreen =
     let screen = msg.Screen
     match lastScreen with
     | Some s when s = screen -> (None, lastScreen)
     | _ ->
       print screen |> Seq.iter (printfn "%s: %s" "Hand")
-      let decision = decide' xl screen
+      let decision = decide' xlFlopTurn xlTurnDonk screen
       match decision with
       | Some d ->
         printfn "Decision is: %A" d

@@ -150,6 +150,13 @@ module DecisionTests =
     Assert.Equal(actual, Some Action.Call)
 
   [<Fact>]
+  let ``Call when donk is call`` () =
+    let options = { defaultOptions with Donk = Call }
+    let snapshot = { defaultFlop with Pot = 120; VillainBet = 40 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Some Action.Call, actual)
+
+  [<Fact>]
   let ``Call/raise + Pet: allin donk is > 50% preflop stack`` () =
     let options = { defaultOptions with Donk = CallRaisePet }
     let snapshot = { defaultFlop with HeroStack = 540; VillainStack = 130; VillainBet = 210 }

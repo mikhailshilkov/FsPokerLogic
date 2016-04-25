@@ -7,7 +7,7 @@ module HandValue =
 
   let isSecondPairWithAKKicker (hand: SuitedHand) (board: Board) =
     let handArray = [|hand.Card1; hand.Card2|]
-    let secondBoardFace = board |> Array.map (fun x -> x.Face) |> Seq.distinct |> Array.ofSeq |> Array.sortBy (fun x -> faceValue x) |> Array.rev |> Seq.nth 1
+    let secondBoardFace = board |> Array.map (fun x -> x.Face) |> Seq.distinct |> Array.ofSeq |> Array.sortBy (fun x -> faceValue x) |> Array.rev |> Seq.item 1
     let isPairedWithSecondBoardFace = handArray |> Array.exists (fun x -> x.Face = secondBoardFace)
     let hasAK = handArray |> Array.exists (fun x -> x.Face = Ace || x.Face = King)
     isPairedWithSecondBoardFace && hasAK && faceValue secondBoardFace <= 12

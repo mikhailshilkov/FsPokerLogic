@@ -79,6 +79,8 @@ module Decision =
       | CallEQ eq -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
+      | Call -> Some Action.Call
+      | Fold -> Some Action.Fold
       | Undefined -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with

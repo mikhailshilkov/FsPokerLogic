@@ -5,6 +5,7 @@ open Microsoft.Office.Interop.Excel
 open System.Runtime.InteropServices
 open Options
 open Hands
+open Cards.HandValues
 
 module Import =
   open System.Globalization
@@ -120,3 +121,60 @@ module Import =
         | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
         | None -> Never 
     }
+
+  let parseTurnDonk (i: string) =
+    match i.ToLowerInvariant() with
+    | "stack off" -> OnDonk.ForValueStackOff
+    | "call" -> OnDonk.Call
+    | "fold" -> OnDonk.Fold
+    | Int i -> OnDonk.CallEQ i
+    | _ -> OnDonk.Undefined
+
+  type TurnSpecialConditions = { 
+    StreetyBoard: bool
+    DoublePairedBoard: bool }
+
+  let importTurnDonk (xlWorkBook : Workbook) specialConditions handValue =
+    let xlWorkSheet = xlWorkBook.Worksheets.["turn vs donkbet"] :?> Worksheet
+    let index = 
+      (match handValue.Made with
+      | StraightFlush | FourOfKind -> 18
+      | FullHouse -> 17
+      | Flush -> 16
+      | Straight(Normal) -> 15
+      | Straight(Weak) -> 15 // TODO
+      | ThreeOfKind -> 14
+      | TwoPair -> 13
+      | Pair(x) -> 
+        let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+        match x, handValue.FD, handValue.SD with
+        | Over, _, _ -> 6 
+        | Top(_), Draw, _ -> 30
+        | Top(_), _, OpenEnded -> 25
+        | Top(_), _, GutShot -> 21
+        | Top(k), NoFD, NoSD when highKicker k -> 7
+        | Top(_), NoFD, NoSD -> 8
+        | Second(_), Draw, _ | Third, Draw, _ | Fourth, Draw, _ -> 31
+        | Second(_), _, OpenEnded | Third, _, OpenEnded | Fourth, _, OpenEnded -> 26
+        | Second(_), _, GutShot | Third, _, GutShot | Fourth, _, GutShot -> 22
+        | Second(k), NoFD, NoSD when highKicker k -> 9
+        | Second(_), NoFD, NoSD -> 10
+        | Third, NoFD, NoSD | Fourth, NoFD, NoSD -> 11
+        | Fifth, _, _ -> failwith "Fifth pair impossible on turn"
+        | Under, _, OpenEnded -> 27
+        | Under, _, _ -> 12
+      | Nothing ->
+        match handValue.FD, handValue.SD with
+        | Draw, OpenEnded | Draw, GutShot -> 30
+        | Draw, NoSD -> 29
+        | NoFD, OpenEnded -> 24
+        | NoFD, GutShot -> 20
+        | NoFD, NoSD -> 4
+      )|> string
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)
+    let specialConditionsApply = 
+      [(specialConditions.StreetyBoard, "1"); (specialConditions.DoublePairedBoard, "3")]
+      |> List.filter fst
+      |> List.map snd
+      |> List.exists (fun x -> cellValues.[1].Contains(x))
+    parseTurnDonk (if specialConditionsApply then cellValues.[2] else cellValues.[0])

@@ -9,7 +9,7 @@ module Options =
   }
   type CBet = Always of decimal | OrAllIn of CBetOr | OrCheck of CBetOr | Never | Undefined
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
-  type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int | Undefined
+  type OnDonk = ForValueStackOff | CallRaisePet | CallEQ of int | Call | Fold | Undefined
 
   type Options = {
     CbetFactor: CBet

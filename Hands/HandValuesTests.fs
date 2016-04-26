@@ -174,8 +174,14 @@ let ``Flush`` handS flopS =
 [<Theory>]
 [<InlineData("JdTd", "AdJhTs2sTc")>]
 [<InlineData("TdTh", "AdJhTs2sJc")>]
-let ``Full house`` handS flopS =
-  FullHouse |> test handS flopS
+let ``Full house normal`` handS flopS =
+  FullHouse(Normal) |> test handS flopS
+
+[<Theory>]
+[<InlineData("JdJh", "JsQsQsKcKd")>]
+[<InlineData("7d7h", "Td9h7s9sTc")>]
+let ``Full house weak`` handS flopS =
+  FullHouse(Weak) |> test handS flopS
 
 [<Theory>]
 [<InlineData("TdTh", "AdJhTs2sTc")>]

@@ -29,7 +29,7 @@ let main argv =
   let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
   let xlFlopTurn = openExcel fileNameFlopTurn
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-  let xlTurnDonk = openExcel fileNameTurnDonk
+  let xlTurnDonkRiver = openExcel fileNameTurnDonk
   Console.Write "\n"
 
   //while true do
@@ -48,25 +48,33 @@ let main argv =
   let hand = parseFullHand handString
   let suitedHand = parseSuitedHand handString
 
-  printf "\nPot preflop is %A. Please enter flop/turn (e.g. 9s8c7d): " (bb*4)
+  printf "\nPot preflop is %A. Please enter board (e.g. 9s8c7d): " (bb*4)
   let flopString = Console.ReadLine()
   let flop = parseBoard flopString
   let value = handValueWithDraws suitedHand flop
+  let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
   printfn "Hand value is: %A" value
 
   let villainBet = enterNumber "Please enter the villain bet (0 for check)" 0 (villainStack - 40)
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
-  let street = if flop.Length = 4 then Turn else Flop
+  let street = 
+    match flop.Length with
+    | 5 -> River
+    | 4 -> Turn 
+    | 3 -> Flop
+    | _ -> failwith "Weird board length"
   let s = { Street = street; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2 - villainBet; HeroStack = heroStack - bb*2 - heroBet; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
-  let turnDonkOption = importTurnDonk (fst xlTurnDonk) special value
   let eo = importOptions (fst xlFlopTurn) hand flop 
   let o = 
-    if street = Turn then 
+    match street with
+    | River ->
+      importRiver (fst xlTurnDonkRiver) special value.Made
+    | Turn ->
       let turnFace = flop.[3].Face
+      let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) special value
       toTurnOptions turnFace (value.Made = Flush) (isFlushDrawWith2 suitedHand flop) turnDonkOption eo
-    else
+    | Flop ->
       toFlopOptions (isMonoboard flop) (isFlushDrawWith2 suitedHand flop) (canBeFlushDraw flop) eo
     |> augmentOptions suitedHand flop s
 
@@ -80,6 +88,6 @@ let main argv =
       Console.WriteLine a
 
   closeExcel xlFlopTurn
-  closeExcel xlTurnDonk
+  closeExcel xlTurnDonkRiver
   Console.ReadKey() |> ignore
   0 // return an integer exit code

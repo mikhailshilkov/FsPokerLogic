@@ -23,7 +23,7 @@ let main argv =
     let hand = parseFullHand handString
     let suitedHand = parseSuitedHand handString
 
-    printf "\nPlease enter flop/turn (e.g. 9s8c7d): "
+    printf "\nPlease enter turn (e.g. 9s8c7d6h): "
     let flopString = Console.ReadLine()
     let flop = parseBoard flopString
     let value = handValueWithDraws suitedHand flop

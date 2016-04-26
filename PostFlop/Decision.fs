@@ -5,7 +5,7 @@ open Options
 
 module Decision =
 
-  type Street = Flop | Turn
+  type Street = Flop | Turn | River
 
   type Snapshot = {
     Pot: int 
@@ -22,6 +22,7 @@ module Decision =
   let betPre s = (potPre s) / 2
   let stackPre s = betPre s + min (s.HeroStack + s.HeroBet) (s.VillainStack + s.VillainBet)
   let stack s = min s.HeroStack s.VillainStack
+  let effectiveStackOnCurrentStreet s = min (s.HeroStack + s.HeroBet) (s.VillainStack + s.VillainBet)
   let effectiveStackPre s = (stackPre s + s.BB / 2 - 1) / s.BB
   let callSize s = s.VillainBet - s.HeroBet
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
@@ -50,6 +51,15 @@ module Decision =
   let callEQ s threshold = 
     if potOdds s <= threshold then Action.Call else Action.Fold
 
+  let stackOffDonkRiver s = 
+    let raiseSize = s.VillainBet * 5 / 2
+    if raiseSize + 100 > effectiveStackOnCurrentStreet s then Action.AllIn
+    else Action.RaiseToAmount raiseSize
+
+  let callRaiseRiver s =
+    if s.VillainBet * 2 < (s.Pot - s.VillainBet) then stackOffDonkRiver s
+    else Action.Call
+
   let stackOffDonk s =
     if s.VillainBet = s.BB then 
       4 * s.VillainBet |> RaiseToAmount
@@ -73,15 +83,17 @@ module Decision =
 
   let decide snapshot options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
-      match options.Donk with
-      | ForValueStackOff -> stackOffDonk snapshot |> Some
-      | CallRaisePet -> raisePetDonk snapshot |> Some
-      | CallEQ eq -> 
+      match options.Donk, snapshot.Street with
+      | ForValueStackOff, River -> stackOffDonkRiver snapshot |> Some
+      | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
+      | CallRaisePet, River -> callRaiseRiver snapshot |> Some
+      | CallRaisePet, _ -> raisePetDonk snapshot |> Some
+      | CallEQ eq, _ -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
-      | Call -> Some Action.Call
-      | Fold -> Some Action.Fold
-      | Undefined -> None
+      | Call, _ -> Some Action.Call
+      | Fold, _ -> Some Action.Fold
+      | Undefined, _ -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with
       | OnCheckRaise.StackOff -> reraise snapshot |> Some

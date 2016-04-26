@@ -122,24 +122,31 @@ module Import =
         | None -> Never 
     }
 
-  let parseTurnDonk (i: string) =
+  let parseTurnRiverDonk (i: string) =
     match i.ToLowerInvariant() with
     | "stack off" -> OnDonk.ForValueStackOff
     | "call" -> OnDonk.Call
     | "fold" -> OnDonk.Fold
+    | "call/raise" -> OnDonk.CallRaisePet
     | Int i -> OnDonk.CallEQ i
     | _ -> OnDonk.Undefined
 
-  type TurnSpecialConditions = { 
+  type TurnRiverSpecialConditions = { 
     StreetyBoard: bool
     DoublePairedBoard: bool }
+
+  let specialConditionsApply sc (v: string) = 
+    [(sc.StreetyBoard, "1"); (sc.DoublePairedBoard, "3")]
+    |> List.filter fst
+    |> List.map snd
+    |> List.exists (fun x -> v.Contains(x))
 
   let importTurnDonk (xlWorkBook : Workbook) specialConditions handValue =
     let xlWorkSheet = xlWorkBook.Worksheets.["turn vs donkbet"] :?> Worksheet
     let index = 
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 19
-      | FullHouse -> 18
+      | FullHouse(_) -> 18
       | Flush -> 17
       | Straight(Normal) -> 15
       | Straight(Weak) -> 16
@@ -171,10 +178,45 @@ module Import =
         | NoFD, GutShot -> 21
         | NoFD, NoSD -> 4
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)
-    let specialConditionsApply = 
-      [(specialConditions.StreetyBoard, "1"); (specialConditions.DoublePairedBoard, "3")]
-      |> List.filter fst
-      |> List.map snd
-      |> List.exists (fun x -> cellValues.[1].Contains(x))
-    parseTurnDonk (if specialConditionsApply then cellValues.[2] else cellValues.[0])
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)    
+    parseTurnRiverDonk (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
+
+  let parseRiverCbet (i: string) =
+    match i.ToLowerInvariant() with
+    | "stack off" -> (Always(62.5m), OnCheckRaise.StackOff)
+    | "check" -> (Never, OnCheckRaise.Undefined)
+    | Decimal d -> (Always(d), OnCheckRaise.Fold)
+    | _ -> failwith "Failed parsing River on check"
+
+  let importRiver (xlWorkBook : Workbook) specialConditions handValue =
+    let xlWorkSheet = xlWorkBook.Worksheets.["river"] :?> Worksheet
+    let index = 
+      (match handValue with
+      | StraightFlush | FourOfKind -> 21
+      | FullHouse(Normal) -> 19
+      | FullHouse(Weak) -> 20
+      | Flush -> 18
+      | Straight(Normal) -> 16
+      | Straight(Weak) -> 17
+      | ThreeOfKind -> 15
+      | TwoPair -> 14
+      | Pair(x) -> 
+        let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+        match x with
+        | Over -> 5
+        | Top(k) when highKicker k -> 6
+        | Top(_) -> 7
+        | Second(k) when highKicker k -> 8
+        | Second(_) -> 9
+        | Third -> 10
+        | Fourth -> 11
+        | Fifth -> 12
+        | Under -> 13
+      | Nothing -> 4
+      )|> string
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
+    let check = parseRiverCbet (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
+    let donk = parseTurnRiverDonk (if specialConditionsApply specialConditions cellValues.[4] then cellValues.[5] else cellValues.[3])
+    { Options.CbetFactor = fst check
+      CheckRaise = snd check
+      Donk = donk }

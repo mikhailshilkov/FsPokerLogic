@@ -10,6 +10,7 @@ module DecisionTests =
   let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff  }
   let defaultFlop = { Street = Flop; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Street = Turn; Pot = 180; VillainStack = 440; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let defaultRiver = { Street = River; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
 
   [<Theory>]
   [<InlineData(80, 50, 40)>]
@@ -259,3 +260,31 @@ module DecisionTests =
     let options = { defaultOptions with CheckRaise = OnCheckRaise.Undefined }
     let actual = Decision.decide snapshot options
     Assert.Equal(None, actual)
+
+  [<Fact>]
+  let ``Stack off all-in on river`` () =
+    let snapshot = { defaultRiver with Pot = 260; VillainBet = 100; HeroStack = 320; VillainStack = 420 }
+    let options = { defaultOptions with Donk = OnDonk.ForValueStackOff }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Some Action.AllIn, actual)
+
+  [<Fact>]
+  let ``Stack off 2.5x on river`` () =
+    let snapshot = { defaultRiver with Pot = 240; VillainBet = 80; HeroStack = 320; VillainStack = 440 }
+    let options = { defaultOptions with Donk = OnDonk.ForValueStackOff }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Action.RaiseToAmount 200 |> Some, actual)
+
+  [<Fact>]
+  let ``Call big donk on river`` () =
+    let snapshot = { defaultRiver with Pot = 240; VillainBet = 80; HeroStack = 320; VillainStack = 440 }
+    let options = { defaultOptions with Donk = OnDonk.CallRaisePet }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Some Action.Call, actual)
+
+  [<Fact>]
+  let ``Raise small donk on river`` () =
+    let snapshot = { defaultRiver with Pot = 230; VillainBet = 70; HeroStack = 320; VillainStack = 450 }
+    let options = { defaultOptions with Donk = OnDonk.CallRaisePet }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Action.RaiseToAmount 175 |> Some, actual)

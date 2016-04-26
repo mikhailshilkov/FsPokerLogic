@@ -13,16 +13,16 @@ module HandValues =
     | Top of Face
     | Over
 
-  type StraightType = | Normal | Weak
+  type TypeStrength = | Normal | Weak
 
   type MadeHandValue =
     | Nothing
     | Pair of PairType
     | TwoPair
     | ThreeOfKind
-    | Straight of StraightType
+    | Straight of TypeStrength
     | Flush
-    | FullHouse
+    | FullHouse of TypeStrength
     | FourOfKind
     | StraightFlush
 
@@ -81,10 +81,17 @@ module HandValues =
     | _ -> false
 
   let cardValueGroups cards = cards |> Seq.countBy (fun x -> x.Face) |> Seq.map snd |> Seq.sortDescending 
+  let sameSequence a b = Seq.compareWith Operators.compare a b = 0
 
   let isFullHouse (cards : SuitedCard[]) =
-    let sameSequence a b = Seq.compareWith Operators.compare a b = 0
     cards |> cardValueGroups |> Seq.take 2 |> sameSequence (seq [3; 2])
+
+  let isWeakFullHouse hand board =
+    hand.Card1.Face = hand.Card2.Face
+    && board |> Array.filter (fun x -> x.Face = hand.Card1.Face) |> Array.length = 1
+    && board |> Array.filter (fun x -> faceValue x.Face > faceValue hand.Card1.Face) |> Array.length = 4
+    && Array.concat [| board; [|hand.Card1; hand.Card2|] |] |> cardValueGroups |> sameSequence (seq [3; 2; 2])
+
 
   let isFourOfKind (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.head = 4
@@ -137,7 +144,8 @@ module HandValues =
 
     if isStraightFlush combined then StraightFlush
     else if isFourOfKind combined then FourOfKind
-    else if isFullHouse combined then FullHouse
+    else if isWeakFullHouse hand board then FullHouse(Weak)
+    else if isFullHouse combined then FullHouse(Normal)
     else if isFlush combined then Flush
     else if isStraight combined then 
       if isWeakStraight hand board then Straight(Weak) else Straight(Normal)

@@ -78,3 +78,33 @@ module ImportTests =
     let actual = importTurnDonk (fst xl) special { Made = Flush; FD = NoFD; SD = NoSD }
     Assert.Equal(OnDonk.ForValueStackOff, actual)
     closeExcel xl
+
+  [<Fact>]
+  let ``importRiver returns correct options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = false; DoublePairedBoard = false }
+    let actual = importRiver (fst xl) special (FullHouse(Weak))
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importRiver returns correct option when special conditions apply`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = false; DoublePairedBoard = true }
+    let actual = importRiver (fst xl) special Flush
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importRiver returns correct option when special conditions apply but no special action defined`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+    let xl = openExcel fileName
+    let special = { StreetyBoard = true; DoublePairedBoard = true }
+    let actual = importRiver (fst xl) special (Pair(Under))
+    let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold }
+    Assert.Equal(expected, actual)
+    closeExcel xl

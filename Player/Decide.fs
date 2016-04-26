@@ -45,7 +45,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' xlFlopTurn xlTurnDonk (screen: Screen): Action option =
+  let decide' xlFlopTurn xlTurnDonkRiver (screen: Screen): Action option =
     let decidePre (screen: Screen): Action option =
       match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | true, _, _, _, _, _ -> Some Action.MinRaise
@@ -64,19 +64,27 @@ module Decide =
         let hand = screen.HeroHand |> parseFullHand
         let suitedHand = screen.HeroHand |> parseSuitedHand
         let flop = screen.Flop |> parseBoard
-        let street = if flop.Length = 4 then Turn else Flop
+        let street = 
+          match flop.Length with
+          | 5 -> River
+          | 4 -> Turn 
+          | 3 -> Flop
+          | _ -> failwith "Weird board length"
         let value = handValueWithDraws suitedHand flop
         let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
-        let turnDonkOption = importTurnDonk (fst xlTurnDonk) special value
         let eo = importOptions (fst xlFlopTurn) hand flop 
         let vb = defaultArg screen.VillainBet 0
         let hb = defaultArg screen.HeroBet 0
         let s = { Street = street; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         let o = 
-          if street = Turn then 
+          match street with 
+          | River ->
+            importRiver (fst xlTurnDonkRiver) special value.Made
+          | Turn ->
             let turnFace = flop.[3].Face
+            let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) special value
             toTurnOptions turnFace (value.Made = Flush) (isFlushDrawWith2 suitedHand flop) turnDonkOption eo
-          else
+          | Flop ->
             toFlopOptions (isMonoboard flop) (isFlushDrawWith2 suitedHand flop) (canBeFlushDraw flop) eo
           |> augmentOptions suitedHand flop s
         PostFlop.Decision.decide s o

@@ -15,13 +15,15 @@ module HandValues =
 
   type TypeStrength = | Normal | Weak
 
+  type FlushStrength = Nut | NotNut of Face | Board
+
   type MadeHandValue =
     | Nothing
     | Pair of PairType
     | TwoPair
     | ThreeOfKind
     | Straight of TypeStrength
-    | Flush
+    | Flush of FlushStrength
     | FullHouse of TypeStrength
     | FourOfKind
     | StraightFlush
@@ -30,6 +32,8 @@ module HandValues =
   type StraightDraw = | OpenEnded | GutShot | NoSD
 
   type HandValue = { Made: MadeHandValue; FD: FlushDraw; SD: StraightDraw }
+
+  let concat hand board = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
 
   let streetyFaces amount holes (cards: int list) =
     if List.length cards < amount then None
@@ -57,20 +61,20 @@ module HandValues =
 
   let isOpenEndedStraightDraw hand board =
     let exceptA c = c.Face <> Ace
-    let combined = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
+    let combined = concat hand board
     not (isStraight combined)
     && not (isStreety 4 0 (board |> Array.filter exceptA))
     && isStreety 4 0 (combined |> Array.filter exceptA)
 
   let isGutShot hand board =
-    let combined = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
+    let combined = concat hand board
     not (isStraight combined)
     && not (isOpenEndedStraightDraw hand board)
     && not (isStreety 4 1 board)
     && isStreety 4 1 combined
 
   let isWeakStraight hand board =
-    let combined = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
+    let combined = concat hand board
     let our = streety 5 0 combined
     match our with
     | Some s -> 
@@ -96,8 +100,35 @@ module HandValues =
   let isFourOfKind (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.head = 4
 
+  let flushSuit cards = 
+    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.filter (fun (x, count) -> count >= 5) |> Seq.map fst |> Seq.tryHead
+
   let isFlush (cards : SuitedCard[]) =
     cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.exists (fun x -> x >= 5)
+
+  let flushValue hand board =
+    let combined = concat hand board
+    match flushSuit combined with
+    | Some s -> 
+      let highestCard = 
+        [hand.Card1; hand.Card2] 
+        |> Seq.sortByDescending (fun x -> faceValue x.Face)
+        |> Seq.tryFind (fun x -> x.Suit = s)
+        |> Option.map (fun x -> x.Face)
+      match highestCard with
+      | Some h when 
+        [faceValue h + 1 .. 14] 
+        |> List.forall (fun x -> board |> Array.exists (fun y -> y.Suit = s && faceValue y.Face = x)) 
+        -> Nut
+      | Some h when 
+        board
+        |> Array.filter (fun y -> y.Suit = s && faceValue y.Face > faceValue h) 
+        |> Array.length = 5
+        -> Board
+      | Some x -> NotNut x
+      | None -> Board
+      |> Some
+    | None -> None
 
   let isFlushDrawWith2 hand board =
     hand.Card1.Suit = hand.Card2.Suit 
@@ -111,16 +142,18 @@ module HandValues =
       |> List.exists (fun c -> c = 3)
 
   let isStraightFlush (cards : SuitedCard[]) =
-    let flushSuit = cards |> Seq.countBy (fun x -> x.Suit) |> Seq.filter (fun (x, count) -> count >= 5) |> Seq.map fst |> Seq.tryHead
-    match flushSuit with
+    match flushSuit cards with
     | Some s -> cards |> Array.filter (fun x -> x.Suit = s) |> isStraight
     | None -> false
+
+  let monoboardLength (cards : SuitedCard[]) =
+    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.sortByDescending id |> Seq.head
 
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
 
   let handValue hand board =
-    let combined = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
+    let combined = concat hand board
 
     let boardFaces =
       board 
@@ -141,12 +174,13 @@ module HandValues =
       |> Seq.tryHead
 
     let isPairedHand = hand.Card1.Face = hand.Card2.Face
+    let flush = flushValue hand board
 
     if isStraightFlush combined then StraightFlush
     else if isFourOfKind combined then FourOfKind
     else if isWeakFullHouse hand board then FullHouse(Weak)
     else if isFullHouse combined then FullHouse(Normal)
-    else if isFlush combined then Flush
+    else if flush.IsSome then Flush(flush.Value)
     else if isStraight combined then 
       if isWeakStraight hand board then Straight(Weak) else Straight(Normal)
     else if Seq.length pairs = 2 && fst pairs.[0] = fst pairs.[1] then ThreeOfKind
@@ -179,3 +213,13 @@ module HandValues =
       FD = if isFlushDraw hand board then Draw else NoFD
       SD = if isOpenEndedStraightDraw hand board then OpenEnded else if isGutShot hand board then GutShot else NoSD
     }
+
+  type BoardTexture = { 
+    Streety: bool
+    DoublePaired: bool
+    Monoboard: int }
+
+  let boardTexture board =
+    { Streety = isStreety 4 1 board 
+      DoublePaired = isDoublePaired board
+      Monoboard = monoboardLength board }

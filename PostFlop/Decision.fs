@@ -1,6 +1,7 @@
 ﻿namespace PostFlop
 
 open Cards
+open Hands
 open Options
 
 module Decision =
@@ -14,8 +15,16 @@ module Decision =
     VillainBet: int 
     HeroBet: int
     BB: int
-    Street: Street
+    Hand: SuitedHand
+    Board: Board
   }
+
+  let street s = 
+    match s.Board.Length with
+    | 5 -> River
+    | 4 -> Turn 
+    | 3 -> Flop
+    | _ -> failwith "Weird board length"
 
   let roundTo5 v = (v + 2) / 5 * 5
   let potPre s = s.Pot - s.HeroBet - s.VillainBet
@@ -83,7 +92,7 @@ module Decision =
 
   let decide snapshot options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
-      match options.Donk, snapshot.Street with
+      match options.Donk, street snapshot with
       | ForValueStackOff, River -> stackOffDonkRiver snapshot |> Some
       | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some

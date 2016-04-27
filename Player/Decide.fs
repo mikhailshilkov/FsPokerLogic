@@ -10,11 +10,9 @@ open Hands
 open Cards.HandValues
 open Actions
 open Recognition.ScreenRecognition
-open PostFlop.Options
-open PostFlop.Import
-open PostFlop.Texture
 open PostFlop.HandValue
 open PostFlop.Decision
+open PostFlop.Facade
 
 module Decide =
   open Interaction
@@ -61,36 +59,17 @@ module Decide =
       match screen.IsVillainSitout, screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
       | true, _, _, _, _ -> Some Action.MinRaise
       | _, Some tp, Some hs, Some vs, Some b -> 
-        let hand = screen.HeroHand |> parseFullHand
         let suitedHand = screen.HeroHand |> parseSuitedHand
-        let flop = screen.Flop |> parseBoard
-        let street = 
-          match flop.Length with
-          | 5 -> River
-          | 4 -> Turn 
-          | 3 -> Flop
-          | _ -> failwith "Weird board length"
-        let value = handValueWithDraws suitedHand flop
-        let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
-        let eo = importOptions (fst xlFlopTurn) hand flop 
+        let board = screen.Board |> parseBoard
+        let value = handValueWithDraws suitedHand board
+        let special = boardTexture board
         let vb = defaultArg screen.VillainBet 0
         let hb = defaultArg screen.HeroBet 0
-        let s = { Street = street; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
-        let o = 
-          match street with 
-          | River ->
-            importRiver (fst xlTurnDonkRiver) special value.Made
-          | Turn ->
-            let turnFace = flop.[3].Face
-            let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) special value
-            toTurnOptions turnFace (value.Made = Flush) (isFlushDrawWith2 suitedHand flop) turnDonkOption eo
-          | Flop ->
-            toFlopOptions (isMonoboard flop) (isFlushDrawWith2 suitedHand flop) (canBeFlushDraw flop) eo
-          |> augmentOptions suitedHand flop s
-        PostFlop.Decision.decide s o
+        let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
+        decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
       | _ -> None
 
-    match screen.Flop with
+    match screen.Board with
     | null -> decidePre screen
     | _ -> decidePost screen
 

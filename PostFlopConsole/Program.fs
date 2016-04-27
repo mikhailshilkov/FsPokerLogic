@@ -2,11 +2,9 @@
 open Excel.Import
 open Hands
 open Cards.HandValues
-open PostFlop.Options
-open PostFlop.Decision
-open PostFlop.Import
-open PostFlop.Texture
 open PostFlop.HandValue
+open PostFlop.Decision
+open PostFlop.Facade
 
 let (|Int|_|) str =
    match System.Int32.TryParse(str) with
@@ -45,41 +43,23 @@ let main argv =
 
   Console.Write "\nPlease enter your hand (e.g. AsAc, 8d7h, Kh2h): "
   let handString = Console.ReadLine()
-  let hand = parseFullHand handString
   let suitedHand = parseSuitedHand handString
 
   printf "\nPot preflop is %A. Please enter board (e.g. 9s8c7d): " (bb*4)
-  let flopString = Console.ReadLine()
-  let flop = parseBoard flopString
-  let value = handValueWithDraws suitedHand flop
-  let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
+  let boardString = Console.ReadLine()
+  let board = parseBoard boardString
+  let value = handValueWithDraws suitedHand board
+  let special = boardTexture board
   printfn "Hand value is: %A" value
 
   let villainBet = enterNumber "Please enter the villain bet (0 for check)" 0 (villainStack - 40)
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
-  let street = 
-    match flop.Length with
-    | 5 -> River
-    | 4 -> Turn 
-    | 3 -> Flop
-    | _ -> failwith "Weird board length"
-  let s = { Street = street; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2 - villainBet; HeroStack = heroStack - bb*2 - heroBet; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let eo = importOptions (fst xlFlopTurn) hand flop 
-  let o = 
-    match street with
-    | River ->
-      importRiver (fst xlTurnDonkRiver) special value.Made
-    | Turn ->
-      let turnFace = flop.[3].Face
-      let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) special value
-      toTurnOptions turnFace (value.Made = Flush) (isFlushDrawWith2 suitedHand flop) turnDonkOption eo
-    | Flop ->
-      toFlopOptions (isMonoboard flop) (isFlushDrawWith2 suitedHand flop) (canBeFlushDraw flop) eo
-    |> augmentOptions suitedHand flop s
+  let s = { Hand = suitedHand; Board = board; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2 - villainBet; HeroStack = heroStack - bb*2 - heroBet; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
+  let decision = decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
 
   try    
-    match decide s o with
+    match decision with
     | Some d -> printfn "Action is: %A. Press any key to quit." d
     | None -> printfn "No Action defined. Press any key to quit."
   with 

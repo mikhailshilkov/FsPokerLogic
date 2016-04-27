@@ -146,6 +146,13 @@ let parseSuitedHand (s : string) =
     Card2 = { Face = parseFace s.[2]; Suit = parseSuit s.[3] } 
   }
 
+let toHand suited =
+  let ordered = 
+    [suited.Card1; suited.Card2]
+    |> List.map (fun x -> x.Face)
+    |> List.sortByDescending faceValue
+  { Face1 = ordered.[0]; Face2 = ordered.[1]; SameSuit = suited.Card1.Suit = suited.Card2.Suit }
+
 type Board = SuitedCard[]
 
 let chunkBySize n s =

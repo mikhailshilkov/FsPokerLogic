@@ -30,7 +30,7 @@ module ScreenRecognition =
     Actions: ActionButton[]
     Blinds: Blinds option
     Button: ButtonPosition
-    Flop: string
+    Board: string
     IsVillainSitout: bool
   }
 
@@ -120,5 +120,5 @@ module ScreenRecognition =
       Button = button
       Actions = actions
       Blinds = blinds
-      Flop = flop
+      Board = flop
       IsVillainSitout = isVillainSitout }

@@ -29,7 +29,7 @@ let main argv =
     let value = handValueWithDraws suitedHand flop
     printfn "Hand value is: %A" value
 
-    let special = { StreetyBoard = isStreety 4 1 flop; DoublePairedBoard = isDoublePaired flop }
+    let special = boardTexture flop
     printfn "Special conditions: %A" special
 
     let turnDonkOption = importTurnDonk (fst xlTurnDonk) special value

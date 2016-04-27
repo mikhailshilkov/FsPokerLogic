@@ -95,8 +95,9 @@ module Import =
     >> Seq.sum 
     >> (+) 6
 
-  let importOptions (xlWorkBook : Workbook) (hand: Hand) (board: Board) =
-    let worksheetName = [hand.Face1; hand.Face2] |> List.sortByDescending faceValue |> List.map faceToChar |> String.Concat
+  let importOptions (xlWorkBook : Workbook) (hand: SuitedHand) (board: Board) =
+    let h = toHand hand
+    let worksheetName = [h.Face1; h.Face2] |> List.sortByDescending faceValue |> List.map faceToChar |> String.Concat
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
     let index = board |> Seq.take 3 |> Seq.map (fun x -> x.Face) |> rowIndex |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
@@ -131,12 +132,8 @@ module Import =
     | Int i -> OnDonk.CallEQ i
     | _ -> OnDonk.Undefined
 
-  type TurnRiverSpecialConditions = { 
-    StreetyBoard: bool
-    DoublePairedBoard: bool }
-
   let specialConditionsApply sc (v: string) = 
-    [(sc.StreetyBoard, "1"); (sc.DoublePairedBoard, "3")]
+    [(sc.Streety, "1"); (sc.DoublePaired, "3")]
     |> List.filter fst
     |> List.map snd
     |> List.exists (fun x -> v.Contains(x))
@@ -147,7 +144,7 @@ module Import =
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 19
       | FullHouse(_) -> 18
-      | Flush -> 17
+      | Flush(_) -> 17
       | Straight(Normal) -> 15
       | Straight(Weak) -> 16
       | ThreeOfKind -> 14
@@ -195,7 +192,7 @@ module Import =
       | StraightFlush | FourOfKind -> 21
       | FullHouse(Normal) -> 19
       | FullHouse(Weak) -> 20
-      | Flush -> 18
+      | Flush(_) -> 18
       | Straight(Normal) -> 16
       | Straight(Weak) -> 17
       | ThreeOfKind -> 15

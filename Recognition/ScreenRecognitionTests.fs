@@ -47,4 +47,4 @@ let ``recognize sitout from predefined file`` () =
 
 [<Fact>]
 let ``recognize board from predefined file`` () =
-  test (fun r -> r.Flop) "Flop"
+  test (fun r -> r.Board) "Flop"

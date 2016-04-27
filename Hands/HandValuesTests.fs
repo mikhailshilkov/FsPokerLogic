@@ -89,6 +89,16 @@ let ``isWeakStraight returns true for weak straights`` handS flopS expected =
   let actual = isWeakStraight hand board
   Assert.Equal(expected, actual)
 
+[<Theory>]
+[<InlineData("TsJs6sAsQs", 5)>]
+[<InlineData("TsJs6sJcQs", 4)>]
+[<InlineData("TsJs6cJcQs", 3)>]
+[<InlineData("TsJd6cJcQs", 2)>]
+let ``monoboardLength returns the length of longest suit`` flopS expected =
+  let board = parseBoard flopS
+  let actual = monoboardLength board
+  Assert.Equal(expected, actual)
+
 
 [<Theory>]
 [<InlineData("7s2c", "AdKdJhTh8c")>]
@@ -164,12 +174,30 @@ let ``Straight weak`` handS flopS =
   Straight(Weak) |> test handS flopS
 
 [<Theory>]
-[<InlineData("2d3d", "Ad5d6d")>]
+[<InlineData("Ad3d", "2c4dJdKd6c")>]
+[<InlineData("Kd3d", "2c4dJdAd6c")>]
+[<InlineData("Jd3c", "2cKdQdAd6d")>]
+let ``Flush Nut`` handS flopS =
+  Flush(Nut) |> test handS flopS
+
+[<Theory>]
 [<InlineData("Kd3d", "2c4dJdAc6d")>]
+[<InlineData("Kc3c", "2c4cJcQc6c")>]
+let ``Flush K`` handS flopS =
+  Flush(NotNut King) |> test handS flopS
+
+[<Theory>]
+[<InlineData("2d3d", "Ad5d6d")>]
 [<InlineData("Kd3c", "2c4cKhAc6c")>]
-[<InlineData("Kc3c", "2c4cJcAc6c")>]
-let ``Flush`` handS flopS =
-  Flush |> test handS flopS
+let ``Flush 3`` handS flopS =
+  Flush(NotNut Three) |> test handS flopS
+
+[<Theory>]
+[<InlineData("2d3d", "Ad5d6dKdTd")>]
+[<InlineData("Ac5d", "Ad7d6dKdTd")>]
+[<InlineData("Ac5c", "Ad7d6dKdTd")>]
+let ``Flush Board`` handS flopS =
+  Flush(Board) |> test handS flopS
 
 [<Theory>]
 [<InlineData("JdTd", "AdJhTs2sTc")>]

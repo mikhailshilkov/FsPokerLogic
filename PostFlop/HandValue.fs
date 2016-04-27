@@ -24,9 +24,10 @@ module HandValue =
     |> Seq.sort
     |> Seq.last = 3
 
-  let augmentOptions (hand: SuitedHand) (board: Board) (s: Snapshot) o =
-    if s.Street = Flop && s.VillainStack = 0 && isSecondPairWithAKKicker hand board then 
+  let augmentOptions s o =
+    let street = street s
+    if street = Flop && s.VillainStack = 0 && isSecondPairWithAKKicker s.Hand s.Board then 
       {o with Donk = OnDonk.CallRaisePet } 
-    else if s.Street = Turn && o.CheckRaise = OnCheckRaise.Call && is3SuitedCardsOnBoard board && not(isSingleCardFlushDrawWithAKQKicker hand board) then
+    else if street = Turn && o.CheckRaise = OnCheckRaise.Call && is3SuitedCardsOnBoard s.Board && not(isSingleCardFlushDrawWithAKQKicker s.Hand s.Board) then
       {o with CheckRaise = OnCheckRaise.StackOff } 
     else o

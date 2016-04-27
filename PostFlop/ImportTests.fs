@@ -11,6 +11,8 @@ module ImportTests =
   open System.Runtime.InteropServices
   open Excel.Import
 
+  let defaultTexture = { Streety = false; DoublePaired = false; Monoboard = 2 }
+
   [<Theory>]
   [<InlineData("222", 6)>]
   [<InlineData("233", 19)>]
@@ -35,7 +37,8 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
     let xl = openExcel fileName
     let board = parseBoard boardString
-    let actual = importOptions (fst xl) { Face1 = Ace; Face2 = Two; SameSuit = false } board
+    let hand = { Card1 = { Face = Ace; Suit = Clubs; }; Card2 = { Face = Two; Suit = Spades } }
+    let actual = importOptions (fst xl) hand board
     let expected = { 
       CbetFactor = Always 50m
       CheckRaise = OnCheckRaise.CallEQ 1
@@ -56,8 +59,7 @@ module ImportTests =
   let ``importTurnDonk returns correct option for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = false; DoublePairedBoard = false }
-    let actual = importTurnDonk (fst xl) special { Made = Pair(Over); FD = NoFD; SD = NoSD }
+    let actual = importTurnDonk (fst xl) defaultTexture { Made = Pair(Over); FD = NoFD; SD = NoSD }
     Assert.Equal(OnDonk.ForValueStackOff, actual)
     closeExcel xl
 
@@ -65,7 +67,7 @@ module ImportTests =
   let ``importTurnDonk returns correct option when special conditions apply`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = true; DoublePairedBoard = false }
+    let special = { defaultTexture with Streety = true }
     let actual = importTurnDonk (fst xl) special { Made = Pair(Third); FD = NoFD; SD = NoSD }
     Assert.Equal(OnDonk.Fold, actual)
     closeExcel xl
@@ -74,8 +76,8 @@ module ImportTests =
   let ``importTurnDonk returns correct option when special conditions apply but no special action defined`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = true; DoublePairedBoard = true }
-    let actual = importTurnDonk (fst xl) special { Made = Flush; FD = NoFD; SD = NoSD }
+    let special = { defaultTexture with Streety = true; DoublePaired = true }
+    let actual = importTurnDonk (fst xl) special { Made = Flush(NotNut Jack); FD = NoFD; SD = NoSD }
     Assert.Equal(OnDonk.ForValueStackOff, actual)
     closeExcel xl
 
@@ -83,8 +85,7 @@ module ImportTests =
   let ``importRiver returns correct options for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = false; DoublePairedBoard = false }
-    let actual = importRiver (fst xl) special (FullHouse(Weak))
+    let actual = importRiver (fst xl) defaultTexture (FullHouse(Weak))
     let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
@@ -93,8 +94,8 @@ module ImportTests =
   let ``importRiver returns correct option when special conditions apply`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = false; DoublePairedBoard = true }
-    let actual = importRiver (fst xl) special Flush
+    let special = { defaultTexture with DoublePaired = true }
+    let actual = importRiver (fst xl) special (Flush(NotNut Ten))
     let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
@@ -103,7 +104,7 @@ module ImportTests =
   let ``importRiver returns correct option when special conditions apply but no special action defined`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { StreetyBoard = true; DoublePairedBoard = true }
+    let special = { defaultTexture with Streety = true; DoublePaired = true }
     let actual = importRiver (fst xl) special (Pair(Under))
     let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold }
     Assert.Equal(expected, actual)

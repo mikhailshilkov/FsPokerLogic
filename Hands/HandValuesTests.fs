@@ -27,17 +27,18 @@ let ``isFlushDrawWith2 returns true for flush draw with 2 hole cards`` handS flo
   Assert.Equal(expected, actual)
 
 [<Theory>]
-[<InlineData("AcKc", "QcTs8c", true)>]
-[<InlineData("AcKs", "Ts8s2sJd", true)>]
-[<InlineData("AcKs", "Ts8c2cJc", true)>]
-[<InlineData("AcKc", "Tc8c2c", false)>]
-[<InlineData("AcKc", "Tc8s2s", false)>]
-[<InlineData("AcKs", "Ts8d2h", false)>]
-let ``isFlushDraw returns true for flush draw`` handS flopS expected =
+[<InlineData("AcKc", "QcTs8c", 'A')>]
+[<InlineData("AcKs", "Ts8s2sJd", 'K')>]
+[<InlineData("QcKs", "Ts8c2cJc", 'Q')>]
+[<InlineData("Jc9c", "Tc8c2c", '-')>]
+[<InlineData("AcKc", "Tc8s2s", '-')>]
+[<InlineData("AcKs", "Ts8d2h", '-')>]
+let ``handValueWithDraws returns FD face value for flush draw`` handS flopS expectedS =
   let hand = parseSuitedHand handS
   let board = parseBoard flopS
-  let actual = isFlushDraw hand board
-  Assert.Equal(expected, actual)
+  let actual = handValueWithDraws hand board
+  let expected = if expectedS = '-' then NoFD else (parseFace expectedS |> Draw)
+  Assert.Equal(expected, actual.FD)
 
 [<Theory>]
 [<InlineData("QcKs", "Th8s2sJd", true)>]

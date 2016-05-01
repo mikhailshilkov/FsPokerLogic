@@ -23,6 +23,13 @@ module DecisionTests =
     Assert.Equal(RaiseToAmount cbet |> Some, actual)
 
   [<Fact>]
+  let ``If CBet is less or equal 1 BB then MinRaise`` () =
+    let options = { defaultOptions with CbetFactor = Always 50m }
+    let snapshot = { defaultFlop with Pot = 40 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Some MinRaise, actual)
+
+  [<Fact>]
   let ``Condition 2: No CBet IP on flop if size is undefined`` () =
     let options = { defaultOptions with CbetFactor = Never }
     let actual = Decision.decide defaultFlop options
@@ -265,14 +272,14 @@ module DecisionTests =
   [<Fact>]
   let ``Stack off all-in on river`` () =
     let snapshot = { defaultRiver with Pot = 260; VillainBet = 100; HeroStack = 320; VillainStack = 420 }
-    let options = { defaultOptions with Donk = OnDonk.ForValueStackOff }
+    let options = { defaultOptions with Donk = OnDonk.ForValueStackOffX 250 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Some Action.AllIn, actual)
 
   [<Fact>]
   let ``Stack off 2.5x on river`` () =
     let snapshot = { defaultRiver with Pot = 240; VillainBet = 80; HeroStack = 320; VillainStack = 440 }
-    let options = { defaultOptions with Donk = OnDonk.ForValueStackOff }
+    let options = { defaultOptions with Donk = OnDonk.ForValueStackOffX 250 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Action.RaiseToAmount 200 |> Some, actual)
 

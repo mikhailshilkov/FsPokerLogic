@@ -22,42 +22,36 @@ let defaultOptions = {
 [<Fact>]
 let ``toFlopOptions when no FD`` () =
   let eo = { defaultOptions with CbetFactor = Always 75m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17 }
-  let actual = toFlopOptions false false false eo
+  let actual = toFlopOptions false false eo
   let expected = { Options.CbetFactor = Always 75m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17 }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toFlopOptions when no FD but board has FD and Cbet is 75m => Cbet becomes 100m`` () =
   let eo = { defaultOptions with CbetFactor = Always 75m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17 }
-  let actual = toFlopOptions false false true eo
+  let actual = toFlopOptions false true eo
   let expected = { Options.CbetFactor = Always 100m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17 }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toFlopOptions when FD`` () =
   let eo = { defaultOptions with CbetFactor = Always 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
-  let actual = toFlopOptions false true true eo
+  let actual = toFlopOptions true true eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toFlopOptions when FD Cbets 50m instead of None and Stacks Off`` () =
   let eo = { defaultOptions with CbetFactor = Never; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
-  let actual = toFlopOptions false true true eo
+  let actual = toFlopOptions true true eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toFlopOptions when FD but Donk FD is not defined`` () =
   let eo = { defaultOptions with CbetFactor = Never; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = None }
-  let actual = toFlopOptions false true true eo
+  let actual = toFlopOptions true true eo
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.CallEQ 17 }
-  Assert.Equal(expected, actual)
-
-[<Fact>]
-let ``toFlopOptions on monoboard is not defined`` () =
-  let actual = toFlopOptions true false false defaultOptions
-  let expected = { Options.CbetFactor = CBet.Undefined; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
   Assert.Equal(expected, actual)
 
 [<Fact>]

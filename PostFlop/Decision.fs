@@ -60,13 +60,13 @@ module Decision =
   let callEQ s threshold = 
     if potOdds s <= threshold then Action.Call else Action.Fold
 
-  let stackOffDonkRiver s = 
-    let raiseSize = s.VillainBet * 5 / 2
+  let stackOffDonkX x s = 
+    let raiseSize = s.VillainBet * x / 100
     if raiseSize + 100 > effectiveStackOnCurrentStreet s then Action.AllIn
     else Action.RaiseToAmount raiseSize
 
   let callRaiseRiver s =
-    if s.VillainBet * 2 < (s.Pot - s.VillainBet) then stackOffDonkRiver s
+    if s.VillainBet * 2 < (s.Pot - s.VillainBet) then stackOffDonkX 250 s
     else Action.Call
 
   let stackOffDonk s =
@@ -90,10 +90,15 @@ module Decision =
       else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
       else Action.Call
 
+  let ensureMinRaise s a =
+    match a with
+    | Some (RaiseToAmount x) when x <= s.BB -> Some MinRaise
+    | x -> x
+
   let decide snapshot options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk, street snapshot with
-      | ForValueStackOff, River -> stackOffDonkRiver snapshot |> Some
+      | ForValueStackOffX(x), _ -> stackOffDonkX x snapshot |> Some
       | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
@@ -118,3 +123,4 @@ module Decision =
       | OrCheck f -> cbetOr snapshot f Check |> Some
       | Never -> Check |> Some
       | CBet.Undefined -> None
+      |> ensureMinRaise snapshot

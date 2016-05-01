@@ -5,10 +5,8 @@ module Texture =
   open Options
   open Import
 
-  let toFlopOptions isMonoboard isFlushDraw isFlopFlushDraw eo =
-    if isMonoboard then 
-      { Options.CbetFactor = CBet.Undefined; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Undefined }
-    else if isFlushDraw then
+  let toFlopOptions isFlushDraw isFlopFlushDraw eo =
+    if isFlushDraw then
       let donk = if eo.DonkFlashDraw.IsSome then eo.DonkFlashDraw.Value else eo.Donk
       let cbetFactor = if eo.CbetFactor = Never then Always 50m else eo.CbetFactor
       { Options.CbetFactor = cbetFactor; CheckRaise = StackOff; Donk = donk }

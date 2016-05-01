@@ -125,7 +125,7 @@ module Import =
 
   let parseTurnRiverDonk (i: string) =
     match i.ToLowerInvariant() with
-    | "stack off" -> OnDonk.ForValueStackOff
+    | "stack off" -> OnDonk.ForValueStackOffX 250
     | "call" -> OnDonk.Call
     | "fold" -> OnDonk.Fold
     | "call/raise" -> OnDonk.CallRaisePet
@@ -153,12 +153,12 @@ module Import =
         let highKicker k = k = Ace || k = King || k = Queen || k = Jack
         match x, handValue.FD, handValue.SD with
         | Over, _, _ -> 6 
-        | Top(_), Draw, _ -> 31
+        | Top(_), Draw(_), _ -> 31
         | Top(_), _, OpenEnded -> 26
         | Top(_), _, GutShot -> 22
         | Top(k), NoFD, NoSD when highKicker k -> 7
         | Top(_), NoFD, NoSD -> 8
-        | Second(_), Draw, _ | Third, Draw, _ | Fourth, Draw, _ -> 32
+        | Second(_), Draw(_), _ | Third, Draw(_), _ | Fourth, Draw(_), _ -> 32
         | Second(_), _, OpenEnded | Third, _, OpenEnded | Fourth, _, OpenEnded -> 27
         | Second(_), _, GutShot | Third, _, GutShot | Fourth, _, GutShot -> 23
         | Second(k), NoFD, NoSD when highKicker k -> 9
@@ -169,8 +169,8 @@ module Import =
         | Under, _, _ -> 12
       | Nothing ->
         match handValue.FD, handValue.SD with
-        | Draw, OpenEnded | Draw, GutShot -> 31
-        | Draw, NoSD -> 30
+        | Draw(_), OpenEnded | Draw(_), GutShot -> 31
+        | Draw(_), NoSD -> 30
         | NoFD, OpenEnded -> 25
         | NoFD, GutShot -> 21
         | NoFD, NoSD -> 4

@@ -28,7 +28,7 @@ module HandValues =
     | FourOfKind
     | StraightFlush
 
-  type FlushDraw = | Draw | NoFD
+  type FlushDraw = | Draw of Face | NoFD
   type StraightDraw = | OpenEnded | GutShot | NoSD
 
   type HandValue = { Made: MadeHandValue; FD: FlushDraw; SD: StraightDraw }
@@ -130,16 +130,24 @@ module HandValues =
       |> Some
     | None -> None
 
-  let isFlushDrawWith2 hand board =
-    hand.Card1.Suit = hand.Card2.Suit 
-    && Array.filter (fun x -> x.Suit = hand.Card1.Suit) board |> Array.length = 2
+  let findFlushDrawWith2 hand board =
+    if hand.Card1.Suit = hand.Card2.Suit 
+       && Array.filter (fun x -> x.Suit = hand.Card1.Suit) board |> Array.length = 2
+    then maxFace hand.Card1 hand.Card2 |> Some
+    else None
 
-  let isFlushDraw hand board =
-    if hand.Card1.Suit = hand.Card2.Suit then isFlushDrawWith2 hand board 
+  let isFlushDrawWith2 hand board = match findFlushDrawWith2 hand board with | Some _ -> true | None -> false
+
+  let findFlushDraw hand board =
+    if hand.Card1.Suit = hand.Card2.Suit then findFlushDrawWith2 hand board 
     else 
       [hand.Card1; hand.Card2]
-      |> List.map (fun c -> Array.filter (fun x -> x.Suit = c.Suit) board |> Array.length)
-      |> List.exists (fun c -> c = 3)
+      |> List.map (fun c -> (c, Array.filter (fun x -> x.Suit = c.Suit) board |> Array.length))
+      |> List.filter (fun (_, c) -> c = 3)
+      |> List.map (fun (x, _) -> x.Face)
+      |> List.tryHead
+
+  let isFlushDraw hand board = match findFlushDraw hand board with | Some _ -> true | None -> false
 
   let isStraightFlush (cards : SuitedCard[]) =
     match flushSuit cards with
@@ -210,7 +218,7 @@ module HandValues =
 
   let handValueWithDraws hand board =
     { Made = handValue hand board
-      FD = if isFlushDraw hand board then Draw else NoFD
+      FD = match findFlushDraw hand board with | Some x -> Draw x | None -> NoFD
       SD = if isOpenEndedStraightDraw hand board then OpenEnded else if isGutShot hand board then GutShot else NoSD
     }
 

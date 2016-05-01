@@ -34,7 +34,7 @@ module Click =
 
   let r = new Random()
   let click' msg =
-    if not msg.IsInstant then Thread.Sleep(r.Next(1000, 2700))
+    if not msg.IsInstant then Thread.Sleep(r.Next(500, 1700))
     msg.Clicks |> Array.iter (executeAction msg.WindowTitle)
     // Move to random place below
     Clicker.shiftBy (100, 50, 150, 100)

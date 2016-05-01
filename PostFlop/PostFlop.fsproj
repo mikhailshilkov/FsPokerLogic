@@ -63,6 +63,7 @@
     <Compile Include="HandValueTests.fs" />
     <Compile Include="Monoboard.fs" />
     <Compile Include="Facade.fs" />
+    <Compile Include="MonoboardTests.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

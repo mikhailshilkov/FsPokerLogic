@@ -60,7 +60,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
     let actual = importTurnDonk (fst xl) defaultTexture { Made = Pair(Over); FD = NoFD; SD = NoSD }
-    Assert.Equal(OnDonk.ForValueStackOff, actual)
+    Assert.Equal(OnDonk.ForValueStackOffX 250, actual)
     closeExcel xl
 
   [<Fact>]
@@ -78,7 +78,7 @@ module ImportTests =
     let xl = openExcel fileName
     let special = { defaultTexture with Streety = true; DoublePaired = true }
     let actual = importTurnDonk (fst xl) special { Made = Flush(NotNut Jack); FD = NoFD; SD = NoSD }
-    Assert.Equal(OnDonk.ForValueStackOff, actual)
+    Assert.Equal(OnDonk.ForValueStackOffX 250, actual)
     closeExcel xl
 
   [<Fact>]

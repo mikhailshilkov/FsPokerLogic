@@ -90,7 +90,7 @@ module Decide =
       | Action.Call -> ["Call"; "AllIn"]
       | Action.MinRaise -> ["RaiseTo"; "Bet"]
       | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"]
-      | Action.AllIn -> ["RaiseTo"; "Bet"]
+      | Action.AllIn -> ["AllIn"; "RaiseTo"; "Bet"; "Call"]
       |> findButton
 
     match (action, button) with

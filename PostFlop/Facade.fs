@@ -28,7 +28,7 @@ module Facade =
       toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eo
       |> (if special.Monoboard >= 3 then monoboardFlop value else id)
     )
-    |> augmentOptions s
+    |> augmentOptions s value.Made
     |> decide s
 
 

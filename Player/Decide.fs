@@ -82,13 +82,15 @@ module Decide =
 
   let mapAction action buttons : ClickAction[] =
     let findButton names =
-      buttons |> Array.tryFind (fun x -> Seq.exists (fun y -> x.Name = y) names)
+      names 
+      |> List.choose (fun x -> Seq.tryFind (fun y -> x = y.Name) buttons)
+      |> List.tryHead
     let button =
       match action with
       | Action.Fold -> ["Check"; "Fold"]
       | Action.Check -> ["Check"]
       | Action.Call -> ["Call"; "AllIn"]
-      | Action.MinRaise -> ["RaiseTo"; "Bet"]
+      | Action.MinRaise -> ["RaiseTo"; "Bet"; "Call"]
       | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"]
       | Action.AllIn -> ["AllIn"; "RaiseTo"; "Bet"; "Call"]
       |> findButton

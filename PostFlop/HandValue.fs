@@ -3,14 +3,13 @@
 module HandValue =
   open Hands
   open Options
+  open Cards.HandValues
   open PostFlop.Decision
 
-  let isSecondPairWithAKKicker (hand: SuitedHand) (board: Board) =
-    let handArray = [|hand.Card1; hand.Card2|]
-    let secondBoardFace = board |> Array.map (fun x -> x.Face) |> Seq.distinct |> Array.ofSeq |> Array.sortBy (fun x -> faceValue x) |> Array.rev |> Seq.item 1
-    let isPairedWithSecondBoardFace = handArray |> Array.exists (fun x -> x.Face = secondBoardFace)
-    let hasAK = handArray |> Array.exists (fun x -> x.Face = Ace || x.Face = King)
-    isPairedWithSecondBoardFace && hasAK && faceValue secondBoardFace <= 12
+  let isSecondPairWithAKKicker handValue =
+    match handValue with
+    | Pair(Second(King)) | Pair(Second(Ace)) -> true
+    | _ -> false
 
   let isSingleCardFlushDrawWithAKQKicker (hand: SuitedHand) (board: Board) =
     [hand.Card1; hand.Card2]
@@ -24,9 +23,9 @@ module HandValue =
     |> Seq.sort
     |> Seq.last = 3
 
-  let augmentOptions s o =
+  let augmentOptions s handValue o =
     let street = street s
-    if street = Flop && s.VillainStack = 0 && isSecondPairWithAKKicker s.Hand s.Board then 
+    if street = Flop && s.VillainStack = 0 && isSecondPairWithAKKicker handValue then 
       {o with Donk = OnDonk.CallRaisePet } 
     else if street = Turn && o.CheckRaise = OnCheckRaise.Call && is3SuitedCardsOnBoard s.Board && not(isSingleCardFlushDrawWithAKQKicker s.Hand s.Board) then
       {o with CheckRaise = OnCheckRaise.StackOff } 

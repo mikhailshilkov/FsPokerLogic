@@ -296,3 +296,10 @@ module DecisionTests =
     let options = { defaultOptions with Donk = OnDonk.CallRaisePet }
     let actual = Decision.decide snapshot options
     Assert.Equal(Action.RaiseToAmount 175 |> Some, actual)
+
+  [<Fact>]
+  let ``Call small check-raise on river`` () =
+    let snapshot = { defaultRiver with Pot = 820; VillainBet = 430; HeroBet = 160; HeroStack = 90; VillainStack = 0 }
+    let options = { defaultOptions with CheckRaise = OnCheckRaise.CallEQ 11 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Action.Call |> Some, actual)

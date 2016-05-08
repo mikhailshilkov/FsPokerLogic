@@ -86,7 +86,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
     let actual = importRiver (fst xl) defaultTexture (FullHouse(Weak))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -96,7 +96,7 @@ module ImportTests =
     let xl = openExcel fileName
     let special = { defaultTexture with DoublePaired = true }
     let actual = importRiver (fst xl) special (Flush(NotNut Ten))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.Fold; Donk = CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
 

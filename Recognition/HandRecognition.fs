@@ -10,20 +10,175 @@ module HandRecognition =
   }
 
   let patterns = [|  
-    { Card = "2"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;W;W;W;W;B;B;B;B;W;W;W;W;W;B;B;B;B;W;W;W;B;B;B;B;W;W;W;W;B;B;B;B;B;B;W;W;W;B;B;W;W;W;W;W;W;B;B;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;B;B;B;B;W;W;W;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "3"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;B;B;B;B;W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "4"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;W;B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;W;W;W;W;W;W;W;B;B;B;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "5"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;B;B;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "6"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;W;B;B;B;B;B;B;B;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;W;W;W;W;B;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;B;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "7"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    //{ Card = "8"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;W;W;W;W;W;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "8"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;W;B;B;B;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;W;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;B;B;B;B;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "9"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;B;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;B;B;B;W;W;W;B;B;W;W;B;B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "T"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;B;B;B;W;W;B;B;B;B;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W|] }
-    { Card = "J"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "Q"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;W;W;W;W;W;B;B;B;B;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;B;B;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W|] }
-    { Card = "K"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;W;W;B;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
-    { Card = "A"; Pattern = [|W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "2"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;B;B;B;W;W;W;W;W;W;B;B;B;W;
+    W;W;W;B;B;B;B;W;W;W;W;W;B;B;B;B;W;
+    W;W;B;B;B;B;W;W;W;W;B;B;B;B;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;B;B;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;
+    W;W;B;B;B;W;W;B;B;B;B;W;W;W;B;B;W;
+    W;W;W;B;B;B;B;B;B;B;W;W;W;W;B;B;W;
+    W;W;W;W;B;B;B;B;W;W;W;W;W;W;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "3"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;
+    W;W;W;B;B;B;W;W;W;W;W;B;B;B;B;W;W;
+    W;W;B;B;B;B;W;W;W;W;W;W;B;B;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;B;B;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;B;B;B;W;W;W;W;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;W;B;B;B;B;B;W;B;B;B;B;B;B;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "4"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;
+    W;W;W;W;W;W;B;B;B;W;B;B;B;W;W;W;W;
+    W;W;W;W;W;B;B;B;W;W;W;B;B;W;W;W;W;
+    W;W;W;B;B;B;W;W;W;W;B;B;B;W;W;W;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "5"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;
+    W;W;W;W;B;B;B;B;B;B;W;W;B;B;B;W;W;
+    W;W;B;B;B;B;B;B;B;W;W;W;B;B;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;
+    W;W;B;B;W;W;W;B;B;B;B;B;B;B;B;W;W;
+    W;W;B;B;W;W;W;W;B;B;B;B;B;B;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;B;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "6"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;W;
+    W;W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;
+    W;W;W;B;B;B;W;B;B;B;B;B;B;B;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;W;W;W;W;B;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;B;W;
+    W;W;W;W;B;W;W;W;B;B;B;B;B;B;B;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "7"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;B;B;B;W;W;W;W;B;B;B;B;B;B;B;W;
+    W;W;B;B;B;W;W;B;B;B;B;B;B;B;B;W;W;
+    W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "8"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;
+    W;W;W;B;B;B;B;W;W;B;B;B;B;B;B;W;W;
+    W;W;B;B;B;B;B;B;B;B;B;W;B;B;B;W;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;B;B;B;W;
+    W;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;B;B;W;W;W;W;W;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+    W;W;W;B;B;B;B;W;W;B;B;B;B;B;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "9"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;B;B;B;B;W;W;W;W;B;W;W;W;
+    W;W;W;B;B;B;B;B;B;B;B;W;B;B;B;W;W;
+    W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;B;B;W;W;W;B;B;W;
+    W;W;B;B;B;W;W;W;B;B;W;W;B;B;B;B;W;
+    W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+    W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "T"; Pattern = [|
+    W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;B;B;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;
+    W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+    W;W;B;B;B;B;B;B;W;W;B;B;B;B;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;B;W;W;W;W;W;W;W;W;B;B;B;W|] }
+    { Card = "J"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "Q"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;
+    W;W;W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;
+    W;W;W;B;B;B;W;W;W;W;W;B;B;B;B;W;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;
+    W;W;B;B;W;W;W;W;W;W;W;B;B;B;B;B;W;
+    W;W;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;
+    W;W;W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;
+    W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;
+    W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W|] }
+    { Card = "K"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+    W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;
+    W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;W;W;
+    W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;
+    W;W;W;W;B;B;B;B;B;B;B;B;B;W;W;W;W;
+    W;W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;W;
+    W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;
+    W;W;B;W;W;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "A"; Pattern = [|
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;
+    W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;
+    W;W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;
+    W;W;B;B;B;B;B;W;W;W;B;B;B;W;W;W;W;
+    W;W;B;B;B;B;W;W;W;W;B;B;B;W;W;W;W;
+    W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;
+    W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;
+    W;W;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;W;
+    W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
   |]
 
   let findCardStart getPixel width height = 
@@ -58,29 +213,41 @@ module HandRecognition =
     if Seq.isEmpty suits then None
     else suits |> Seq.maxBy snd|> fst |> Some
 
-  let getCardValue patterns bws =
+  let getCardValue patterns height bws =
+    let shiftByOneColumn h =
+      let padding = Seq.init height (fun _ -> W)
+      Seq.append (h |> Seq.skip height) padding
     let matchCount h p =
       Seq.zip h p
       |> Seq.map (fun (v1, v2) -> if v1 = v2 then 1 else -2)
       |> Seq.sum
+    let matchCountWithShift h p =
+      let c1 = matchCount h p
+      let c2 = matchCount (shiftByOneColumn h) p
+      let c3 = matchCount h (shiftByOneColumn p)
+      max (max c1 c2) c3
     let rating = 
       patterns 
-      |> Array.map (fun p -> (p, matchCount bws p.Pattern))
+      |> Array.map (fun p -> (p, matchCountWithShift bws p.Pattern))
       |> Array.filter (fun (p, m) -> m > 0)
       |> Array.sortByDescending (fun (p_, m) -> m)
+    let str = 
+      bws
+      |> Seq.map (fun x -> if x = B then "B" else "W") 
+      |> String.concat ";"
     rating
       |> Array.tryHead
       |> Option.map (fun (p, _) -> p)
 
-  let getCardString getCardPattern getCardSuit =
-    let value = getCardPattern |> getCardValue patterns
+  let getCardString height getCardPattern getCardSuit =
+    let value = getCardPattern |> getCardValue patterns height
     let suit = getCardSuit
     match value with
     | Some v -> v.Card + suit
     | None -> null
 
   let recognizeCard getPixel width height = 
-    let value = getCardPattern getPixel width height |> getCardValue patterns
+    let value = getCardPattern getPixel width height |> getCardValue patterns height
     let suit = getCardSuit getPixel width height
     match value, suit with
     | Some v, Some s -> v.Card + s

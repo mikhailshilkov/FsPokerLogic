@@ -180,9 +180,9 @@ module Import =
 
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with
-    | "stack off" -> (Always(62.5m), OnCheckRaise.StackOff)
+    | "stack off" -> (OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 4m/3m; IfPreStackLessThan = 0 }, OnCheckRaise.StackOff)
     | "check" -> (Never, OnCheckRaise.Undefined)
-    | Decimal d -> (Always(d), OnCheckRaise.Fold)
+    | Decimal d -> (Always(d), OnCheckRaise.CallEQ 11)
     | _ -> failwith "Failed parsing River on check"
 
   let importRiver (xlWorkBook : Workbook) specialConditions handValue =

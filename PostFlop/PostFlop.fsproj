@@ -63,8 +63,8 @@
     <Compile Include="HandValueTests.fs" />
     <Compile Include="Monoboard.fs" />
     <Compile Include="Facade.fs" />
-    <Compile Include="MonoboardTests.fs" />
     <Content Include="packages.config" />
+    <Compile Include="MonoboardTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">

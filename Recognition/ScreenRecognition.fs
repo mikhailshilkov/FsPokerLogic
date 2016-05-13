@@ -8,7 +8,7 @@ module ScreenRecognition =
   open StringRecognition
   open HandRecognition
 
-  type ButtonPosition = Hero | Villain | Unknown
+  type Seat = Hero | Villain | Unknown
 
   type Blinds = {
     SB: int
@@ -29,9 +29,9 @@ module ScreenRecognition =
     HeroHand: string
     Actions: ActionButton[]
     Blinds: Blinds option
-    Button: ButtonPosition
+    Button: Seat
     Board: string
-    IsVillainSitout: bool
+    Sitout: Seat
   }
 
   let print screen =
@@ -81,9 +81,10 @@ module ScreenRecognition =
       chooseGoodNumber 2 [recognizeNumber (getPixel 462 301) 50 15; recognizeNumber (getPixel 517 231) 50 15] 
     
     let actions = 
-      [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]
+      [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17); (263, 321, 40, 15)]
       |> Seq.map (fun (x, y, w, h) -> (recognizeButton (getPixel x y) w h), (x, y, w, h))
       |> Seq.filter (fun (x, _) -> not (String.IsNullOrEmpty x) && not(x.Contains("?")))
+      |> Seq.map (fun (x, r) -> (if x = "YES" then "SitBack" else x), r)
       |> Seq.map (fun (x, r) -> { Name = x; Region = r })
       |> Array.ofSeq      
 
@@ -94,6 +95,7 @@ module ScreenRecognition =
     let hasFlop = isFlop (getPixel 212 178) 131 60
 
     let isVillainSitout = isVillainSitout (getPixel 570 319) 12 11
+    let isHeroSitout = actions |> Array.exists (fun x -> x.Name = "SitBack")
 
     let (dxo, dyo) = findCardStart (getPixel 78 274) 12 17
     let heroHand = 
@@ -121,4 +123,4 @@ module ScreenRecognition =
       Actions = actions
       Blinds = blinds
       Board = flop
-      IsVillainSitout = isVillainSitout }
+      Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown }

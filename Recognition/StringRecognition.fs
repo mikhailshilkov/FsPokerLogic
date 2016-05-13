@@ -61,6 +61,11 @@ module StringRecognition =
     { Char = 'n'; Pattern = [[B;B;B;W;W;W;W;W;W];[B;B;B;W;W;W;W;W;W];[B;B;B;W;B;B;B;B;B];[B;B;B;W;B;B;B;B;B];[B;B;B;W;W;W;W;W;W];[B;B;B;B;W;W;W;W;W]] }
     { Char = 'B'; Pattern = [[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;W;W;W;W;W;W;W];[B;W;W;B;W;W;W;B]] }
     { Char = 't'; Pattern = [[W;W;W;W;W;W;W;B];[W;W;W;W;W;W;W;W];[B;B;W;B;B;B;B;W];[B;B;W;B;B;B;B;W]] }
+
+    // Sitout popup
+    { Char = 'Y'; Pattern = [[W;W;B;B;B;B;B;B];[B;B;W;W;B;B;B;B];[B;B;B;B;W;W;W;W];[B;B;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]] }
+    { Char = 'E'; Pattern = [[W;W;W;W;W;W;W;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;B;B;B;W]] }
+    { Char = 'S'; Pattern = [[B;W;W;B;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;W;W;W;B]] }
   |]
 
   let getChar patterns bws =
@@ -96,6 +101,17 @@ module StringRecognition =
   let recognizeString (matchSymbol: BW list list -> char) threshold getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
+    let invertifWhiteBackground pixels = 
+      let mutable whiteCount = 0
+      let mutable blackCount = 0
+      let whiteBackground = pixels |> Array2D.iter (fun x -> 
+        match x with
+        | W -> whiteCount <- whiteCount + 1
+        | B -> blackCount <- blackCount + 1)
+      if whiteCount > blackCount then 
+        pixels |> Array2D.map (fun x -> if x = B then W else B)
+      else pixels
+
     let splitIntoSymbols (e : BW list) (state: BW list list list) = 
       match state with
       | cur::rest ->
@@ -108,6 +124,7 @@ module StringRecognition =
 
     let pixels = 
       Array2D.init width height (fun x y -> isWhite (getPixel x y))
+      |> invertifWhiteBackground
       |> removePadding threshold
 
     let pixelColumns =

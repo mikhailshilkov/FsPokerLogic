@@ -45,9 +45,8 @@ module Decide =
 
   let decide' xlFlopTurn xlTurnDonkRiver (screen: Screen): Action option =
     let decidePre (screen: Screen): Action option =
-      match screen.IsVillainSitout, screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
-      | true, _, _, _, _, _ -> Some Action.MinRaise
-      | _, Some hs, Some hb, Some vs, Some vb, Some b -> 
+      match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
+      | Some hs, Some hb, Some vs, Some vb, Some b -> 
         let stack = min (hs + hb) (vs + vb)
         let effectiveStack = decimal stack / decimal b.BB
         let fullHand = parseFullHand screen.HeroHand
@@ -56,9 +55,8 @@ module Decide =
         Option.map (mapPatternToAction vb stack) actionPattern  
       | _ -> None
     let decidePost (screen: Screen) =
-      match screen.IsVillainSitout, screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
-      | true, _, _, _, _ -> Some Action.MinRaise
-      | _, Some tp, Some hs, Some vs, Some b -> 
+      match screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
+      | Some tp, Some hs, Some vs, Some b -> 
         let suitedHand = screen.HeroHand |> parseSuitedHand
         let board = screen.Board |> parseBoard
         let value = handValueWithDraws suitedHand board
@@ -69,9 +67,11 @@ module Decide =
         decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
       | _ -> None
 
-    match screen.Board with
-    | null -> decidePre screen
-    | _ -> decidePost screen
+    match screen.Sitout, screen.Board with
+    | Villain, _ -> Some Action.MinRaise
+    | Hero, _ -> Some Action.SitBack
+    | _, null -> decidePre screen
+    | _, _ -> decidePost screen
 
   type DecisionMessage = {
     WindowTitle: string
@@ -90,9 +90,10 @@ module Decide =
       | Action.Fold -> ["Check"; "Fold"]
       | Action.Check -> ["Check"]
       | Action.Call -> ["Call"; "AllIn"]
-      | Action.MinRaise -> ["RaiseTo"; "Bet"; "Call"]
-      | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"]
+      | Action.MinRaise -> ["RaiseTo"; "Bet"; "AllIn"; "Call"]
+      | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"; "AllIn"; "Call"]
       | Action.AllIn -> ["AllIn"; "RaiseTo"; "Bet"; "Call"]
+      | Action.SitBack -> ["SitBack"]
       |> findButton
 
     match (action, button) with
@@ -113,7 +114,7 @@ module Decide =
         printfn "Decision is: %A" d
         let action = mapAction d screen.Actions
         printfn "Action is: %A" action
-        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.IsVillainSitout }
+        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown }
         (Some outMsg, Some screen)
       | None ->
         printfn "Could not make a decision, dumping the screenshot..."

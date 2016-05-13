@@ -7,3 +7,4 @@ type Action =
 | Call
 | Check
 | Fold
+| SitBack

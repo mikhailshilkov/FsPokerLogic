@@ -209,6 +209,10 @@ let ``Full house normal`` handS flopS =
 [<Theory>]
 [<InlineData("JdJh", "JsQsQsKcKd")>]
 [<InlineData("7d7h", "Td9h7s9sTc")>]
+[<InlineData("Qd4h", "4d4c8s6s6c")>]
+[<InlineData("Jd2h", "JhJcQsQc")>]
+[<InlineData("8d8h", "7h7c7dKs")>]
+[<InlineData("Ad9h", "4h4c4dJs9d")>]
 let ``Full house weak`` handS flopS =
   FullHouse(Weak) |> test handS flopS
 

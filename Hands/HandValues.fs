@@ -90,12 +90,18 @@ module HandValues =
   let isFullHouse (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.take 2 |> sameSequence (seq [3; 2])
 
+  // If a better full house can be made with just 1 hole card
   let isWeakFullHouse hand board =
-    hand.Card1.Face = hand.Card2.Face
-    && board |> Array.filter (fun x -> x.Face = hand.Card1.Face) |> Array.length = 1
-    && board |> Array.filter (fun x -> faceValue x.Face > faceValue hand.Card1.Face) |> Array.length = 4
-    && Array.concat [| board; [|hand.Card1; hand.Card2|] |] |> cardValueGroups |> sameSequence (seq [3; 2; 2])
-
+    let fullHouseValue cards =
+      let groups = cards |> Array.countBy id |> Array.sortByDescending snd |> Array.take 2
+      match groups with
+      | [|(h, 3); (l, 2)|] -> h * 100 + l
+      | _ -> 0
+    let combined = concat hand board |> Array.map (fun x -> faceValue x.Face)
+    let our = fullHouseValue combined
+    let faces = board |> Array.map (fun x -> faceValue x.Face)
+    our > 0 
+    && [2..14] |> Seq.map (fun x -> Array.append faces [|x|]) |> Seq.exists (fun x -> fullHouseValue x > our)
 
   let isFourOfKind (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.head = 4

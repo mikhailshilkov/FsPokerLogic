@@ -50,9 +50,17 @@ let ``decide on imported / open`` handString stack expected =
 [<Theory>]
 [<InlineData("98o", 21, 2.5, "Fold")>]
 [<InlineData("98s", 20, 2.5, "Call")>]
+[<InlineData("KQo", 21, 2.5, "AllIn")>]
 [<InlineData("KTs", 19, 3.5, "Fold")>]
+[<InlineData("KJs", 20, 3.5, "AllIn")>]
 let ``decide on imported / limp raise`` handString stack raiseSize expected =
   decideOnImported decideIP handString stack [Limp; Raise(raiseSize, raiseSize)] expected
+
+[<Theory>]
+[<InlineData("KJo", 25, "Fold")>]
+[<InlineData("KQs", 24, "Call")>]
+let ``decide on imported / limp allin`` handString stack expected =
+  decideOnImported decideIP handString stack [Limp; RaiseAllIn] expected
 
 [<Theory>]
 [<InlineData("95s", 18, 3.2, "Fold")>]
@@ -84,6 +92,22 @@ let decideOOP = decideOnRules rulesOOP
 let ``decide on OOP import has value for any stack and hand`` bb history h =
   let action = decideOOP bb [history] h
   Assert.NotEqual(None, action)
+
+[<Theory>]
+[<InlineData("QQ", 25, 2.3, "AllIn")>]
+[<InlineData("JJ", 25, 2.3, "Fold")>]
+[<InlineData("AA", 25, 2.7, "AllIn")>]
+[<InlineData("JJ", 25, 2.7, "Fold")>]
+let ``decide on imported / 4bet`` handString stack raiseSize expected =
+  decideOnImported decideOOP handString stack [Raise(raiseSize, raiseSize); Raise(2.5m, 2.5m); Raise(2m, 2m)] expected
+
+[<Theory>]
+[<InlineData("JJ", 25, 2.3, "Call")>]
+[<InlineData("T3s", 25, 2.3, "Fold")>]
+[<InlineData("KK", 25, 2.7, "Call")>]
+[<InlineData("T2s", 25, 2.7, "Fold")>]
+let ``decide on imported / 4bet allin`` handString stack raiseSize expected =
+  decideOnImported decideOOP handString stack [Raise(raiseSize, raiseSize); Raise(2.5m, 2.5m); RaiseAllIn] expected
 
 [<Theory>]
 [<InlineData("Q9s", 7, "Check")>]

@@ -19,6 +19,8 @@ let main argv =
   let xlFlopTurn = openExcel fileNameFlopTurn
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
   let xlTurnDonk = openExcel fileNameTurnDonk
+  let fileNamePostFlopOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+  let xlPostFlopOop = openExcel fileNamePostFlopOop
 
   let system = Configuration.defaultConfig() |> System.create "my-system"
   let spawnChild childActor (debug: string) name (mailbox : Actor<'a>) = 
@@ -27,7 +29,7 @@ let main argv =
   
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
 
-  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn xlTurnDonk) None clickerRef
+  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop) None clickerRef
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 

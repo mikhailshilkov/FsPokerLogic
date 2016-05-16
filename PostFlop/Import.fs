@@ -227,7 +227,7 @@ module Import =
       CheckRaise = snd check
       Donk = donk }
 
-  let parseFlopOop (i: string) =
+  let parseOopOption (i: string) =
     let parts = i.Split([|'/'|], 2)
     if parts.Length = 2 then
       let donk = 
@@ -253,7 +253,7 @@ module Import =
       Some { First = donk; Then = cbet }
     else None
 
-  let importOopFlop (xlWorkBook : Workbook) sheetName handValue =
+  let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
     let index = 
       (match handValue.Made with
@@ -296,5 +296,135 @@ module Import =
         | NoFD, GutShot -> 23
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + index) ("C" + index)
-    parseFlopOop cellValues.[0]
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
+    let column = 
+      match texture.Monoboard, handValue.FD with
+      | 3, NoFD -> 2
+      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> 5
+      | 3, Draw(_) -> 3
+      | _ -> 0
+    parseOopOption cellValues.[column]
+
+  let importOopTurn (xlWorkBook : Workbook) sheetName handValue texture =
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    let index = 
+      (match handValue.Made with
+      | StraightFlush | FourOfKind -> 24
+      | FullHouse(Normal) -> 22
+      | FullHouse(Weak) -> 23
+      | Flush(_) -> 21
+      | Straight(Normal) -> 19
+      | Straight(Weak) -> 20
+      | ThreeOfKind -> 18
+      | TwoPair -> 17
+      | Pair(x) -> 
+        let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+        match x, handValue.FD, handValue.SD with
+        | Over, _, _ -> 9
+        | Top(_), Draw(_), _ -> 41
+        | Top(_), _, OpenEnded -> 34
+        | Top(_), _, GutShot -> 28
+        | Top(k), NoFD, NoSD when highKicker k -> 10
+        | Top(_), NoFD, NoSD -> 11
+        | Second(_), Draw(_), _  -> 43
+        | Third, Draw(_), _ | Fourth, Draw(_), _ -> 44
+        | Second(_), _, OpenEnded -> 35 
+        | Third, _, OpenEnded | Fourth, _, OpenEnded -> 36
+        | Second(_), _, GutShot -> 29 
+        | Third, _, GutShot | Fourth, _, GutShot -> 30
+        | Second(k), NoFD, NoSD when highKicker k -> 12
+        | Second(_), NoFD, NoSD -> 13
+        | Third, NoFD, NoSD -> 14
+        | Fourth, _, _ ->   15
+        | Fifth, _, _ -> failwith "Fifth pair impossible on егкт"
+        | Under, _, OpenEnded -> 37
+        | Under, _, _ -> 16
+      | TwoOvercards ->
+        match handValue.FD, handValue.SD with
+        | Draw(_), OpenEnded | Draw(_), GutShot -> 42
+        | Draw(_), NoSD -> 40
+        | NoFD, OpenEnded -> 33
+        | NoFD, GutShot -> 27
+        | NoFD, NoSD -> 7
+      | Nothing -> 
+        match handValue.FD, handValue.SD with
+        | Draw(_), OpenEnded | Draw(_), GutShot -> 42
+        | Draw(_), NoSD -> 39
+        | NoFD, OpenEnded -> 32
+        | NoFD, GutShot -> 26
+        | NoFD, NoSD -> 6
+      )|> string
+    let cellValues = getCellValues xlWorkSheet ("K" + index) ("AB" + index)
+    let column = 
+      match texture.Monoboard, handValue.FD with
+      | 4, _ ->
+        match handValue.Made with
+        | Flush(Nut) | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> 16
+        | Flush(_) -> 14
+        | _ -> 11
+      | 3, NoFD -> 4
+      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> 8
+      | 3, Draw(_) -> 6
+      | _ -> 0
+    parseOopOption cellValues.[column]
+
+  let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
+    let defaultMapping () =
+      let index = 
+        (match handValue with
+        | StraightFlush | FourOfKind ->
+          match texture.Monoboard with
+          | 4 -> 30
+          | 5 -> 36
+          | _ -> 23
+        | FullHouse(Normal) -> 21
+        | FullHouse(Weak) -> 22
+        | Flush(_) -> 
+          match texture.Monoboard with
+          | 4 -> 29
+          | 5 -> 35
+          | _ -> 20
+        | Straight(Normal) -> 18
+        | Straight(Weak) -> 19
+        | ThreeOfKind -> 17
+        | TwoPair -> 16
+        | Pair(x) -> 
+          let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+          match x with
+          | Over -> 8
+          | Top(k) when highKicker k -> 9
+          | Top(_) -> 10
+          | Second(k) when highKicker k -> 11
+          | Second(_) -> 12
+          | Third(_) -> 13
+          | Fourth | Fifth -> 14
+          | Under -> 15
+        | TwoOvercards | Nothing -> 6
+        )
+      let column = 
+        match texture.Monoboard, handValue with
+        | 4, Flush(Nut) -> 4
+        | 4, Flush(NotNut King) | 4, Flush(NotNut Queen) | 4, Flush(NotNut Jack) -> 2
+        | 4, Flush(_) -> 0
+        | 4, _ -> 4
+        | _ -> 0
+      (index, column)
+
+    let monoMapping () =
+      match handValue with
+      | StraightFlush | FourOfKind -> (36, 0)
+      | Flush(Board) -> (35, 0)
+      | Flush(Nut) -> (35, 2)
+      | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> (35, 5)
+      | Flush(_) -> (35, 3)
+      | _ -> (6, 0)
+
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    
+    let (index, column) =
+      if texture.Monoboard = 5 then monoMapping ()
+      else defaultMapping ()
+
+    let indexString = index |> string
+    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AJ" + indexString)
+    parseOopOption cellValues.[column]

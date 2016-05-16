@@ -15,7 +15,6 @@ module Recognize =
 
   let recognizeActor (window : WindowInfo) =
     let result = recognize' window.Bitmap
-    let canAct = System.String.IsNullOrEmpty(result.Board) || result.Button = Hero
-    if canAct && not(Array.isEmpty result.Actions) then
+    if not(Array.isEmpty result.Actions) then
       Some { WindowTitle = window.Title; TableName = window.TableName; Screen = result; Bitmap = window.Bitmap }
     else None    

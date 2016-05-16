@@ -43,7 +43,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' xlFlopTurn xlTurnDonkRiver (screen: Screen): Action option =
+  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop (screen: Screen) history: Action option =
     let decidePre (screen: Screen): Action option =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
@@ -64,7 +64,10 @@ module Decide =
         let vb = defaultArg screen.VillainBet 0
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
-        decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
+        if screen.Button = Hero then 
+          decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
+        else
+          decidePostFlopOop history s value special xlPostFlopOop
       | _ -> None
 
     match screen.Sitout, screen.Board with
@@ -78,6 +81,11 @@ module Decide =
     TableName: string
     Screen: Screen
     Bitmap: Bitmap
+  }
+
+  type DecisionState = {
+    LastScreen: Screen
+    PreviousActions: Action list
   }
 
   let mapAction action buttons : ClickAction[] =
@@ -102,21 +110,33 @@ module Decide =
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decisionActor xlFlopTurn xlTurnDonk msg lastScreen =
+  let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop msg (state:DecisionState option) =
+    let pushAction state action reset =
+      match state, action with
+      | Some s, Some a -> if reset then [a] else List.append s.PreviousActions [a]
+      | Some s, None -> s.PreviousActions
+      | None, Some a -> [a]
+      | None, None -> []
+
     let screen = msg.Screen
-    match lastScreen with
-    | Some s when s = screen -> (None, lastScreen)
+    match state with
+    | Some s when s.LastScreen = screen -> (None, state)
     | _ ->
       print screen |> Seq.iter (printfn "%s: %s" "Hand")
-      let decision = decide' xlFlopTurn xlTurnDonk screen
+      let isPre = System.String.IsNullOrEmpty screen.Board
+      let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
+      history |> Seq.iter (printfn "History: %A")
+
+      let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop screen history
+      let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
       match decision with
       | Some d ->
         printfn "Decision is: %A" d
         let action = mapAction d screen.Actions
         printfn "Action is: %A" action
         let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown }
-        (Some outMsg, Some screen)
+        (Some outMsg, newState)
       | None ->
         printfn "Could not make a decision, dumping the screenshot..."
         Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
-        (None, Some screen)
+        (None, newState)

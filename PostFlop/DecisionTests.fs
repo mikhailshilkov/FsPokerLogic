@@ -348,6 +348,13 @@ module DecisionTests =
     Assert.Equal(Action.RaiseToAmount 90 |> Some, actual)
 
   [<Fact>]
+  let ``Stack Off: Check/raise flop OOP to AllIn`` () =
+    let snapshot = { defaultFlop with VillainBet = 70; Pot = 150; HeroStack = 290 }
+    let options = { defaultOopOptions with Then = StackOff }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.AllIn |> Some, actual)
+
+  [<Fact>]
   let ``Stack Off+: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = StackOffFast }

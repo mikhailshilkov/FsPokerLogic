@@ -111,16 +111,65 @@ module ImportTests =
     closeExcel xl
 
   [<Fact>]
-  let ``importLimpCheck returns correct options for a sample cell`` () =
+  let ``importOopFlop returns correct options for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
-    let actual = importOopFlop (fst xl) "limp and check" { Made = Pair(Second Ten); FD = NoFD; SD = NoSD }
+    let actual = importOopFlop (fst xl) "limp and check" { Made = Pair(Second Ten); FD = NoFD; SD = NoSD } defaultTexture
     let expected = { First = Check; Then = CallEQ 27 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
+  [<Fact>]
+  let ``importOopTurn returns correct options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 4 }
+    let actual = importOopTurn (fst xl) "limp and check" { Made = Flush(NotNut Queen); FD = NoFD; SD = NoSD } texture
+    let expected = { First = Donk(75m); Then = Call } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Normal)) defaultTexture
+    let expected = { First = Donk(62.5m); Then = StackOff } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct options on 4-monoboard`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 4 }
+    let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Weak)) texture
+    let expected = { First = Donk(50m); Then = Fold } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct options on 4-monoboard with flush`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 4 }
+    let actual = importOopRiver (fst xl) "limp and check" (Flush(NotNut King)) texture
+    let expected = { First = Donk(50m); Then = Call } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct options on 5-monoboard with flush`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 5 }
+    let actual = importOopRiver (fst xl) "limp and check" (Flush(Board)) texture
+    let expected = { First = Check; Then = CallEQ 15 } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
   let testParseFlopOop s f t =
-    let actual = parseFlopOop s
+    let actual = parseOopOption s
     let expected = { First = f; Then = t } |> Some
     Assert.Equal(expected, actual)
 

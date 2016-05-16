@@ -134,7 +134,9 @@ module Decision =
       if not (wasRaisedPre s) then xlimped
       else if s.VillainBet = s.BB then xraisedonebb
       else xraised
-    s.VillainBet |> decimal |> (*) k |> int |> roundTo5 |> RaiseToAmount
+    let raiseSize = s.VillainBet |> decimal |> (*) k |> int |> roundTo5 
+    if raiseSize * 100 / 65 > effectiveStackOnCurrentStreet s then Action.AllIn
+    else RaiseToAmount raiseSize
 
   let decideOop s options =
     if s.VillainBet = 0 then

@@ -31,12 +31,19 @@ module Facade =
     |> augmentOptions s value.Made
     |> decide s
 
-  let decidePostFlopOop s value xlLimpCheck =
-    let preFlopPattern =
-      if s.Pot = s.BB * 2 then Some "limp and check"
-      else None
-    match street s, preFlopPattern with
-    | Flop, Some p -> 
-      importOopFlop (fst xlLimpCheck) p value
-      |> Option.bind (decideOop s)
+  let pickOopSheet history bb =
+    match history with
+    | Cards.Action.Check::_ -> Some "limp and check"
+    | Cards.Action.Call::_ -> Some "hero call raise pre"
+    | Cards.Action.RaiseToAmount a :: _ when a < bb * 4 -> Some "hero raise FV vs limp"
+    | Cards.Action.RaiseToAmount _ :: _ -> Some "hero 3b chips FV vs minr"
     | _ -> None
+
+  let decidePostFlopOop history s value texture xl =
+    let preFlopPattern = pickOopSheet history s.BB
+    match street s, preFlopPattern with
+    | Flop, Some p -> importOopFlop (fst xl) p value texture
+    | Turn, Some p -> importOopTurn (fst xl) p value texture
+    | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
+    | _ -> None
+    |> Option.bind (decideOop s)

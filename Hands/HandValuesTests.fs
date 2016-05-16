@@ -100,6 +100,11 @@ let ``monoboardLength returns the length of longest suit`` flopS expected =
   let actual = monoboardLength board
   Assert.Equal(expected, actual)
 
+[<Theory>]
+[<InlineData("JsTc", "9d6h5d4c")>]
+[<InlineData("AsQc", "Jd6h4d4c")>]
+let ``TwoOvercards`` handS flopS =
+  TwoOvercards |> test handS flopS
 
 [<Theory>]
 [<InlineData("7s2c", "AdKdJhTh8c")>]

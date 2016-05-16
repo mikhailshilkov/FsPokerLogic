@@ -19,6 +19,7 @@ module HandValues =
 
   type MadeHandValue =
     | Nothing
+    | TwoOvercards
     | Pair of PairType
     | TwoPair
     | ThreeOfKind
@@ -166,6 +167,12 @@ module HandValues =
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
 
+  let overcards hand b = 
+    let maxBoard = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
+    [hand.Card1; hand.Card2] 
+    |> Seq.filter (fun x -> faceValue x.Face > maxBoard) 
+    |> Seq.length
+
   let handValue hand board =
     let combined = concat hand board
 
@@ -220,7 +227,8 @@ module HandValues =
       | Some(3) -> Pair(Third)
       | Some(4) -> Pair(Fourth)
       | Some(5) -> Pair(Fifth)
-      | _ -> Nothing
+      | _ -> 
+        if overcards hand board >= 2 then TwoOvercards else Nothing
 
   let handValueWithDraws hand board =
     { Made = handValue hand board

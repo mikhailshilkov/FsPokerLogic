@@ -37,6 +37,7 @@ module Decision =
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
   let potOdds s = (callSize s |> decimal) * 100m / (s.Pot + (callSize s) |> decimal) |> ceil |> int
   let times i d = ((i |> decimal) * d) |> int
+  let wasRaisedPre s = betPre s > s.BB
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
 
@@ -102,11 +103,11 @@ module Decision =
       | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
-      | CallEQ eq, _ -> 
+      | OnDonk.CallEQ eq, _ -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
-      | Call, _ -> Some Action.Call
-      | Fold, _ -> Some Action.Fold
+      | OnDonk.Call, _ -> Some Action.Call
+      | OnDonk.Fold, _ -> Some Action.Fold
       | Undefined, _ -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       match options.CheckRaise with
@@ -120,7 +121,35 @@ module Decision =
       match options.CbetFactor with
       | Always f -> cbet snapshot.Pot f |> RaiseToAmount |> Some
       | OrAllIn f -> cbetOr snapshot f Action.AllIn |> Some
-      | OrCheck f -> cbetOr snapshot f Check |> Some
-      | Never -> Check |> Some
+      | OrCheck f -> cbetOr snapshot f Action.Check |> Some
+      | Never -> Action.Check |> Some
       | CBet.Undefined -> None
       |> ensureMinRaise snapshot
+
+  let betXPot x s =
+    (s.Pot |> decimal) * x / 100m |> int |> roundTo5 |> RaiseToAmount
+
+  let raiseOop xlimped xraised xraisedonebb s =
+    let k = 
+      if not (wasRaisedPre s) then xlimped
+      else if s.VillainBet = s.BB then xraisedonebb
+      else xraised
+    s.VillainBet |> decimal |> (*) k |> int |> roundTo5 |> RaiseToAmount
+
+  let decideOop s options =
+    if s.VillainBet = 0 then
+      match options.First with
+      | Check -> Action.Check
+      | Donk x -> betXPot x s
+      |> Some
+    else if s.VillainBet > 0 then
+      match options.Then with
+      | StackOff -> raiseOop 3m 2.75m 5m s
+      | StackOffFast -> raiseOop 4m 3.5m 6m s
+      | RaiseFold | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
+      | Fold | RaiseFold -> Action.Fold
+      | Call | RaiseCall -> Action.Call
+      | CallEQ i | RaiseCallEQ i -> callEQ s i
+      | AllIn -> Action.AllIn
+      |> Some
+    else None

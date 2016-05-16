@@ -38,7 +38,29 @@ namespace Interaction
 
 
             return windowHwnd.Location;
-        }    
+        }
+
+        public static IEnumerable<WindowInfo> GetRawWindowList(Size screenSize, params string[] searchStrings)
+        {
+            foreach (string searchString in searchStrings)
+            {
+                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.StartsWith(searchString)))
+                {
+                    //Bitmap bitmap = new Bitmap(screenSize.Width, screenSize.Height);
+                    //Graphics memoryGraphics = Graphics.FromImage(bitmap);
+                    //IntPtr dc = memoryGraphics.GetHdc();
+                    //bool success = Win32.PrintWindow(window.Hwnd, dc, 0);
+                    //memoryGraphics.ReleaseHdc(dc);
+
+                    yield return new WindowInfo
+                    {
+                        Title = window.Title,
+                        Size = window.Size,
+                        //Bitmap = bitmap
+                    };
+                }
+            }
+        }
 
         public static IEnumerable<WindowInfo> GetWindowList(Size screenSize, Size targetSize, params string[] searchStrings)
         {
@@ -63,7 +85,6 @@ namespace Interaction
                     IntPtr dc = memoryGraphics.GetHdc();
                     bool success = Win32.PrintWindow(window.Hwnd, dc, 0);
                     memoryGraphics.ReleaseHdc(dc);
-                    bitmap.Save("out.bmp");
 
                     yield return new WindowInfo
                     {

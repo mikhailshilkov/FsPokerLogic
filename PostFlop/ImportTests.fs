@@ -86,7 +86,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
     let actual = importRiver (fst xl) defaultTexture (FullHouse(Weak))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -96,7 +96,7 @@ module ImportTests =
     let xl = openExcel fileName
     let special = { defaultTexture with DoublePaired = true }
     let actual = importRiver (fst xl) special (Flush(NotNut Ten))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20 }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -109,3 +109,35 @@ module ImportTests =
     let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold }
     Assert.Equal(expected, actual)
     closeExcel xl
+
+  [<Fact>]
+  let ``importLimpCheck returns correct options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let actual = importOopFlop (fst xl) "limp and check" { Made = Pair(Second Ten); FD = NoFD; SD = NoSD }
+    let expected = { First = Check; Then = CallEQ 27 } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  let testParseFlopOop s f t =
+    let actual = parseFlopOop s
+    let expected = { First = f; Then = t } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``parseFlopOop ch/25 works`` () = testParseFlopOop "ch/25" Check (CallEQ 25)
+
+  [<Fact>]
+  let ``parseFlopOop 62.5%/30 works`` () = testParseFlopOop "62.5%/30" (Donk 62.5m) (CallEQ 30)
+
+  [<Fact>]
+  let ``parseFlopOop ch/r/f works`` () = testParseFlopOop "ch/r/f" Check RaiseFold
+
+  [<Fact>]
+  let ``parseFlopOop ch/r/c works`` () = testParseFlopOop "ch/r/c" Check RaiseCall
+
+  [<Fact>]
+  let ``parseFlopOop 75%/c works`` () = testParseFlopOop "75%/c" (Donk 75m) Call
+
+  [<Fact>]
+  let ``parseFlopOop ch/r/20 works`` () = testParseFlopOop "ch/r/20" Check (RaiseCallEQ 20)

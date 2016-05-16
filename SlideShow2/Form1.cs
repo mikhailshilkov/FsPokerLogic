@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -18,7 +19,8 @@ namespace SlideShow2
         {
             InitializeComponent();
             this.Text = $"Heads Up - 10/20 - {Guid.NewGuid().ToString().Substring(0, 6)}";
-            this.Load += (s, ea) => {
+            this.Load += (s, ea) =>
+            {
                 var r = new Random();
                 this.Location = new Point(r.Next(500), r.Next(200));
             };
@@ -31,9 +33,31 @@ namespace SlideShow2
         }
 
         private void pictureBox1_Click(object sender, EventArgs e)
-        {            
-            index = (index + 1) % 13;
-            pictureBox1.ImageLocation = $@"C:\Work\FsPokerLogic\SlideShow2\bin\Debug\{index + 1}.png";
+        {
+            NextImage();
+        }
+
+        private void NextImage()
+        {
+            index += 1;
+            string path = $@"C:\Work\FsPokerLogic\SlideShow2\bin\Debug\{index + 1}.png";
+            if (File.Exists(path))
+            {
+                pictureBox1.ImageLocation = path;
+            }
+            else
+            {
+                path = $@"C:\Work\FsPokerLogic\SlideShow2\bin\Debug\{index + 1}.bmp";
+                if (File.Exists(path))
+                {
+                    pictureBox1.ImageLocation = path;
+                }
+                else
+                {
+                    index = -1;
+                    NextImage();
+                }
+            }
         }
     }
 }

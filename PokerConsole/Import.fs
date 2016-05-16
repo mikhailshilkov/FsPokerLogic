@@ -325,6 +325,8 @@ let importRuleFromExcel importRules fileName =
     |> Seq.collect id
     |> List.ofSeq)
 
+  let misValue = System.Reflection.Missing.Value
+  xlWorkBook.Close(false, misValue, misValue)
   Marshal.ReleaseComObject(xlWorkBook) |> ignore
   xlApp.Quit()
   Marshal.ReleaseComObject(xlApp) |> ignore

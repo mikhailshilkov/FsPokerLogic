@@ -16,3 +16,10 @@ module Options =
     CheckRaise: OnCheckRaise
     Donk: OnDonk
   }
+
+  type OopDonk = Check | Donk of decimal
+  type OopOnCBet = Fold | StackOff | StackOffFast | CallEQ of int | RaiseFold | RaiseCall | RaiseCallEQ of int | Call | AllIn
+  type OptionsOop = {
+    First: OopDonk
+    Then: OopOnCBet
+  }

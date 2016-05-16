@@ -9,7 +9,7 @@ module Texture =
     if isFlushDraw then
       let donk = if eo.DonkFlashDraw.IsSome then eo.DonkFlashDraw.Value else eo.Donk
       let cbetFactor = if eo.CbetFactor = Never then Always 50m else eo.CbetFactor
-      { Options.CbetFactor = cbetFactor; CheckRaise = StackOff; Donk = donk }
+      { Options.CbetFactor = cbetFactor; CheckRaise = OnCheckRaise.StackOff; Donk = donk }
     else if isFlopFlushDraw && eo.CbetFactor = Always 75m then
       { Options.CbetFactor = Always 100m; CheckRaise = eo.CheckRaise; Donk = eo.Donk }
     else

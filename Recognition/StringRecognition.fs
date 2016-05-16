@@ -66,6 +66,11 @@ module StringRecognition =
     { Char = 'Y'; Pattern = [[W;W;B;B;B;B;B;B];[B;B;W;W;B;B;B;B];[B;B;B;B;W;W;W;W];[B;B;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]] }
     { Char = 'E'; Pattern = [[W;W;W;W;W;W;W;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;B;B;B;W]] }
     { Char = 'S'; Pattern = [[B;W;W;B;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;B;W;W;W;B]] }
+
+    // Sitout popup Titan
+    { Char = 'Y'; Pattern = [[W;W;B;B;B;B;B;B];[W;W;W;W;B;B;B;B];[B;B;W;W;W;W;W;W];[B;B;W;W;W;W;W;W];[W;W;W;W;B;B;B;B];[W;W;B;B;B;B;B;B]] }
+    { Char = 'E'; Pattern = [[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W];[W;B;B;W;B;B;B;W]] }
+    { Char = 'S'; Pattern = [[B;W;W;W;B;B;B;W];[W;W;W;W;W;B;B;W];[W;B;B;W;W;B;B;W];[W;B;B;W;W;B;B;W];[W;B;B;W;W;W;W;W];[W;B;B;B;W;W;W;B]] }
   |]
 
   let getChar patterns bws =

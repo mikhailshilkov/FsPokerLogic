@@ -44,6 +44,12 @@ module Import =
    | (true,int) -> Some(int)
    | _ -> None
 
+  let (|StartsWith|_|) (p:string) (s:string) =
+    if s.StartsWith(p) then
+        s.Substring(p.Length) |> Some
+    else
+        None
+
   let parseInt (s: string) = 
     match s with
     | Int i -> Some i
@@ -53,6 +59,9 @@ module Import =
    match System.Decimal.TryParse(str.Replace(",", "."), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) with
    | (true,f) -> Some(f)
    | _ -> None
+
+  let (|DecimalPerc|_|) (str: string) =
+   if str.EndsWith("%") then match str.Replace("%", "") with | Decimal d -> Some d | _ -> None else None
 
   let parseDecimal (s: string) = 
     match s with
@@ -167,7 +176,7 @@ module Import =
         | Fifth, _, _ -> failwith "Fifth pair impossible on turn"
         | Under, _, OpenEnded -> 28
         | Under, _, _ -> 12
-      | Nothing ->
+      | TwoOvercards | Nothing ->
         match handValue.FD, handValue.SD with
         | Draw(_), OpenEnded | Draw(_), GutShot -> 31
         | Draw(_), NoSD -> 30
@@ -209,7 +218,7 @@ module Import =
         | Fourth -> 11
         | Fifth -> 12
         | Under -> 13
-      | Nothing -> 4
+      | TwoOvercards | Nothing -> 4
       )|> string
     let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
     let check = parseRiverCbet (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
@@ -217,3 +226,75 @@ module Import =
     { Options.CbetFactor = fst check
       CheckRaise = snd check
       Donk = donk }
+
+  let parseFlopOop (i: string) =
+    let parts = i.Split([|'/'|], 2)
+    if parts.Length = 2 then
+      let donk = 
+        match parts.[0] with 
+        | "ch" -> OopDonk.Check
+        | DecimalPerc n -> OopDonk.Donk n
+        | _ -> failwith "Failed parsing Flop Oop Donk"
+      let cbet =
+        match parts.[1] with 
+        | StartsWith "r/" p3 -> 
+          match p3 with 
+          | "f" -> OopOnCBet.RaiseFold
+          | "c" -> OopOnCBet.RaiseCall
+          | Int i -> OopOnCBet.RaiseCallEQ i
+          | _ -> failwith "Failed parsing Flop Oop OnCbet raise"
+        | "f" -> OopOnCBet.Fold
+        | "so" -> OopOnCBet.StackOff
+        | "so+" -> OopOnCBet.StackOffFast
+        | "c" -> OopOnCBet.Call
+        | "ai" -> OopOnCBet.AllIn
+        | Int i -> CallEQ i
+        | _ -> failwith "Failed parsing Flop Oop OnCbet" 
+      Some { First = donk; Then = cbet }
+    else None
+
+  let importOopFlop (xlWorkBook : Workbook) sheetName handValue =
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    let index = 
+      (match handValue.Made with
+      | StraightFlush | FourOfKind -> 21
+      | FullHouse(_) -> 20
+      | Flush(_) -> 19
+      | Straight(_) -> 18
+      | ThreeOfKind -> 17
+      | TwoPair -> 16
+      | Pair(x) -> 
+        let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+        match x, handValue.FD, handValue.SD with
+        | Over, _, _ -> 9
+        | Top(_), Draw(_), _ -> 36
+        | Top(_), _, OpenEnded -> 30
+        | Top(_), _, GutShot -> 25
+        | Top(k), NoFD, NoSD when highKicker k -> 10
+        | Top(_), NoFD, NoSD -> 11
+        | Second(_), Draw(_), _ | Third, Draw(_), _ -> 38
+        | Second(_), _, OpenEnded | Third, _, OpenEnded -> 31
+        | Second(_), _, GutShot | Third, _, GutShot -> 25
+        | Second(k), NoFD, NoSD when highKicker k -> 12
+        | Second(_), NoFD, NoSD -> 13
+        | Third, NoFD, NoSD -> 14
+        | Fourth, _, _ | Fifth, _, _ -> failwith "Fourth/Fifth pair impossible on flop"
+        | Under, _, OpenEnded -> 32
+        | Under, _, _ -> 15
+      | TwoOvercards ->
+        match handValue.FD, handValue.SD with
+        | Draw(_), OpenEnded | Draw(_), GutShot -> 37
+        | Draw(_), NoSD -> 35
+        | NoFD, OpenEnded -> 29
+        | NoFD, GutShot -> 24
+        | NoFD, NoSD -> 7
+      | Nothing -> 
+        match handValue.FD, handValue.SD with
+        | Draw(_), OpenEnded | Draw(_), GutShot -> 37
+        | Draw(_), NoSD -> 34
+        | NoFD, OpenEnded -> 28
+        | NoFD, GutShot -> 23
+        | NoFD, NoSD -> 6
+      )|> string
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("C" + index)
+    parseFlopOop cellValues.[0]

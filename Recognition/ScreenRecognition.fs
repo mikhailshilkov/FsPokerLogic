@@ -81,10 +81,9 @@ module ScreenRecognition =
       chooseGoodNumber 2 [recognizeNumber (getPixel 462 301) 50 15; recognizeNumber (getPixel 517 231) 50 15] 
     
     let actions = 
-      [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17); (263, 321, 40, 15)]
+      [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]
       |> Seq.map (fun (x, y, w, h) -> (recognizeButton (getPixel x y) w h), (x, y, w, h))
       |> Seq.filter (fun (x, _) -> not (String.IsNullOrEmpty x) && not(x.Contains("?")))
-      |> Seq.map (fun (x, r) -> (if x = "YES" then "SitBack" else x), r)
       |> Seq.map (fun (x, r) -> { Name = x; Region = r })
       |> Array.ofSeq      
 
@@ -95,7 +94,8 @@ module ScreenRecognition =
     let hasFlop = isFlop (getPixel 212 178) 131 60
 
     let isVillainSitout = isVillainSitout (getPixel 570 319) 12 11
-    let isHeroSitout = actions |> Array.exists (fun x -> x.Name = "SitBack")
+    let isHeroSitout = isHeroSitout (getPixel 489 469) 11 11
+    let actionsWithCheckboxes = actions |> Array.append (if isHeroSitout then [|{ Name = "SitBack"; Region = (492, 472, 7, 5) }|] else [||])
 
     let (dxo, dyo) = findCardStart (getPixel 78 274) 12 17
     let heroHand = 
@@ -120,7 +120,7 @@ module ScreenRecognition =
       VillainBet = villainBet
       HeroHand = if heroHand = "" then null else heroHand
       Button = button
-      Actions = actions
+      Actions = actionsWithCheckboxes
       Blinds = blinds
       Board = flop
       Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown }

@@ -253,6 +253,13 @@ module Import =
       Some { First = donk; Then = cbet }
     else None
 
+  let parseOopOptionWithSpecial (i: string) isSpecial (s:string) =
+    if isSpecial then
+      match parseOopOption s with
+      | None -> parseOopOption i
+      | x -> x
+    else parseOopOption i
+
   let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
     let index = 
@@ -355,18 +362,26 @@ module Import =
         | NoFD, NoSD -> 6
       )|> string
     let cellValues = getCellValues xlWorkSheet ("K" + index) ("AB" + index)
-    let column = 
+
+    let specialConditionsColumn = 
+      match texture.Monoboard with
+      | 4 -> 13
+      | 3 -> 10
+      | _ -> 2
+    let sc = specialConditionsApply texture cellValues.[specialConditionsColumn]
+
+    let (column, specialColumn) = 
       match texture.Monoboard, handValue.FD with
       | 4, _ ->
         match handValue.Made with
-        | Flush(Nut) | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> 16
-        | Flush(_) -> 14
-        | _ -> 11
-      | 3, NoFD -> 4
-      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> 8
-      | 3, Draw(_) -> 6
-      | _ -> 0
-    parseOopOption cellValues.[column]
+        | Flush(Nut) | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> (16, 17)
+        | Flush(_) -> (14, 15)
+        | _ -> (11, 12)
+      | 3, NoFD -> (4, 5)
+      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> (8, 9)
+      | 3, Draw(_) -> (6, 7)
+      | _ -> (0, 3)
+    parseOopOptionWithSpecial cellValues.[column] sc cellValues.[specialColumn]
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
     let defaultMapping () =
@@ -426,5 +441,13 @@ module Import =
       else defaultMapping ()
 
     let indexString = index |> string
-    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AJ" + indexString)
-    parseOopOption cellValues.[column]
+    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AK" + indexString)
+
+    let (specialConditionsColumn, specialColumn) = 
+      match texture.Monoboard with
+      | 5 -> (None, 0)
+      | 4 -> (Some 6, 5)
+      | _ -> (Some 2, 3)
+    let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
+
+    parseOopOptionWithSpecial cellValues.[column] sc cellValues.[specialColumn]

@@ -130,11 +130,31 @@ module ImportTests =
     closeExcel xl
 
   [<Fact>]
+  let ``importOopTurn returns correct special options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 3; Streety = true }
+    let actual = importOopTurn (fst xl) "limp and check" { Made = TwoPair; FD = Draw(King); SD = NoSD } texture
+    let expected = { First = Check; Then = CallEQ 28 } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Normal)) defaultTexture
     let expected = { First = Donk(62.5m); Then = StackOff } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct special options for a sample cell`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with DoublePaired = true }
+    let actual = importOopRiver (fst xl) "limp and check" (Flush(NotNut Eight)) texture
+    let expected = { First = Donk(50m); Then = Fold } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -145,6 +165,16 @@ module ImportTests =
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Weak)) texture
     let expected = { First = Donk(50m); Then = Fold } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopRiver returns correct special options on 4-monoboard`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let texture = { defaultTexture with Monoboard = 4; Streety = true }
+    let actual = importOopRiver (fst xl) "hero raise FV vs limp" ThreeOfKind texture
+    let expected = { First = Check; Then = Fold } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 

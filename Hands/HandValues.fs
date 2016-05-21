@@ -164,6 +164,9 @@ module HandValues =
   let monoboardLength (cards : SuitedCard[]) =
     cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.sortByDescending id |> Seq.head
 
+  let isPaired (cards : SuitedCard[]) =
+    cards |> cardValueGroups |> Seq.exists (fun x -> x = 2)
+
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
 

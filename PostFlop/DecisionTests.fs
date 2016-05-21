@@ -9,7 +9,7 @@ module DecisionTests =
   open Xunit
 
   let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff  }
-  let defaultOopOptions = { First = Check; Then = Fold }
+  let defaultOopOptions = { First = Check; Then = Fold; Special = [] }
   let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}|]; Pot = 180; VillainStack = 440; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}; {Face = King; Suit = Clubs}|]; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
@@ -428,5 +428,18 @@ module DecisionTests =
   let ``Check/AllIn: AllIn flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40 }
     let options = { defaultOopOptions with Then = AllIn }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.AllIn |> Some, actual)
+
+  [<Fact>]
+  let ``Donk: Donk flop OOP`` () =
+    let options = { defaultOopOptions with First = Donk 50m }
+    let actual = Decision.decideOop defaultFlop options
+    Assert.Equal(Action.RaiseToAmount 40 |> Some, actual)
+
+  [<Fact>]
+  let ``Donk: Donk flop OOP AI if bet is > 80% stack`` () =
+    let snapshot = { defaultFlop with Pot = 200; HeroStack = 149 }
+    let options = { defaultOopOptions with First = Donk 60m }
     let actual = Decision.decideOop snapshot options
     Assert.Equal(Action.AllIn |> Some, actual)

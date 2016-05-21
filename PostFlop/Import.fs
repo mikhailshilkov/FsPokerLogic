@@ -227,8 +227,25 @@ module Import =
       CheckRaise = snd check
       Donk = donk }
 
-  let parseOopOption (i: string) =
-    let parts = i.Split([|'/'|], 2)
+  let parseOopSpecialRules (specialRules: string) = 
+    let parseOopSpecialRule (s: string) =
+      match s.Trim() with
+      | "AI" -> CallEQPlusXvsAI 10
+      | "AI+" -> CallEQPlusXvsAI 14
+      | "Bp GS" -> PairedBoard (Check, CallEQ 14)
+      | "Bp FD" -> PairedBoard (Check, CallEQ 22)
+      | "22" -> PairedBoard (Donk 50m, CallEQ 20)
+      | "6" -> BoardOvercard(Check, Call)
+      | "Ov" -> BoardOvercard(OopDonk.AllIn, AllIn)
+      | "ov AI" -> BoardOvercard(Check, AllIn)
+      | "61" -> BoardOvercard(Donk 100m, CallEQ 25)
+      | "A" -> BoardAce OopDonk.AllIn
+      | "A/f" -> BoardAce(Donk 67m)
+      | _ -> failwith "Failed parsing special rules"
+    specialRules.Split(',') |> List.ofArray |> List.map parseOopSpecialRule
+
+  let parseOopOption (strategy: string) (specialRules: string) =
+    let parts = strategy.Split([|'/'|], 2)
     if parts.Length = 2 then
       let donk = 
         match parts.[0] with 
@@ -250,15 +267,15 @@ module Import =
         | "ai" -> OopOnCBet.AllIn
         | Int i -> CallEQ i
         | _ -> failwith "Failed parsing Flop Oop OnCbet" 
-      Some { First = donk; Then = cbet }
+      Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialRules  }
     else None
 
-  let parseOopOptionWithSpecial (i: string) isSpecial (s:string) =
-    if isSpecial then
-      match parseOopOption s with
-      | None -> parseOopOption i
+  let parseOopOptionWithSpecialBoard (strategy: string) isSpecialBoard (specialBoardStrategy:string) (specialRules: string) =
+    if isSpecialBoard then
+      match parseOopOption specialBoardStrategy specialRules with
+      | None -> parseOopOption strategy specialRules
       | x -> x
-    else parseOopOption i
+    else parseOopOption strategy specialRules
 
   let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -304,13 +321,13 @@ module Import =
         | NoFD, NoSD -> 6
       )|> string
     let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
-    let column = 
+    let (column, specialRulesColumn) = 
       match texture.Monoboard, handValue.FD with
-      | 3, NoFD -> 2
-      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> 5
-      | 3, Draw(_) -> 3
-      | _ -> 0
-    parseOopOption cellValues.[column]
+      | 3, NoFD -> (2, 4)
+      | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> (5, 4)
+      | 3, Draw(_) -> (3, 4)
+      | _ -> (0, 1)
+    parseOopOption cellValues.[column] cellValues.[specialRulesColumn]
 
   let importOopTurn (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -381,7 +398,7 @@ module Import =
       | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> (8, 9)
       | 3, Draw(_) -> (6, 7)
       | _ -> (0, 3)
-    parseOopOptionWithSpecial cellValues.[column] sc cellValues.[specialColumn]
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] ""
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
     let defaultMapping () =
@@ -450,4 +467,4 @@ module Import =
       | _ -> (Some 2, 3)
     let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
 
-    parseOopOptionWithSpecial cellValues.[column] sc cellValues.[specialColumn]
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] ""

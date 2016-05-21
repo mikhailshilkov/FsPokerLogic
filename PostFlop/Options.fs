@@ -17,9 +17,15 @@ module Options =
     Donk: OnDonk
   }
 
-  type OopDonk = Check | Donk of decimal
+  type OopDonk = Check | Donk of decimal | AllIn
   type OopOnCBet = Fold | StackOff | StackOffFast | CallEQ of int | RaiseFold | RaiseCall | RaiseCallEQ of int | Call | AllIn
+  type OopSpecialCondition = 
+    | CallEQPlusXvsAI of int 
+    | PairedBoard of OopDonk * OopOnCBet
+    | BoardOvercard of OopDonk * OopOnCBet
+    | BoardAce of OopDonk
   type OptionsOop = {
     First: OopDonk
     Then: OopOnCBet
+    Special: OopSpecialCondition list
   }

@@ -67,6 +67,15 @@ let ``isGutShot returns true for GS`` handS flopS expected =
   Assert.Equal(expected, actual)
 
 [<Theory>]
+[<InlineData("TsJdTcAc", true)>]
+[<InlineData("Ts8cQcJc", false)>]
+[<InlineData("TsTcTdJc", false)>]
+let ``isPaired returns true for boards with a pair`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isPaired board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
 [<InlineData("TsJdTcAcJc", true)>]
 [<InlineData("TsJdTcJhJc", true)>]
 [<InlineData("Ts8cQcJc", false)>]

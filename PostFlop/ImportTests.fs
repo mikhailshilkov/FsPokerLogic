@@ -12,6 +12,7 @@ module ImportTests =
   open Excel.Import
 
   let defaultTexture = { Streety = false; DoublePaired = false; Monoboard = 2 }
+  let defaultOptions = { First = Check; Then = Fold; Special = [] }
 
   [<Theory>]
   [<InlineData("222", 6)>]
@@ -115,7 +116,16 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let actual = importOopFlop (fst xl) "limp and check" { Made = Pair(Second Ten); FD = NoFD; SD = NoSD } defaultTexture
-    let expected = { First = Check; Then = CallEQ 27 } |> Some
+    let expected = { defaultOptions with Then = CallEQ 27 } |> Some
+    Assert.Equal(expected, actual)
+    closeExcel xl
+
+  [<Fact>]
+  let ``importOopFlop returns AI special option`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+    let xl = openExcel fileName
+    let actual = importOopFlop (fst xl) "hero call raise pre" { Made = Pair(Second Ten); FD = NoFD; SD = NoSD } defaultTexture
+    let expected = { defaultOptions with Then = CallEQ 33; Special = [CallEQPlusXvsAI 10] } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -125,7 +135,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopTurn (fst xl) "limp and check" { Made = Flush(NotNut Queen); FD = NoFD; SD = NoSD } texture
-    let expected = { First = Donk(75m); Then = Call } |> Some
+    let expected = { defaultOptions with First = Donk(75m); Then = Call } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -135,7 +145,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 3; Streety = true }
     let actual = importOopTurn (fst xl) "limp and check" { Made = TwoPair; FD = Draw(King); SD = NoSD } texture
-    let expected = { First = Check; Then = CallEQ 28 } |> Some
+    let expected = { defaultOptions with Then = CallEQ 28 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -144,7 +154,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Normal)) defaultTexture
-    let expected = { First = Donk(62.5m); Then = StackOff } |> Some
+    let expected = { defaultOptions with First = Donk(62.5m); Then = StackOff } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -154,7 +164,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with DoublePaired = true }
     let actual = importOopRiver (fst xl) "limp and check" (Flush(NotNut Eight)) texture
-    let expected = { First = Donk(50m); Then = Fold } |> Some
+    let expected = { defaultOptions with First = Donk(50m); Then = Fold } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -164,7 +174,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver (fst xl) "limp and check" (FullHouse(Weak)) texture
-    let expected = { First = Donk(50m); Then = Fold } |> Some
+    let expected = { defaultOptions with First = Donk(50m); Then = Fold } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -174,7 +184,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 4; Streety = true }
     let actual = importOopRiver (fst xl) "hero raise FV vs limp" ThreeOfKind texture
-    let expected = { First = Check; Then = Fold } |> Some
+    let expected = defaultOptions |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -184,7 +194,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver (fst xl) "limp and check" (Flush(NotNut King)) texture
-    let expected = { First = Donk(50m); Then = Call } |> Some
+    let expected = { defaultOptions with First = Donk(50m); Then = Call } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -194,13 +204,13 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 5 }
     let actual = importOopRiver (fst xl) "limp and check" (Flush(Board)) texture
-    let expected = { First = Check; Then = CallEQ 15 } |> Some
+    let expected = { defaultOptions with Then = CallEQ 15 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
   let testParseFlopOop s f t =
-    let actual = parseOopOption s
-    let expected = { First = f; Then = t } |> Some
+    let actual = parseOopOption s ""
+    let expected = { defaultOptions with First = f; Then = t } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -220,3 +230,46 @@ module ImportTests =
 
   [<Fact>]
   let ``parseFlopOop ch/r/20 works`` () = testParseFlopOop "ch/r/20" Check (RaiseCallEQ 20)
+
+  let testParseOopSpecialRules s e =
+    let actual = parseOopSpecialRules s |> List.head
+    Assert.Equal(e, actual)
+
+  [<Fact>]
+  let ``parseOopSpecialRules AI works`` () = testParseOopSpecialRules "AI" (CallEQPlusXvsAI 10)
+
+  [<Fact>]
+  let ``parseOopSpecialRules AI+ works`` () = testParseOopSpecialRules "AI+" (CallEQPlusXvsAI 14)
+
+  [<Fact>]
+  let ``parseOopSpecialRules 6 works`` () = testParseOopSpecialRules "6" (BoardOvercard(Check, Call))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Ov works`` () = testParseOopSpecialRules "Ov" (BoardOvercard(OopDonk.AllIn, AllIn))
+
+  [<Fact>]
+  let ``parseOopSpecialRules ov AI works`` () = testParseOopSpecialRules "ov AI" (BoardOvercard(Check, AllIn))
+
+  [<Fact>]
+  let ``parseOopSpecialRules ov 61 works`` () = testParseOopSpecialRules "61" (BoardOvercard(Donk 100m, CallEQ 25))
+
+  [<Fact>]
+  let ``parseOopSpecialRules A works`` () = testParseOopSpecialRules "A" (BoardAce OopDonk.AllIn)
+
+  [<Fact>]
+  let ``parseOopSpecialRules A/f works`` () = testParseOopSpecialRules "A/f" (BoardAce(Donk 67m))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Bp GS works`` () = testParseOopSpecialRules "Bp GS" (PairedBoard (Check, CallEQ 14))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Bp FD works`` () = testParseOopSpecialRules "Bp FD" (PairedBoard (Check, CallEQ 22))
+
+  [<Fact>]
+  let ``parseOopSpecialRules 22 works`` () = testParseOopSpecialRules "22" (PairedBoard (Donk 50m, CallEQ 20))
+
+  [<Fact>]
+  let ``parseOopSpecialRules parses multiple rules`` () =
+    let actual = parseOopSpecialRules "AI, A, 61"
+    let expected = [CallEQPlusXvsAI 10; BoardAce OopDonk.AllIn; BoardOvercard(Donk 100m, CallEQ 25)]
+    Assert.Equal<System.Collections.Generic.IEnumerable<OopSpecialCondition>>(expected, actual)

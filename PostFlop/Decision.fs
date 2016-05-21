@@ -127,7 +127,9 @@ module Decision =
       |> ensureMinRaise snapshot
 
   let betXPot x s =
-    (s.Pot |> decimal) * x / 100m |> int |> roundTo5 |> RaiseToAmount
+    let raiseSize = (s.Pot |> decimal) * x / 100m |> int |> roundTo5 
+    if raiseSize * 5 / 4 > effectiveStackOnCurrentStreet s then Action.AllIn
+    else raiseSize |> RaiseToAmount
 
   let raiseOop xlimped xraised xraisedonebb s =
     let k = 
@@ -143,6 +145,7 @@ module Decision =
       match options.First with
       | Check -> Action.Check
       | Donk x -> betXPot x s
+      | OopDonk.AllIn -> Action.AllIn
       |> Some
     else if s.VillainBet > 0 then
       match options.Then with

@@ -8,6 +8,7 @@ open Import
 open Monoboard
 open Texture
 open HandValue
+open SpecialRules
 
 module Facade =
   let defaultArgLazy o (p:'a Lazy) = match o with | Some v -> v | None -> p.Force()
@@ -46,4 +47,5 @@ module Facade =
     | Turn, Some p -> importOopTurn (fst xl) p value texture
     | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
     | _ -> None
+    |> Option.map (specialRulesOop s)
     |> Option.bind (decideOop s)

@@ -62,6 +62,8 @@
     <Compile Include="HandValue.fs" />
     <Compile Include="HandValueTests.fs" />
     <Compile Include="Monoboard.fs" />
+    <Compile Include="SpecialRules.fs" />
+    <Compile Include="SpecialRulesTests.fs" />
     <Compile Include="Facade.fs" />
     <Compile Include="FacadeTests.fs" />
     <Content Include="packages.config" />

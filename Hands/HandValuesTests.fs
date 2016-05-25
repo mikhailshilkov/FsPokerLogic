@@ -27,18 +27,21 @@ let ``isFlushDrawWith2 returns true for flush draw with 2 hole cards`` handS flo
   Assert.Equal(expected, actual)
 
 [<Theory>]
-[<InlineData("AcKc", "QcTs8c", 'A')>]
-[<InlineData("AcKs", "Ts8s2sJd", 'K')>]
-[<InlineData("QcKs", "Ts8c2cJc", 'Q')>]
-[<InlineData("Jc9c", "Tc8c2c", '-')>]
-[<InlineData("AcKc", "Tc8s2s", '-')>]
-[<InlineData("AcKs", "Ts8d2h", '-')>]
-let ``handValueWithDraws returns FD face value for flush draw`` handS flopS expectedS =
+[<InlineData("AcKc", "QcTs8c", 'A', 'A')>]
+[<InlineData("Jc2c", "Ts8c2sJc", 'J', 'J')>]
+[<InlineData("AcKs", "Ts8s2sJd", 'K', '-')>]
+[<InlineData("QcKs", "Ts8c2cJc", 'Q', '-')>]
+[<InlineData("Jc9c", "Tc8c2c", '-', '-')>]
+[<InlineData("AcKc", "Tc8s2s", '-', '-')>]
+[<InlineData("AcKs", "Ts8d2h", '-', '-')>]
+let ``handValueWithDraws returns FD face value for flush draw`` handS flopS expectedS expectedS2 =
   let hand = parseSuitedHand handS
   let board = parseBoard flopS
   let actual = handValueWithDraws hand board
   let expected = if expectedS = '-' then NoFD else (parseFace expectedS |> Draw)
   Assert.Equal(expected, actual.FD)
+  let expected2 = if expectedS2 = '-' then NoFD else (parseFace expectedS2 |> Draw)
+  Assert.Equal(expected2, actual.FD2)
 
 [<Theory>]
 [<InlineData("QcKs", "Th8s2sJd", true)>]
@@ -73,6 +76,28 @@ let ``isGutShot returns true for GS`` handS flopS expected =
 let ``isPaired returns true for boards with a pair`` flopS expected =
   let board = parseBoard flopS
   let actual = isPaired board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("KsJd", true)>]
+[<InlineData("2sKs", true)>]
+[<InlineData("QcJc", false)>]
+[<InlineData("KdKc", false)>]
+[<InlineData("AdKc", false)>]
+let ``isXHigh returns true for K-high hand`` s expected =
+  let hand = parseSuitedHand s
+  let actual = isXHigh King hand
+  Assert.Equal(expected, actual)  
+
+[<Theory>]
+[<InlineData("TsJdTcAc", true)>]
+[<InlineData("TsTcTdJc", true)>]
+[<InlineData("Ts8cQcJc", false)>]
+[<InlineData("", false)>]
+[<InlineData("Ks", false)>]
+let ``isLastBoardCardOvercard returns true for boards with last card being overcard for previous cards`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isLastBoardCardOvercard board
   Assert.Equal(expected, actual)
 
 [<Theory>]

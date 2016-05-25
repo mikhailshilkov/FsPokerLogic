@@ -43,7 +43,11 @@ let ``recognize blinds from predefined file`` () =
 
 [<Fact>]
 let ``recognize sitout from predefined file`` () =
-  test (fun r ->  match r.Sitout with | Hero -> "Hero" | Villain -> "Villain" | _ -> "Nobody") "Sitout"
+  test (fun r -> 
+    match r.Sitout with 
+    | Hero -> "Hero" + r.HeroHand
+    | Villain -> "Villain" 
+    | _ -> "Nobody") "Sitout"
 
 [<Fact>]
 let ``recognize board from predefined file`` () =

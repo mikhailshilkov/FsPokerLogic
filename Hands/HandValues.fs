@@ -32,7 +32,7 @@ module HandValues =
   type FlushDraw = | Draw of Face | NoFD
   type StraightDraw = | OpenEnded | GutShot | NoSD
 
-  type HandValue = { Made: MadeHandValue; FD: FlushDraw; SD: StraightDraw }
+  type HandValue = { Made: MadeHandValue; FD: FlushDraw; FD2: FlushDraw; SD: StraightDraw }
 
   let concat hand board = Array.concat [| board; [|hand.Card1; hand.Card2|] |]
 
@@ -170,6 +170,20 @@ module HandValues =
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
 
+  let isXHigh x hand =
+    let values = [hand.Card1; hand.Card2] |> List.map (fun x -> faceValue x.Face) |> List.sortDescending
+    let xValue = faceValue x
+    match values with
+    | y::rem when y = xValue && rem |> List.forall ((>) xValue) -> true
+    | _ -> false
+
+  let isLastBoardCardOvercard (board: SuitedCard[]) =
+    match Array.rev board |> List.ofArray with
+    | [] | [_] -> false
+    | last::remaining ->
+      let latestCardValue = last.Face |> faceValue
+      List.forall (fun x -> faceValue x.Face < latestCardValue) remaining
+
   let overcards hand b = 
     let maxBoard = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
     [hand.Card1; hand.Card2] 
@@ -236,6 +250,7 @@ module HandValues =
   let handValueWithDraws hand board =
     { Made = handValue hand board
       FD = match findFlushDraw hand board with | Some x -> Draw x | None -> NoFD
+      FD2 = match findFlushDrawWith2 hand board with | Some x -> Draw x | None -> NoFD
       SD = if isOpenEndedStraightDraw hand board then OpenEnded else if isGutShot hand board then GutShot else NoSD
     }
 

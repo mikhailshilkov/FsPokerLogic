@@ -93,7 +93,7 @@ module Decision =
 
   let ensureMinRaise s a =
     match a with
-    | Some (RaiseToAmount x) when x <= s.BB -> Some MinRaise
+    | RaiseToAmount x when x <= s.BB -> MinRaise
     | x -> x
 
   let decide snapshot options =
@@ -123,8 +123,8 @@ module Decision =
       | OrAllIn f -> cbetOr snapshot f Action.AllIn |> Some
       | OrCheck f -> cbetOr snapshot f Action.Check |> Some
       | Never -> Action.Check |> Some
-      | CBet.Undefined -> None
-      |> ensureMinRaise snapshot
+      | CBet.Undefined -> None      
+      |> Option.map (ensureMinRaise snapshot)
 
   let betXPot x s =
     let raiseSize = (s.Pot |> decimal) * x / 100m |> int |> roundTo5 
@@ -144,7 +144,7 @@ module Decision =
     if s.VillainBet = 0 then
       match options.First with
       | Check -> Action.Check
-      | Donk x -> betXPot x s
+      | Donk x -> betXPot x s |> ensureMinRaise s
       | OopDonk.AllIn -> Action.AllIn
       |> Some
     else if s.VillainBet > 0 then

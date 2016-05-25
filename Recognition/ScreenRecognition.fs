@@ -99,10 +99,10 @@ module ScreenRecognition =
 
     let (dxo, dyo) = findCardStart (getPixel 78 274) 12 17
     let heroHand = 
-      match (dxo, dyo) with 
-      | Some dx, Some dy ->
+      match (dxo, dyo, isHeroSitout) with 
+      | Some dx, Some dy, false ->
         (recognizeCard (getPixel (79+dx) (274+dy)) 12 17) + (recognizeCard (getPixel (116+dx) (274+dy)) 12 17)
-      | _, _ -> null
+      | _, _, _ -> null
 
     let (dxo, dyo) = findCardStart (getPixel 223 185) 12 17
     let flop = 

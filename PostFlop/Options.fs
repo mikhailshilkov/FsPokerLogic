@@ -23,7 +23,11 @@ module Options =
     | CallEQPlusXvsAI of int 
     | PairedBoard of OopDonk * OopOnCBet
     | BoardOvercard of OopDonk * OopOnCBet
-    | BoardAce of OopDonk
+    | BoardAce of OopDonk * OopOnCBet
+    | CheckCheck of OopDonk * OopOnCBet
+    | CheckCheckAndBoardOvercard of OopDonk * OopOnCBet
+    | KHighOnPaired
+    | CheckRaiseBluffOnFlop
   type OptionsOop = {
     First: OopDonk
     Then: OopOnCBet

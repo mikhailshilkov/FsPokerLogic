@@ -122,10 +122,10 @@ module Decide =
     match state with
     | Some s when s.LastScreen = screen -> (None, state)
     | _ ->
-      print screen |> Seq.iter (printfn "%s: %s" "Hand")
+      print screen |> List.iter (printfn "%s: %s" "Hand")
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
-      history |> Seq.iter (printfn "History: %A")
+      history |> List.iter (printfn "History: %A")
 
       let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop screen history
       let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }

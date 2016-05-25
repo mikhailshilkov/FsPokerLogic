@@ -6,6 +6,7 @@ open WindowsInput
 
 module Clicker =
   open System.Threading
+  open System.Diagnostics
 
   let currentPosition () = 
     let mp = Control.MousePosition
@@ -29,12 +30,17 @@ module Clicker =
 
   let moveToWorkflow step (toX, toY) = async {
     let (fromX, fromY) = currentPosition()
-    let count = Math.Max(10, (Math.Abs (toX - fromX) + Math.Abs (toY - fromY)) / 20)
-    for i = 0 to count do 
-      let x = step fromX toX count i |> float
-      let y = step fromY toY count i |> float
+    let duration = Math.Max(150, (Math.Abs (toX - fromX) + Math.Abs (toY - fromY)) / 2) |> int64
+    let stopwatch = new Stopwatch()
+    stopwatch.Start()
+    while stopwatch.ElapsedMilliseconds < duration do
+      let i = stopwatch.ElapsedMilliseconds * 100L / duration |> int
+      let x = step fromX toX 100 i |> float
+      let y = step fromY toY 100 i |> float
       moveTo x y
       do! Async.Sleep 3
+    moveTo (toX |> float) (toY |> float)
+    stopwatch.Stop()
     }
 
   let moveToRegion (minX, minY, maxX, maxY) =

@@ -12,7 +12,7 @@ open Cards
 let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}; {Face = King; Suit = Clubs}|]; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
 
 let test5MonoboardRiver s combo expected =
-  let v = { Made = Flush(combo); FD = NoFD; SD = NoSD }
+  let v = { Made = Flush(combo); FD = NoFD; FD2 = NoFD; SD = NoSD }
   let t = { Streety = false; DoublePaired = false; Monoboard = 5 }
   let actual = decidePostFlop s v t (null, 1) (null, 2)
   Assert.Equal(expected |> Some, actual)

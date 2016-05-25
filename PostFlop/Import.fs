@@ -229,20 +229,33 @@ module Import =
 
   let parseOopSpecialRules (specialRules: string) = 
     let parseOopSpecialRule (s: string) =
-      match s.Trim() with
-      | "AI" -> CallEQPlusXvsAI 10
-      | "AI+" -> CallEQPlusXvsAI 14
-      | "Bp GS" -> PairedBoard (Check, CallEQ 14)
-      | "Bp FD" -> PairedBoard (Check, CallEQ 22)
+      match s.Trim().ToLowerInvariant() with
+      | "ai" -> CallEQPlusXvsAI 10
+      | "ai+" -> CallEQPlusXvsAI 14
+      | "bp gs" -> PairedBoard (Check, CallEQ 14)
+      | "bp fd" -> PairedBoard (Check, CallEQ 22)
       | "22" -> PairedBoard (Donk 50m, CallEQ 20)
+      | "tpp" -> PairedBoard (OopDonk.AllIn, AllIn)
       | "6" -> BoardOvercard(Check, Call)
-      | "Ov" -> BoardOvercard(OopDonk.AllIn, AllIn)
-      | "ov AI" -> BoardOvercard(Check, AllIn)
+      | "ov" -> BoardOvercard(OopDonk.AllIn, AllIn)
+      | "ov ai" -> BoardOvercard(Check, AllIn)
+      | "ovso" -> BoardOvercard(Donk 67m, StackOff)
       | "61" -> BoardOvercard(Donk 100m, CallEQ 25)
-      | "A" -> BoardAce OopDonk.AllIn
-      | "A/f" -> BoardAce(Donk 67m)
+      | "4" -> BoardOvercard(Check, StackOff)
+      | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
+      | "a" -> BoardAce (OopDonk.AllIn, AllIn)
+      | "a/f" -> BoardAce(Donk 67m, Fold)
+      | "aso" -> BoardAce(Donk 67m, StackOff)
+      | "5" -> CheckCheck (Donk 75m, Call)
+      | "7" -> CheckCheck (Donk 75m, StackOff)
+      | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
+      | "60" -> KHighOnPaired
+      | "1" -> CheckRaiseBluffOnFlop
       | _ -> failwith "Failed parsing special rules"
-    specialRules.Split(',') |> List.ofArray |> List.map parseOopSpecialRule
+    specialRules.Split(',') 
+    |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
+    |> List.ofArray 
+    |> List.map parseOopSpecialRule
 
   let parseOopOption (strategy: string) (specialRules: string) =
     let parts = strategy.Split([|'/'|], 2)
@@ -289,7 +302,7 @@ module Import =
       | TwoPair -> 16
       | Pair(x) -> 
         let highKicker k = k = Ace || k = King || k = Queen || k = Jack
-        match x, handValue.FD, handValue.SD with
+        match x, handValue.FD2, handValue.SD with
         | Over, _, _ -> 9
         | Top(_), Draw(_), _ -> 36
         | Top(_), _, OpenEnded -> 30
@@ -306,14 +319,14 @@ module Import =
         | Under, _, OpenEnded -> 32
         | Under, _, _ -> 15
       | TwoOvercards ->
-        match handValue.FD, handValue.SD with
+        match handValue.FD2, handValue.SD with
         | Draw(_), OpenEnded | Draw(_), GutShot -> 37
         | Draw(_), NoSD -> 35
         | NoFD, OpenEnded -> 29
         | NoFD, GutShot -> 24
         | NoFD, NoSD -> 7
       | Nothing -> 
-        match handValue.FD, handValue.SD with
+        match handValue.FD2, handValue.SD with
         | Draw(_), OpenEnded | Draw(_), GutShot -> 37
         | Draw(_), NoSD -> 34
         | NoFD, OpenEnded -> 28
@@ -343,7 +356,7 @@ module Import =
       | TwoPair -> 17
       | Pair(x) -> 
         let highKicker k = k = Ace || k = King || k = Queen || k = Jack
-        match x, handValue.FD, handValue.SD with
+        match x, handValue.FD2, handValue.SD with
         | Over, _, _ -> 9
         | Top(_), Draw(_), _ -> 41
         | Top(_), _, OpenEnded -> 34
@@ -364,14 +377,14 @@ module Import =
         | Under, _, OpenEnded -> 37
         | Under, _, _ -> 16
       | TwoOvercards ->
-        match handValue.FD, handValue.SD with
+        match handValue.FD2, handValue.SD with
         | Draw(_), OpenEnded | Draw(_), GutShot -> 42
         | Draw(_), NoSD -> 40
         | NoFD, OpenEnded -> 33
         | NoFD, GutShot -> 27
         | NoFD, NoSD -> 7
       | Nothing -> 
-        match handValue.FD, handValue.SD with
+        match handValue.FD2, handValue.SD with
         | Draw(_), OpenEnded | Draw(_), GutShot -> 42
         | Draw(_), NoSD -> 39
         | NoFD, OpenEnded -> 32

@@ -18,11 +18,11 @@ module Decide =
   open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel importRulesIP fileNameIP |> List.ofSeq
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel importRulesOOP fileNameOOP |> List.ofSeq
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
   let rules = Seq.concat [|rulesIP;rulesOOP|]
-  let decidePre stack = decideOnRules rules stack
+  let decidePre stack odds = decideOnRules rules stack odds
 
   let understandHistory (screen: Screen) =
     let raise bet bb = 
@@ -49,9 +49,11 @@ module Decide =
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
         let stack = min (hs + hb) (vs + vb)
         let effectiveStack = decimal stack / decimal b.BB
+        let callSize = min (vb - hb) hs
+        let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen
-        let actionPattern = decidePre effectiveStack history fullHand
+        let actionPattern = decidePre effectiveStack potOdds history fullHand
         Option.map (mapPatternToAction vb stack) actionPattern  
       | _ -> None
     let decidePost (screen: Screen) =

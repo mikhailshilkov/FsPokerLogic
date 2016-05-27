@@ -52,9 +52,9 @@ let rec enterPosition () =
 let main argv =   
   Console.Write "Importing excel files..."
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel importRulesIP fileNameIP |> List.ofSeq
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel importRulesOOP fileNameOOP |> List.ofSeq
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
   let rules = Seq.concat [|rulesIP;rulesOOP|]
   let decide = decideOnRules rules
   Console.Write " done!\n\n"
@@ -86,7 +86,7 @@ let main argv =
           let parsed = parseHand handString
 
           let previous = if position = OOP then [enterVillainAction (decimal bb) (decimal stack)] else []
-          let result = decide effectiveStack previous parsed
+          let result = decide effectiveStack 0 previous parsed
 
           printAction result
 
@@ -95,14 +95,14 @@ let main argv =
 
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 2) stack 
             let x = (raiseSize / bb) |> decimal
-            let onRaise = decide effectiveStack [Limp; Raise(x, x)] parsed
+            let onRaise = decide effectiveStack 0 [Limp; Raise(x, x)] parsed
             printAction onRaise
 
           | Some(MinRaise) ->
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 3) stack 
             let x = (raiseSize |> decimal) / (bb |> decimal)
             let allActions = if raiseSize = stack then List.append previous [Raise(2m, 2m); RaiseAllIn] else List.append previous [Raise(2m, 2m); Raise(x, x)]
-            let onRaise = decide effectiveStack allActions parsed
+            let onRaise = decide effectiveStack 0 allActions parsed
             printAction onRaise
 
           | _ -> ()

@@ -8,7 +8,7 @@ open FsCheck
 open FsCheck.Xunit
 
 let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importRuleFromExcel importRulesIP fileNameIP |> List.ofSeq
+let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
 let decideIP = decideOnRules rulesIP
 
 type BigBets =
@@ -18,12 +18,12 @@ type BigBets =
 
 [<Property(Arbitrary = [| typeof<BigBets> |])>]
 let ``decide on IP import has value for any stack and hand`` bb h =
-  let action = decideIP bb [] h
+  let action = decideIP bb 0 [] h
   not (action = None)
 
 let decideOnImported decide handString stack history expected =
   let hand = parseHand handString
-  let actual = decide stack history hand
+  let actual = decide stack 0 history hand
   Assert.Equal (
     (match expected with
       | "AllIn" -> AllIn
@@ -85,12 +85,12 @@ let ``decide on imported / raise allin`` handString stack expected =
   decideOnImported decideIP handString stack [Raise(2m, 2m); RaiseAllIn] expected
 
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importRuleFromExcel importRulesOOP fileNameOOP |> List.ofSeq
+let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
 let decideOOP = decideOnRules rulesOOP
 
 [<Property(Arbitrary = [| typeof<BigBets> |])>]
 let ``decide on OOP import has value for any stack and hand`` bb history h =
-  let action = decideOOP bb [history] h
+  let action = decideOOP bb 0 [history] h
   Assert.NotEqual(None, action)
 
 [<Theory>]

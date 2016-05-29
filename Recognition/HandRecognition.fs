@@ -275,16 +275,24 @@ module HandRecognition =
 
   let isHeroSitout getPixel width height =
     let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
-    let checkbox = findCardStart getPixel width height
+    let isBrown (c : Color) = c.R > 127uy && c.R > c.G + 10uy && c.G > c.B + 15uy
+    let checkbox = findCardStart getPixel 5 5
     match checkbox with
     | Some dx, Some dy ->
       let whitePixels =
-        seq { for x in dx - 1 .. dx + 5 do
-                for y in dy - 1 .. dy + 5 do
+        seq { for x in dx - 1 .. dx + 4 do
+                for y in dy - 1 .. dy + 4 do
                   yield isWhite (getPixel x y)}
         |> Seq.sumBy (fun x -> if x then 1 else 0)    
-      whitePixels > 25 && whitePixels < 40
-    | _ -> false
+      whitePixels >= 20 && whitePixels <= 28
+    | _ -> 
+      let brownPixels =
+        seq { for x in 0 .. width-1 do
+                for y in 0 .. height-1 do
+                  yield isBrown (getPixel x y)}
+        |> Seq.sumBy (fun x -> if x then 1 else 0)    
+      brownPixels >= 35
+
 
   let parsePattern getPixel width height =
     getCardPattern getPixel width height

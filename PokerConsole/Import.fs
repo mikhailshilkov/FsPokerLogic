@@ -324,39 +324,91 @@ let importRulesByStack importRules xlWorkBook =
   |> Seq.collect id
   |> List.ofSeq)
 
-let importOopLimpRules (xlWorkBook : Workbook) =
-  let xlWorkSheet = xlWorkBook.Worksheets.["limp fold low"] :?> Worksheet
-  let cellValues = getCellValues xlWorkSheet "B3" "B16"
-  let range = (16, 25)
-  [| { StackRange = range
-       History = [Limp]
-       Range = cellValues.[0]
-       Action = Check };
-     { StackRange = range
-       History = [Limp]
-       Range = cellValues.[1]
-       Action = RaiseX 3m };
-     { StackRange = range
-       History = [Limp]
-       Range = cellValues.[2]
-       Action = AllIn } 
-     { StackRange = range
-       History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-       Range = cellValues.[8]
-       Action = AllIn }
-     { StackRange = range
-       History = [Limp; Raise(0m, 100m); RaiseAllIn]
-       Range = cellValues.[9]
-       Action = Call }
-     { StackRange = range
-       History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-       Range = cellValues.[10]
-       Action = Call }
-     { StackRange = range
-       History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
-       Range = cellValues.[11]
-       Action = Call }
-  |]
+let importOopAdvanced (xlWorkBook : Workbook) =
+  let xlWorkSheetLimp = xlWorkBook.Worksheets.["limp fold low"] :?> Worksheet
+  let cellValuesLimp = getCellValues xlWorkSheetLimp "B3" "B16"
+  let rangeLimp = (16, 25)
+
+  let xlWorkSheetRaise = xlWorkBook.Worksheets.["preflop ranges vs minr"] :?> Worksheet
+  let cellValuesRaise = getCellValues xlWorkSheetRaise "B1" "B3"
+  let rangeRaise = (15, 25)
+
+  let xlWorkSheetCallingRange = xlWorkBook.Worksheets.["EQ 3b shove - default, formula"] :?> Worksheet
+  let cellValuesCallingRange = getCellValues xlWorkSheetCallingRange "B12" "B16"
+
+  Array.concat
+    [|
+      [| 
+       { StackRange = rangeLimp
+         History = [Limp]
+         Range = cellValuesLimp.[0]
+         Action = Check };
+       { StackRange = rangeLimp
+         History = [Limp]
+         Range = cellValuesLimp.[1]
+         Action = RaiseX 3m };
+       { StackRange = rangeLimp
+         History = [Limp]
+         Range = cellValuesLimp.[2]
+         Action = AllIn } 
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+         Range = cellValuesLimp.[8]
+         Action = AllIn }
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); RaiseAllIn]
+         Range = cellValuesLimp.[9]
+         Action = Call }
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+         Range = cellValuesLimp.[10]
+         Action = Call }
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
+         Range = cellValuesLimp.[11]
+         Action = Call }
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
+         Range = cellValuesLimp.[12]
+         Action = Call }
+       { StackRange = rangeLimp
+         History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
+         Range = cellValuesLimp.[13]
+         Action = Call }
+      |];
+
+  //    [0..4]
+  //    |> Seq.map (fun i -> 
+  //       { StackRange = rangeRaise
+  //         History = [RaiseFor3BetShove(cellValuesCallingRange.[0])]
+  //         Range = cellValuesRaise.[0]
+  //         Action = AllIn })
+  //    |> Array.ofSeq,
+
+      [|
+       { StackRange = rangeRaise
+         History = [Raise(0m, 100m)]
+         Range = cellValuesRaise.[0]
+         Action = RaiseX 2.5m }
+       { StackRange = rangeRaise
+         History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
+         Range = cellValuesRaise.[0]
+         Action = AllIn }
+       { StackRange = rangeRaise
+         History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
+         Range = cellValuesRaise.[0]
+         Action = Call }
+       // No bluff raise yet
+       //{ StackRange = (20, 25)
+       //  History = [Raise(0m, 100m)]
+       //  Range = cellValuesRaise.[1]
+       //  Action = RaiseX 2.5m }
+       { StackRange = rangeRaise
+         History = [Raise(0m, 100m)]
+         Range = cellValuesRaise.[2]
+         Action = Call }
+      |]
+    |]
 
 let importRuleFromExcel importAllRules fileName =
   let xlApp = new ApplicationClass()

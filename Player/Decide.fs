@@ -21,7 +21,9 @@ module Decide =
   let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
-  let rules = Seq.concat [|rulesIP;rulesOOP|]
+  let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
+  let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP |> List.ofSeq
+  let rules = Seq.concat [|rulesIP;rulesAdvancedOOP;rulesOOP|]
   let decidePre stack odds = decideOnRules rules stack odds
 
   let understandHistory (screen: Screen) =

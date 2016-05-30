@@ -21,9 +21,9 @@ let ``decide on IP import has value for any stack and hand`` bb h =
   let action = decideIP bb 0 [] h
   not (action = None)
 
-let decideOnImported decide handString stack history expected =
+let decideOnImportedWithOdds decide handString stack odds history expected =
   let hand = parseHand handString
-  let actual = decide stack 0 history hand
+  let actual = decide stack odds history hand
   Assert.Equal (
     (match expected with
       | "AllIn" -> AllIn
@@ -36,6 +36,9 @@ let decideOnImported decide handString stack history expected =
       | _ -> failwith "Unknown expected"
       |> Some),
       actual)
+
+let decideOnImported decide handString stack history expected =
+  decideOnImportedWithOdds decide handString stack 0 history expected
 
 [<Theory>]
 [<InlineData("Q4o", 25, "Fold")>]
@@ -150,3 +153,54 @@ let ``decide on imported / allin on 4bet`` () =
 [<Fact>]
 let ``decide on imported / call 4bet allin`` () =
   decideOnImported decideOOP "99" 6.66m [Raise(2m, 2m); Raise(4m, 4m); RaiseAllIn] "Call"
+
+let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
+let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP |> List.ofSeq
+let decideAdvancedOOP x = decideOnRules rulesAdvancedOOP x
+
+[<Fact>]
+let ``decide on PART2 imported / check back after limp`` () =
+  decideOnImported decideAdvancedOOP "K5s" 20m [Limp] "Check"
+
+[<Fact>]
+let ``decide on PART2 imported / raise after limp`` () =
+  decideOnImported decideAdvancedOOP "JTs" 20m [Limp] "RaiseX3"
+
+[<Fact>]
+let ``decide on PART2 imported / all-in after limp`` () =
+  decideOnImported decideAdvancedOOP "22" 20m [Limp] "AllIn"
+
+[<Fact>]
+let ``decide on PART2 imported / all-in after limp/3bet`` () =
+  decideOnImported decideAdvancedOOP "TT" 25m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "AllIn"
+
+[<Fact>]
+let ``decide on PART2 imported / call all-in 3bet`` () =
+  decideOnImported decideAdvancedOOP "TT" 25m [Limp; Raise(3m, 3m); RaiseAllIn] "Call"
+
+[<Fact>]
+let ``decide on PART2 imported / call limp/3bet`` () =
+  decideOnImported decideAdvancedOOP "KTs" 25m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
+
+[<Theory>]
+[<InlineData("K9s", 34)>]
+[<InlineData("K8s", 30)>]
+[<InlineData("K7s", 25)>]
+let ``decide on PART2 imported / call limp/3bet with specfied odds`` hand odds =
+  decideOnImportedWithOdds decideAdvancedOOP hand 25m odds [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
+
+[<Fact>]
+let ``decide on PART2 imported / call pfr`` () =
+  decideOnImported decideAdvancedOOP "J3s" 15m [Raise(3m, 3m)] "Call"
+
+[<Fact>]
+let ``decide on PART2 imported / 3bet pfr`` () =
+  decideOnImported decideAdvancedOOP "JJ" 15m [Raise(3m, 3m)] "RaiseX2.5"
+
+[<Fact>]
+let ``decide on PART2 imported / 5bet ai`` () =
+  decideOnImported decideAdvancedOOP "JJ" 25m [Raise(2m, 2m); Raise(2.5m, 2.5m); Raise(2m, 2m)] "AllIn"
+
+[<Fact>]
+let ``decide on PART2 imported / call 4bet ai`` () =
+  decideOnImported decideAdvancedOOP "QQ" 25m [Raise(2m, 2m); Raise(2.5m, 2.5m); RaiseAllIn] "Call"

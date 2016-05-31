@@ -56,14 +56,14 @@ let ``decide on imported / open`` handString stack expected =
 [<InlineData("KQo", 21, 2.5, "AllIn")>]
 [<InlineData("KTs", 19, 3.5, "Fold")>]
 [<InlineData("KJs", 20, 3.5, "AllIn")>]
-let ``decide on imported / limp raise`` handString stack raiseSize expected =
-  decideOnImported decideIP handString stack [Limp; Raise(raiseSize, raiseSize)] expected
+let ``decide on imported / WasLimp raise`` handString stack raiseSize expected =
+  decideOnImported decideIP handString stack [WasLimp; WasRaise(raiseSize)] expected
 
 [<Theory>]
 [<InlineData("KJo", 25, "Fold")>]
 [<InlineData("KQs", 24, "Call")>]
-let ``decide on imported / limp allin`` handString stack expected =
-  decideOnImported decideIP handString stack [Limp; RaiseAllIn] expected
+let ``decide on imported / WasLimp allin`` handString stack expected =
+  decideOnImported decideIP handString stack [WasLimp; WasRaiseAllIn] expected
 
 [<Theory>]
 [<InlineData("95s", 18, 3.2, "Fold")>]
@@ -79,13 +79,13 @@ let ``decide on imported / limp allin`` handString stack expected =
 [<InlineData("K9s", 21, 7.1, "Fold")>]
 [<InlineData("AKs", 20, 7.1, "AllIn")>]
 let ``decide on imported / reraise`` handString stack raiseSize expected =
-  decideOnImported decideIP handString stack [Raise(2m, 2m); Raise(raiseSize, raiseSize)] expected
+  decideOnImported decideIP handString stack [WasRaise(2m); WasRaise(raiseSize)] expected
 
 [<Theory>]
 [<InlineData("A7s", 19, "Fold")>]
 [<InlineData("99", 18, "Call")>]
 let ``decide on imported / raise allin`` handString stack expected =
-  decideOnImported decideIP handString stack [Raise(2m, 2m); RaiseAllIn] expected
+  decideOnImported decideIP handString stack [WasRaise(2m); WasRaiseAllIn] expected
 
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
 let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
@@ -102,7 +102,7 @@ let ``decide on OOP import has value for any stack and hand`` bb history h =
 [<InlineData("AA", 25, 2.7, "AllIn")>]
 [<InlineData("JJ", 25, 2.7, "Fold")>]
 let ``decide on imported / 4bet`` handString stack raiseSize expected =
-  decideOnImported decideOOP handString stack [Raise(raiseSize, raiseSize); Raise(2.5m, 2.5m); Raise(2m, 2m)] expected
+  decideOnImported decideOOP handString stack [WasRaise(raiseSize); WasRaise(2.5m); WasRaise(2m)] expected
 
 [<Theory>]
 [<InlineData("JJ", 25, 2.3, "Call")>]
@@ -110,14 +110,14 @@ let ``decide on imported / 4bet`` handString stack raiseSize expected =
 [<InlineData("KK", 25, 2.7, "Call")>]
 [<InlineData("T2s", 25, 2.7, "Fold")>]
 let ``decide on imported / 4bet allin`` handString stack raiseSize expected =
-  decideOnImported decideOOP handString stack [Raise(raiseSize, raiseSize); Raise(2.5m, 2.5m); RaiseAllIn] expected
+  decideOnImported decideOOP handString stack [WasRaise(raiseSize); WasRaise(2.5m); WasRaiseAllIn] expected
 
 [<Theory>]
 [<InlineData("Q9s", 7, "Check")>]
 [<InlineData("JTo", 6, "RaiseX3")>]
 [<InlineData("22", 5, "AllIn")>]
-let ``decide on imported / limp`` handString stack expected =
-  decideOnImported decideOOP handString stack [Limp] expected
+let ``decide on imported / WasLimp`` handString stack expected =
+  decideOnImported decideOOP handString stack [WasLimp] expected
 
 [<Theory>]
 [<InlineData("94s", 4, "Fold")>]
@@ -125,85 +125,85 @@ let ``decide on imported / limp`` handString stack expected =
 [<InlineData("88", 2, "RaiseX2.5")>]
 [<InlineData("66", 1, "AllIn")>]
 let ``decide on imported / raise`` handString stack expected =
-  decideOnImported decideOOP handString stack [Raise(2.5m, 2.5m)] expected
+  decideOnImported decideOOP handString stack [WasRaise(2.5m)] expected
 
 [<Theory>]
 [<InlineData("K6s", 7, "Fold")>]
 [<InlineData("K7s", 6, "Call")>]  
 let ``decide on imported / allin`` handString stack expected =
-  decideOnImported decideOOP handString stack [RaiseAllIn] expected
+  decideOnImported decideOOP handString stack [WasRaiseAllIn] expected
 
 [<Theory>]
 [<InlineData("QTo", 5, "Fold")>]
 [<InlineData("QJo", 4, "Call")>]
 [<InlineData("AJo", 3, "AllIn")>]
-let ``decide on imported / limp raise reraise`` handString stack expected =
-  decideOnImported decideOOP handString stack [Limp; Raise(3m, 3m); Raise(5m, 5m)] expected
+let ``decide on imported / WasLimp raise reraise`` handString stack expected =
+  decideOnImported decideOOP handString stack [WasLimp; WasRaise(3m); WasRaise(5m)] expected
 
 [<Theory>]
 [<InlineData("QTs", 2, "Fold")>]
 [<InlineData("KQo", 1, "Call")>]
-let ``decide on imported / limp raise allin`` handString stack expected =
-  decideOnImported decideOOP handString stack [Limp; Raise(3m, 3m); RaiseAllIn] expected
+let ``decide on imported / WasLimp raise allin`` handString stack expected =
+  decideOnImported decideOOP handString stack [WasLimp; WasRaise(3m); WasRaiseAllIn] expected
 
 [<Fact>]
 let ``decide on imported / allin on 4bet`` () =
-  decideOnImported decideOOP "88" 6.66m [Raise(2m, 2m); Raise(4m, 4m); Raise(6m, 6m)] "AllIn"
+  decideOnImported decideOOP "88" 6.66m [WasRaise(2m); WasRaise(4m); WasRaise(6m)] "AllIn"
 
 [<Fact>]
 let ``decide on imported / call 4bet allin`` () =
-  decideOnImported decideOOP "99" 6.66m [Raise(2m, 2m); Raise(4m, 4m); RaiseAllIn] "Call"
+  decideOnImported decideOOP "99" 6.66m [WasRaise(2m); WasRaise(4m); WasRaiseAllIn] "Call"
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
 let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP |> List.ofSeq
 let decideAdvancedOOP x = decideOnRules rulesAdvancedOOP x
 
 [<Fact>]
-let ``decide on PART2 imported / check back after limp`` () =
-  decideOnImported decideAdvancedOOP "K5s" 20m [Limp] "Check"
+let ``decide on PART2 imported / check back after WasLimp`` () =
+  decideOnImported decideAdvancedOOP "K5s" 20m [WasLimp] "Check"
 
 [<Fact>]
-let ``decide on PART2 imported / raise after limp`` () =
-  decideOnImported decideAdvancedOOP "JTs" 20m [Limp] "RaiseX3"
+let ``decide on PART2 imported / raise after WasLimp`` () =
+  decideOnImported decideAdvancedOOP "JTs" 20m [WasLimp] "RaiseX3"
 
 [<Fact>]
-let ``decide on PART2 imported / all-in after limp`` () =
-  decideOnImported decideAdvancedOOP "22" 20m [Limp] "AllIn"
+let ``decide on PART2 imported / all-in after WasLimp`` () =
+  decideOnImported decideAdvancedOOP "22" 20m [WasLimp] "AllIn"
 
 [<Fact>]
-let ``decide on PART2 imported / all-in after limp/3bet`` () =
-  decideOnImported decideAdvancedOOP "TT" 25m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "AllIn"
+let ``decide on PART2 imported / all-in after WasLimp/3bet`` () =
+  decideOnImported decideAdvancedOOP "TT" 25m [WasLimp; WasRaise(3m); WasRaise(2.5m)] "AllIn"
 
 [<Fact>]
 let ``decide on PART2 imported / call all-in 3bet`` () =
-  decideOnImported decideAdvancedOOP "TT" 25m [Limp; Raise(3m, 3m); RaiseAllIn] "Call"
+  decideOnImported decideAdvancedOOP "TT" 25m [WasLimp; WasRaise(3m); WasRaiseAllIn] "Call"
 
 [<Fact>]
-let ``decide on PART2 imported / call limp/3bet`` () =
-  decideOnImported decideAdvancedOOP "KTs" 25m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
+let ``decide on PART2 imported / call WasLimp/3bet`` () =
+  decideOnImported decideAdvancedOOP "KTs" 25m [WasLimp; WasRaise(3m); WasRaise(2.5m)] "Call"
 
 [<Theory>]
 [<InlineData("K9s", 34)>]
 [<InlineData("K8s", 30)>]
 [<InlineData("K7s", 25)>]
-let ``decide on PART2 imported / call limp/3bet with specfied odds`` hand odds =
-  decideOnImportedWithOdds decideAdvancedOOP hand 25m odds 0m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
+let ``decide on PART2 imported / call WasLimp/3bet with specfied odds`` hand odds =
+  decideOnImportedWithOdds decideAdvancedOOP hand 25m odds 0m [WasLimp; WasRaise(3m); WasRaise(2.5m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / call pfr`` () =
-  decideOnImported decideAdvancedOOP "J3s" 15m [Raise(3m, 3m)] "Call"
+  decideOnImported decideAdvancedOOP "J3s" 15m [WasRaise(3m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / 3bet pfr`` () =
-  decideOnImported decideAdvancedOOP "JJ" 15m [Raise(3m, 3m)] "RaiseX2.5"
+  decideOnImported decideAdvancedOOP "JJ" 15m [WasRaise(3m)] "RaiseX2.5"
 
 [<Fact>]
 let ``decide on PART2 imported / 5bet ai`` () =
-  decideOnImported decideAdvancedOOP "JJ" 25m [Raise(2m, 2m); Raise(2.5m, 2.5m); Raise(2m, 2m)] "AllIn"
+  decideOnImported decideAdvancedOOP "JJ" 25m [WasRaise(2m); WasRaise(2.5m); WasRaise(2m)] "AllIn"
 
 [<Fact>]
 let ``decide on PART2 imported / call 4bet ai`` () =
-  decideOnImported decideAdvancedOOP "QQ" 25m [Raise(2m, 2m); Raise(2.5m, 2.5m); RaiseAllIn] "Call"
+  decideOnImported decideAdvancedOOP "QQ" 25m [WasRaise(2m); WasRaise(2.5m); WasRaiseAllIn] "Call"
 
 [<Fact>]
 let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =

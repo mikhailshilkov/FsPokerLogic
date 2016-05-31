@@ -14,6 +14,11 @@ type ActionPattern =
 type RelativePosition = IP | OOP
 
 type HistoryItem = 
+  | WasLimp
+  | WasRaise of decimal
+  | WasRaiseAllIn
+
+type RuleHistoryItem = 
   | Limp
   | Raise of decimal * decimal
   | RaiseEQ of int
@@ -23,21 +28,25 @@ type HistoryItem =
 type DecisionRule = 
   { StackRange : int * int
     Range : string
-    History : HistoryItem seq
+    History : RuleHistoryItem seq
     Action : ActionPattern }
 
 let isHistoryMatching ranges history stack odds openingRange =
   let if3BetShove raiseX callingRange openingRange allinPot =
     (((-((((raiseX+1m))*((100m-((100m*callingRange)/openingRange))/100m))))*(openingRange/callingRange)+((allinPot/2m)-1m))*100m)/allinPot
 
-  (Seq.compareWith (fun r h -> 
-    match (r, h) with
-    | Limp, Limp -> 0
-    | RaiseAllIn, RaiseAllIn -> 0
-    | Raise (min, max), Raise (v, _) -> if min <= v && v <= max then 0 else 1
-    | RaiseEQ eq, Raise (_, _) -> if eq >= odds then 0 else 1
-    | RaiseFor3BetShove(cra, orathres), Raise (v, _) -> if if3BetShove v cra openingRange (stack*2m) > orathres then 0 else 1
-    | _ -> 1) ranges history) = 0
+  if Seq.length ranges = Seq.length history 
+  then
+    Seq.zip ranges history
+    |> Seq.forall (fun (r, h) -> 
+      match (r, h) with
+      | Limp, WasLimp -> true
+      | RaiseAllIn, WasRaiseAllIn -> true
+      | Raise (min, max), WasRaise v -> min <= v && v <= max
+      | RaiseEQ eq, WasRaise _ -> eq >= odds
+      | RaiseFor3BetShove(cra, orathres), WasRaise v -> if3BetShove v cra openingRange (stack*2m) > orathres
+      | _ -> false)
+  else false
 
 let decideOnRules rules stack odds openingRange history h = 
   let isMatching rule h = 
@@ -49,4 +58,5 @@ let decideOnRules rules stack odds openingRange history h =
       && stack <= stackMaxF + 0.5m 
       && (isHistoryMatching rule.History history stack odds openingRange)
   rules
-  |> Seq.tryPick (fun r -> if isMatching r (normalize h) then Some(r.Action) else None)
+  |> Seq.filter (fun r -> isMatching r (normalize h))    
+  |> Seq.tryHead |> Option.map (fun x -> x.Action)

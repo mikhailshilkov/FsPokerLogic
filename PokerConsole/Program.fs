@@ -31,9 +31,9 @@ let rec enterVillainAction bb stack =
   Console.Write "What was the Villain action (limp, raise xx): "
   let actionString = Console.ReadLine()
   match actionString.ToLowerInvariant() with
-  | "limp" -> Limp
-  | RaiseInt i when i >= stack -> RaiseAllIn
-  | RaiseInt i -> Raise(i / bb, i / bb)
+  | "limp" -> WasLimp
+  | RaiseInt i when i >= stack -> WasRaiseAllIn
+  | RaiseInt i -> WasRaise(i / bb)
   | _ -> 
     Console.WriteLine "Not a valid action!"
     enterVillainAction bb stack
@@ -95,13 +95,13 @@ let main argv =
 
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 2) stack 
             let x = (raiseSize / bb) |> decimal
-            let onRaise = decide effectiveStack 0 0m [Limp; Raise(x, x)] parsed
+            let onRaise = decide effectiveStack 0 0m [WasLimp; WasRaise(x)] parsed
             printAction onRaise
 
           | Some(MinRaise) ->
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 3) stack 
             let x = (raiseSize |> decimal) / (bb |> decimal)
-            let allActions = if raiseSize = stack then List.append previous [Raise(2m, 2m); RaiseAllIn] else List.append previous [Raise(2m, 2m); Raise(x, x)]
+            let allActions = if raiseSize = stack then List.append previous [WasRaise(2m); WasRaiseAllIn] else List.append previous [WasRaise(2m); WasRaise(x)]
             let onRaise = decide effectiveStack 0 0m allActions parsed
             printAction onRaise
 

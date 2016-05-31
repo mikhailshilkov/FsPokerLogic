@@ -5,6 +5,10 @@ open Microsoft.Office.Interop.Excel
 open Preflop
 open System.Runtime.InteropServices
 
+let parseDouble (s: string) =
+  let s2 = s.Replace(",", ".")
+  System.Decimal.Parse(s2, System.Globalization.CultureInfo.InvariantCulture)
+
 let getCellValue (sheet : Worksheet) (name : string) = 
   let result = sheet.Cells.Range(name, name).Value2 :?> string
   if result = null then "" else result
@@ -16,8 +20,7 @@ let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) =
   let result = sheet.Cells.Range(name1, name2).Value2 :?> Object[,]
   result 
     |> toArray 
-    |> Seq.cast<string> 
-    |> Seq.map (fun x -> if x = null then "" else x)
+    |> Seq.map (fun x -> if x = null then "" else x.ToString())
     |> Array.ofSeq
 
 let importRulesIP (xlWorkBook : Workbook) bb =
@@ -381,14 +384,14 @@ let importOopAdvanced (xlWorkBook : Workbook) =
       |> Seq.map (fun i -> 
          [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)]
          |> Seq.map (fun r ->
-           let sheetName = printfn "%i - %i bb" (snd r) (fst r)
+           let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
            let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-           let cellValuesBbThresholds = getCellValues xlWorkSheetCallingRange "A1" "A37"
-           let cellValuesBbRanges = getCellValues xlWorkSheetCallingRange "B1" "B37"
+           let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
+           let cellValuesBbRanges = getCellValues sheet "B1" "B37"
            [0..36]
            |> Seq.map (fun row ->
              { StackRange = r
-               History = [RaiseFor3BetShove(System.Decimal.Parse(cellValuesCallingRange.[0]), System.Decimal.Parse(cellValuesBbThresholds.[row]))]
+               History = [RaiseFor3BetShove(parseDouble cellValuesCallingRange.[i], parseDouble cellValuesBbThresholds.[row])]
                Range = cellValuesBbRanges.[row]
                Action = AllIn })
            |> Array.ofSeq)

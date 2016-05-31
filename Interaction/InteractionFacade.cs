@@ -96,6 +96,29 @@ namespace Interaction
                 }
             }
         }
+
+        public static WindowInfo GetWindow(string windowTitle, Size screenSize)
+        {
+            HwndObject window = HwndObject.GetWindowByTitle(windowTitle);
+            if (window == null)
+                throw new ApplicationException(string.Format("Window '{0}' not found", windowTitle));
+
+            var parts = window.Title.Split('-');
+
+            Bitmap bitmap = new Bitmap(screenSize.Width, screenSize.Height);
+            Graphics memoryGraphics = Graphics.FromImage(bitmap);
+            IntPtr dc = memoryGraphics.GetHdc();
+            bool success = Win32.PrintWindow(window.Hwnd, dc, 0);
+            memoryGraphics.ReleaseHdc(dc);
+
+            return new WindowInfo
+            {
+                Title = window.Title,
+                TableName = parts.Length > 2 ? parts[2].Trim() : window.Title,
+                Size = window.Size,
+                Bitmap = bitmap
+            };
+        }
     }
 }
 

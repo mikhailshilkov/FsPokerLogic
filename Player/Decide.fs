@@ -134,7 +134,7 @@ module Decide =
         printfn "Decision is: %A" d
         let action = mapAction d screen.Actions
         printfn "Action is: %A" action
-        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown }
+        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
         (Some outMsg, newState)
       | None ->
         printfn "Could not make a decision, dumping the screenshot..."

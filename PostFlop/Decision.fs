@@ -61,8 +61,15 @@ module Decision =
   let callEQ s threshold = 
     if potOdds s <= threshold then Action.Call else Action.Fold
 
+  let preventMicroRaises s d =
+    if match street s with | Turn | River -> true | _ -> false 
+      && s.VillainBet <= 3 * s.BB && s.VillainBet * 7 / 20 < s.Pot 
+    then 6 * s.VillainBet 
+    else if s.VillainBet = s.BB then 4 * s.VillainBet
+    else d
+
   let stackOffDonkX x s = 
-    let raiseSize = s.VillainBet * x / 100
+    let raiseSize = s.VillainBet * x / 100 |> preventMicroRaises s
     if raiseSize + 100 > effectiveStackOnCurrentStreet s then Action.AllIn
     else Action.RaiseToAmount raiseSize
 
@@ -71,25 +78,19 @@ module Decision =
     else Action.Call
 
   let stackOffDonk s =
-    if s.VillainBet = s.BB then 
-      4 * s.VillainBet |> RaiseToAmount
-    else
-      let calculatedRaiseSize = ((stackPre s) - 85 * (potPre s) / 100) * 10 / 27
-      let raiseSize =
-        if calculatedRaiseSize > s.VillainBet * 2 then calculatedRaiseSize
-        else (9 * s.VillainBet / 4)
-        |> roundTo5 
-      if raiseSize < s.HeroStack then RaiseToAmount raiseSize
-      else Action.AllIn
+    let calculatedRaiseSize = ((stackPre s) - 85 * (potPre s) / 100) * 10 / 27 |> preventMicroRaises s
+    let raiseSize =
+      if calculatedRaiseSize > s.VillainBet * 2 then calculatedRaiseSize
+      else (9 * s.VillainBet / 4)
+      |> roundTo5 
+    if raiseSize < s.HeroStack then RaiseToAmount raiseSize
+    else Action.AllIn
 
   let raisePetDonk s =
-    if s.VillainBet = s.BB then 
-      4 * s.VillainBet |> RaiseToAmount
-    else 
-      if s.VillainBet < betPre s then
-        3 * s.VillainBet |> roundTo5 |> RaiseToAmount
-      else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
-      else Action.Call
+    if s.VillainBet < betPre s then
+      3 * s.VillainBet |> preventMicroRaises s |> roundTo5 |> RaiseToAmount
+    else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
+    else Action.Call
 
   let ensureMinRaise s a =
     match a with

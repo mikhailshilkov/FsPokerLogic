@@ -24,8 +24,8 @@ let ``Bet 75% with nut flush on 5-card monoriver`` () =
 
 [<Fact>]
 let ``Raise 2.8x with nut flush on 5-card monoriver`` () =
-  let s = { defaultRiver with Pot = 200; VillainBet = 50 }
-  test5MonoboardRiver s Nut (Action.RaiseToAmount 140)
+  let s = { defaultRiver with Pot = 200; VillainBet = 61 }
+  test5MonoboardRiver s Nut (Action.RaiseToAmount 170)
 
 [<Fact>]
 let ``Bet 50% with high flush on 5-card monoriver`` () =

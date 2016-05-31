@@ -53,9 +53,10 @@ module Decide =
         let effectiveStack = decimal stack / decimal b.BB
         let callSize = min (vb - hb) hs
         let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
+        let openRaise = if b.BB >= 20 then 40m else if b.BB >= 16 then 34m else 31m
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen
-        let actionPattern = decidePre effectiveStack potOdds history fullHand
+        let actionPattern = decidePre effectiveStack potOdds openRaise history fullHand
         Option.map (mapPatternToAction vb stack) actionPattern  
       | _ -> None
     let decidePost (screen: Screen) =

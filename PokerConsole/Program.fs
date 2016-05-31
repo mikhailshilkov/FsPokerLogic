@@ -86,7 +86,7 @@ let main argv =
           let parsed = parseHand handString
 
           let previous = if position = OOP then [enterVillainAction (decimal bb) (decimal stack)] else []
-          let result = decide effectiveStack 0 previous parsed
+          let result = decide effectiveStack 0 0m previous parsed
 
           printAction result
 
@@ -95,14 +95,14 @@ let main argv =
 
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 2) stack 
             let x = (raiseSize / bb) |> decimal
-            let onRaise = decide effectiveStack 0 [Limp; Raise(x, x)] parsed
+            let onRaise = decide effectiveStack 0 0m [Limp; Raise(x, x)] parsed
             printAction onRaise
 
           | Some(MinRaise) ->
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 3) stack 
             let x = (raiseSize |> decimal) / (bb |> decimal)
             let allActions = if raiseSize = stack then List.append previous [Raise(2m, 2m); RaiseAllIn] else List.append previous [Raise(2m, 2m); Raise(x, x)]
-            let onRaise = decide effectiveStack 0 allActions parsed
+            let onRaise = decide effectiveStack 0 0m allActions parsed
             printAction onRaise
 
           | _ -> ()

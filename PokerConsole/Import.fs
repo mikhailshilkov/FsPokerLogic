@@ -377,13 +377,23 @@ let importOopAdvanced (xlWorkBook : Workbook) =
          Action = Call }
       |];
 
-  //    [0..4]
-  //    |> Seq.map (fun i -> 
-  //       { StackRange = rangeRaise
-  //         History = [RaiseFor3BetShove(cellValuesCallingRange.[0])]
-  //         Range = cellValuesRaise.[0]
-  //         Action = AllIn })
-  //    |> Array.ofSeq,
+      [0..4]
+      |> Seq.map (fun i -> 
+         [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)]
+         |> Seq.map (fun r ->
+           let sheetName = printfn "%i - %i bb" (snd r) (fst r)
+           let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+           let cellValuesBbThresholds = getCellValues xlWorkSheetCallingRange "A1" "A37"
+           let cellValuesBbRanges = getCellValues xlWorkSheetCallingRange "B1" "B37"
+           [0..36]
+           |> Seq.map (fun row ->
+             { StackRange = r
+               History = [RaiseFor3BetShove(System.Decimal.Parse(cellValuesCallingRange.[0]), System.Decimal.Parse(cellValuesBbThresholds.[row]))]
+               Range = cellValuesBbRanges.[row]
+               Action = AllIn })
+           |> Array.ofSeq)
+         |> Array.concat)
+      |> Array.concat;
 
       [|
        { StackRange = rangeRaise

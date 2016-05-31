@@ -18,12 +18,12 @@ type BigBets =
 
 [<Property(Arbitrary = [| typeof<BigBets> |])>]
 let ``decide on IP import has value for any stack and hand`` bb h =
-  let action = decideIP bb 0 [] h
+  let action = decideIP bb 0 0m [] h
   not (action = None)
 
-let decideOnImportedWithOdds decide handString stack odds history expected =
+let decideOnImportedWithOdds decide handString stack odds openRange history expected =
   let hand = parseHand handString
-  let actual = decide stack odds history hand
+  let actual = decide stack odds openRange history hand
   Assert.Equal (
     (match expected with
       | "AllIn" -> AllIn
@@ -38,7 +38,7 @@ let decideOnImportedWithOdds decide handString stack odds history expected =
       actual)
 
 let decideOnImported decide handString stack history expected =
-  decideOnImportedWithOdds decide handString stack 0 history expected
+  decideOnImportedWithOdds decide handString stack 0 0m history expected
 
 [<Theory>]
 [<InlineData("Q4o", 25, "Fold")>]
@@ -93,7 +93,7 @@ let decideOOP = decideOnRules rulesOOP
 
 [<Property(Arbitrary = [| typeof<BigBets> |])>]
 let ``decide on OOP import has value for any stack and hand`` bb history h =
-  let action = decideOOP bb 0 [history] h
+  let action = decideOOP bb 0 0m [history] h
   Assert.NotEqual(None, action)
 
 [<Theory>]
@@ -187,7 +187,7 @@ let ``decide on PART2 imported / call limp/3bet`` () =
 [<InlineData("K8s", 30)>]
 [<InlineData("K7s", 25)>]
 let ``decide on PART2 imported / call limp/3bet with specfied odds`` hand odds =
-  decideOnImportedWithOdds decideAdvancedOOP hand 25m odds [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
+  decideOnImportedWithOdds decideAdvancedOOP hand 25m odds 0m [Limp; Raise(3m, 3m); Raise(2.5m, 2.5m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / call pfr`` () =
@@ -204,3 +204,11 @@ let ``decide on PART2 imported / 5bet ai`` () =
 [<Fact>]
 let ``decide on PART2 imported / call 4bet ai`` () =
   decideOnImported decideAdvancedOOP "QQ" 25m [Raise(2m, 2m); Raise(2.5m, 2.5m); RaiseAllIn] "Call"
+
+[<Fact>]
+let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =
+  let sampleRule = 
+    rulesAdvancedOOP
+    |> List.filter (fun r -> r.Action = AllIn && r.StackRange = (18, 19) && r.History = seq [RaiseFor3BetShove(23.44m, 34m)])
+    |> List.head
+  Assert.Equal("99-22,AQs+,K9s+,QTs+,J4s+,T6s+,T4s,94s+,A2o+,KTo+,QJo", sampleRule.Range)

@@ -24,18 +24,13 @@ let ``decide on IP import has value for any stack and hand`` bb h =
 let decideOnImportedWithOdds decide handString stack odds openRange history expected =
   let hand = parseHand handString
   let actual = decide stack odds openRange history hand
-  Assert.Equal (
-    (match expected with
-      | "AllIn" -> AllIn
-      | "Raise" -> MinRaise
-      | "RaiseX2.5" -> RaiseX 2.5m
-      | "RaiseX3" -> RaiseX 3m
-      | "Check" -> ActionPattern.Check
-      | "Call" -> Call
-      | "Fold" -> Fold
-      | _ -> failwith "Unknown expected"
-      |> Some),
-      actual)
+  Assert.Equal (expected,
+    (match actual with
+      | None -> "-"
+      | Some MinRaise -> "Raise"
+      | Some(RaiseX 2.5m) -> "RaiseX2.5"
+      | Some(RaiseX 3m) -> "RaiseX3"
+      | Some x -> sprintf "%A" x))
 
 let decideOnImported decide handString stack history expected =
   decideOnImportedWithOdds decide handString stack 0 0m history expected
@@ -206,7 +201,19 @@ let ``decide on PART2 imported / call 4bet ai`` () =
   decideOnImported decideAdvancedOOP "QQ" 25m [WasRaise(2m); WasRaise(2.5m); WasRaiseAllIn] "Call"
 
 [<Fact>]
+let ``decide on PART2 imported / 3bet shove based on formula`` () =
+  decideOnImportedWithOdds decideAdvancedOOP "87o" 25m 0 40m [WasRaise(2m)] "AllIn"
+
+[<Fact>]
+let ``decide on PART2 imported / does not 3bet shove based on formula`` () =
+  decideOnImportedWithOdds decideAdvancedOOP "97o" 25m 0 40m [WasRaise(2m)] "Call"
+
+[<Fact>]
 let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =
+  let shoveRules = 
+    rulesAdvancedOOP 
+    |> List.filter (fun r -> r.Action = AllIn && match Seq.head r.History with | RaiseFor3BetShove(_, _) -> true | _ -> false)
+  Assert.Equal(5 * 37, List.length shoveRules)
   let sampleRule = 
     rulesAdvancedOOP
     |> List.filter (fun r -> r.Action = AllIn && r.StackRange = (18, 19) && r.History = seq [RaiseFor3BetShove(23.44m, 34m)])

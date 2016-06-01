@@ -382,20 +382,18 @@ let importOopAdvanced (xlWorkBook : Workbook) =
 
       [0..4]
       |> Seq.map (fun i -> 
-         [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)]
-         |> Seq.map (fun r ->
-           let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
-           let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-           let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
-           let cellValuesBbRanges = getCellValues sheet "B1" "B37"
-           [0..36]
-           |> Seq.map (fun row ->
-             { StackRange = r
-               History = [RaiseFor3BetShove(parseDouble cellValuesCallingRange.[i], parseDouble cellValuesBbThresholds.[row])]
-               Range = cellValuesBbRanges.[row]
-               Action = AllIn })
-           |> Array.ofSeq)
-         |> Array.concat)
+        let r = [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)].[i]
+        let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
+        let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+        let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
+        let cellValuesBbRanges = getCellValues sheet "B1" "B37"
+        [0..36]
+        |> Seq.map (fun row ->
+          { StackRange = r
+            History = [RaiseFor3BetShove(parseDouble cellValuesCallingRange.[i], parseDouble cellValuesBbThresholds.[row])]
+            Range = cellValuesBbRanges.[row]
+            Action = AllIn })
+        |> Array.ofSeq)
       |> Array.concat;
 
       [|

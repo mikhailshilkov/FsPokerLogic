@@ -73,6 +73,26 @@ module StringRecognition =
     { Char = 'S'; Pattern = [[B;W;W;W;B;B;B;W];[W;W;W;W;W;B;B;W];[W;B;B;W;W;B;B;W];[W;B;B;W;W;B;B;W];[W;B;B;W;W;W;W;W];[W;B;B;B;W;W;W;B]] }
   |]
 
+  let textPatterns = [|  
+    { Char = 'B'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;W;W;W;B;B;B]] }  
+    { Char = 'a'; Pattern = [[B;B;B;B;B;W;W;B;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
+    { Char = 'b'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }
+    { Char = 'e'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;B;W;W;B;W;B;B;B]] }
+    { Char = 'g'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;W;W;W;W;W;W;B]] }
+    { Char = 'i'; Pattern = [[W;B;W;W;W;W;W;W;B;B]] }
+    { Char = 'l'; Pattern = [[W;W;W;W;W;W;W;W;B;B]] }
+    { Char = 'm'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
+    { Char = 'n'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
+    { Char = 'p'; Pattern = [[B;B;W;W;W;W;W;W;W;W]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }
+    { Char = 'r'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]] }
+    { Char = 's'; Pattern = [[B;B;B;W;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;B;W;B;W;B;B]; [B;B;W;B;B;W;W;B;B;B]] }
+    { Char = 't'; Pattern = [[W;W;W;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]] }
+    { Char = 'u'; Pattern = [[B;B;W;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;W;W;W;W;W;W;B;B]] }
+    { Char = 'v'; Pattern = [[B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]] }
+    { Char = 'y'; Pattern = [[B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;W;W]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
+  |]
+
   let getChar patterns bws =
     let samePatterns h p =
       Seq.zip h p
@@ -87,7 +107,7 @@ module StringRecognition =
   let lessThanXWhite x seq =
     (Seq.filter ((=) W) seq |> Seq.length) >= x
 
-  let removePadding threshold pixels =
+  let removePadding threshold minHeight pixels =
       let maxWidth = Array2D.length1 pixels - 1
       let maxHeight = Array2D.length2 pixels - 1
       let firstX = [0..maxWidth] |> Seq.tryFindIndex (fun y -> lessThanXWhite 1 pixels.[y, 0..maxHeight])
@@ -96,14 +116,15 @@ module StringRecognition =
       let lastY = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThanXWhite threshold pixels.[0..maxWidth, x])
 
       match (firstX, lastX, firstY, lastY) with
-      | (Some fx, Some lx, Some fy, Some ly) -> pixels.[fx..lx, fy..ly]
+      | (Some fx, Some lx, Some fy, Some ly) when fy + minHeight - 1 <= maxHeight -> 
+        pixels.[fx..lx, fy..(max ly (fy + minHeight - 1))]
       | _ -> Array2D.init 0 0 (fun _ _ -> B)
 
   let isWhite (c : Color) =
     if c.B > 180uy && c.G > 180uy && c.R > 180uy then W
     else B
 
-  let recognizeString (matchSymbol: BW list list -> char) threshold getPixel width height =
+  let recognizeString (matchSymbol: BW list list -> char) threshold minHeight getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
     let invertifWhiteBackground pixels = 
@@ -130,8 +151,8 @@ module StringRecognition =
     let pixels = 
       Array2D.init width height (fun x y -> isWhite (getPixel x y))
       |> invertifWhiteBackground
-      |> removePadding threshold
-
+      |> removePadding threshold minHeight
+        
     let pixelColumns =
       [0..Array2D.length1 pixels - 1] 
       |> Seq.map (fun x -> pixels.[x, 0..Array2D.length2 pixels - 1] |> List.ofArray)      
@@ -142,19 +163,24 @@ module StringRecognition =
     |> String.Concat
 
   let recognizeNumber x =
-    recognizeString (getChar numberPatterns) 2 x
+    recognizeString (getChar numberPatterns) 2 8 x
+
+  let recognizeText x =
+    recognizeString (getChar textPatterns) 2 10 x
 
   let recognizeButton x y z =
-    let b = recognizeString (getChar buttonPatterns) 2 x y z
+    let b = recognizeString (getChar buttonPatterns) 2 8 x y z
     if b <> "?" then b else null
 
   let recognizeBlinds x y z =
-    let s = recognizeString (getChar blindNumberPatterns) 3 x y z
+    let s = recognizeString (getChar blindNumberPatterns) 3 8 x y z
     s.Replace("?", "")
 
-  let parsePattern getPixel width height =
-    seq { for x in 0 .. width - 1 do
-            yield seq { for y in 0 .. height - 1 do yield isWhite (getPixel x y)} 
-        }
-    |> Seq.map (fun y -> "[" + (y|> Seq.map (fun x -> if x = B then "B" else "W") |> String.concat ";") + "]")
-    |> String.concat ";"
+  let parseStringPattern getPixel width height =
+    let a = 
+      [0 .. width - 1]
+      |> Seq.map (fun x -> 
+        let b = [0 .. height - 1] |> Seq.map (fun y -> if isWhite (getPixel x y) = B then "B" else "W") |> String.concat ";"
+        "[" + b + "]")
+      |> String.concat "; "
+    "{ Char = '?'; Pattern = [" + a + "] }\n"

@@ -127,7 +127,7 @@ module Decide =
     match state with
     | Some s when s.LastScreen = screen -> (None, state)
     | _ ->
-      //print screen |> List.iter (printfn "%s: %s" "Hand")
+      print screen |> List.iter (printfn "%s: %s" "Hand")
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
       history |> List.iter (printfn "History: %A")

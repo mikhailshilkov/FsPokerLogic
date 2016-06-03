@@ -75,22 +75,41 @@ module StringRecognition =
 
   let textPatterns = [|  
     { Char = 'B'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;W;W;W;B;B;B]] }  
+    { Char = 'I'; Pattern = [[W;B;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
+    { Char = 'N'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'a'; Pattern = [[B;B;B;B;B;W;W;B;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
     { Char = 'b'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }
+    { Char = 'c'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]] }
     { Char = 'e'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;B;W;W;B;W;B;B;B]] }
     { Char = 'g'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;B;B;B;B;W;B;W]; [B;B;W;W;W;W;W;W;W;B]] }
+    { Char = 'h'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
     { Char = 'i'; Pattern = [[W;B;W;W;W;W;W;W;B;B]] }
+    { Char = 'j'; Pattern = [[B;B;W;B;B;B;B;B;B;W]; [W;B;W;W;W;W;W;W;W;B]] }
+    { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = 'l'; Pattern = [[W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'm'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
     { Char = 'n'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
+    { Char = 'o'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }  
     { Char = 'p'; Pattern = [[B;B;W;W;W;W;W;W;W;W]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }
     { Char = 'r'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]] }
     { Char = 's'; Pattern = [[B;B;B;W;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;B;W;B;W;B;B]; [B;B;W;B;B;W;W;B;B;B]] }
     { Char = 't'; Pattern = [[W;W;W;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]] }
     { Char = 'u'; Pattern = [[B;B;W;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;W;W;W;W;W;W;B;B]] }
     { Char = 'v'; Pattern = [[B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]] }
+    { Char = 'w'; Pattern = [[B;B;W;W;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;W;W;W;W;B;B;B;B]] }
     { Char = 'y'; Pattern = [[B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;W;W]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]] }
+    { Char = 'z'; Pattern = [[B;B;W;B;B;B;W;W;B;B]; [B;B;W;B;B;W;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;W;B;B;B;W;B;B]] }
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [B;W;W;W;W;W;W;B;B;B]] }
     { Char = '1'; Pattern = [[B;W;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;B;W;W;B;B]; [W;B;B;B;B;W;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;B;B;B;W;B;B]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;W;W;W;B;B;B]] }
+    { Char = '4'; Pattern = [[B;B;B;W;W;B;B;B;B;B]; [B;B;W;B;W;B;B;B;B;B]; [B;W;B;B;W;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;W;W;B;B;B]; [B;W;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;B;B;B;W;W;W;B;B;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;B;B;B;B;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;W;B;B;B]; [B;W;W;W;W;W;B;B;B;B]] }
+  |]
+
+  let noSpacePatterns = [|  
+    { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
   |]
 
   let getChar patterns bws =
@@ -148,6 +167,21 @@ module StringRecognition =
           else (e::cur)::rest   // add e to current list
       | _ -> [[e]]
 
+    let splitNoSpaceSymbols (symbols: BW list list list) =
+      let samePatterns h p =
+        List.length h > List.length p
+        && Seq.zip h p |> Seq.forall (fun (v1, v2) -> v1 = v2)
+      symbols
+      |> List.map (fun s ->
+        let matchingPattern =
+          noSpacePatterns 
+          |> Array.filter (fun p -> samePatterns s p.Pattern)
+          |> Array.tryHead
+        match matchingPattern with
+        | Some x -> [x.Pattern; List.skip x.Pattern.Length s]
+        | None -> [s])
+      |> List.concat
+
     let pixels = 
       Array2D.init width height (fun x y -> isWhite (getPixel x y))
       |> invertifWhiteBackground
@@ -158,6 +192,7 @@ module StringRecognition =
       |> Seq.map (fun x -> pixels.[x, 0..Array2D.length2 pixels - 1] |> List.ofArray)      
 
     Seq.foldBack splitIntoSymbols pixelColumns []
+    |> splitNoSpaceSymbols
     |> List.map matchSymbol
     |> Array.ofSeq
     |> String.Concat
@@ -165,8 +200,11 @@ module StringRecognition =
   let recognizeNumber x =
     recognizeString (getChar numberPatterns) 2 8 x
 
-  let recognizeText x =
-    recognizeString (getChar textPatterns) 2 10 x
+  let recognizeText getPixel (y:int) width height =
+    let o = 
+      [0..5]
+      |> Seq.map (fun dy -> recognizeString (getChar textPatterns) 0 10 (getPixel (y+dy)) width height)
+    o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
 
   let recognizeButton x y z =
     let b = recognizeString (getChar buttonPatterns) 2 8 x y z

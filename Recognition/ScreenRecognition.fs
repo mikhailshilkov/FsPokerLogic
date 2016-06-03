@@ -80,10 +80,12 @@ module ScreenRecognition =
       chooseGoodNumber 2 [recognizeNumber (getPixel 82 245) 50 15; recognizeNumber (getPixel 82 231) 50 15] 
     let villainBet = 
       chooseGoodNumber 2 [recognizeNumber (getPixel 462 301) 50 15; recognizeNumber (getPixel 517 231) 50 15] 
-    let villainName = recognizeText (getPixel 495 327) 75 12
+    let villainName = recognizeText (getPixel 495) 327 75 10
     let mask = 
-      (parseStringPattern (getPixel 541 327) 5 10) 
-      + (parseStringPattern (getPixel 558 327) 3 10)
+      (parseStringPattern (getPixel 519 329) 4 10) 
+      //+ (parseStringPattern (getPixel 563 330) 5 10)
+//      + (parseStringPattern (getPixel 549 329) 5 10)
+//      + (parseStringPattern (getPixel 561 329) 5 10)
     
     let actions = 
       [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]

@@ -55,4 +55,4 @@ let ``recognize board from predefined file`` () =
 
 [<Fact>]
 let ``recognize villain name from predefined file`` () =
-  test (fun r -> r.VillainName) "Name"
+  test (fun r -> r.VillainName.Replace("?", "-")) "Name"

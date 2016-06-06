@@ -62,6 +62,7 @@
     <Compile Include="Ranges.fs" />
     <Compile Include="RangesTests.fs" />
     <Compile Include="Preflop.fs" />
+    <Compile Include="PreflopTests.fs" />
     <Compile Include="Import.fs" />
     <Compile Include="ImportTests.fs" />
     <Compile Include="Actions.fs" />

@@ -16,7 +16,8 @@ let getCellValue (sheet : Worksheet) (name : string) =
 let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) = 
   Console.Write "."
   let toArray (arr:_[,]) = 
-    Array.init arr.Length (fun i -> arr.[i+1, 1])
+    let byRows = Array2D.length1 arr = 1
+    Array.init arr.Length (fun i -> if byRows then arr.[1, i+1] else arr.[i+1, 1])
   let result = sheet.Cells.Range(name1, name2).Value2 :?> Object[,]
   result 
     |> toArray 
@@ -434,63 +435,63 @@ let importOopAdvanced (xlWorkBook : Workbook) =
               [ 
                 { StackRange = rangeLimp
                   History = [Limp]
-                  Range = cellValuesLimpLow.[0]
+                  Range = cellValuesLimpBig.[0]
                   Action = Check };
                 { StackRange = rangeLimp
                   History = [Limp]
-                  Range = cellValuesLimpLow.[1]
+                  Range = cellValuesLimpBig.[1]
                   Action = RaiseX 3m };
                 { StackRange = rangeLimp
                   History = [Limp]
-                  Range = cellValuesLimpLow.[2]
+                  Range = cellValuesLimpBig.[2]
                   Action = RaiseX 3m };
                 { StackRange = rangeLimp
                   History = [Limp]
-                  Range = cellValuesLimpLow.[3]
+                  Range = cellValuesLimpBig.[3]
                   Action = AllIn } 
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-                  Range = cellValuesLimpLow.[9]
+                  Range = cellValuesLimpBig.[9]
                   Action = AllIn }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseAllIn]
-                  Range = cellValuesLimpLow.[10]
+                  Range = cellValuesLimpBig.[10]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-                  Range = cellValuesLimpLow.[11]
+                  Range = cellValuesLimpBig.[11]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
-                  Range = cellValuesLimpLow.[12]
+                  Range = cellValuesLimpBig.[12]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
-                  Range = cellValuesLimpLow.[13]
+                  Range = cellValuesLimpBig.[13]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
-                  Range = cellValuesLimpLow.[14]
+                  Range = cellValuesLimpBig.[14]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(22)]
-                  Range = cellValuesLimpLow.[15]
+                  Range = cellValuesLimpBig.[15]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
-                  Range = cellValuesLimpLow.[21]
+                  Range = cellValuesLimpBig.[21]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(28)]
-                  Range = cellValuesLimpLow.[22]
+                  Range = cellValuesLimpBig.[22]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
-                  Range = cellValuesLimpLow.[23]
+                  Range = cellValuesLimpBig.[23]
                   Action = Call }
                 { StackRange = rangeLimp
                   History = [Limp; Raise(0m, 100m); RaiseEQ(22)]
-                  Range = cellValuesLimpLow.[24]
+                  Range = cellValuesLimpBig.[24]
                   Action = Call }
               ]
   }
@@ -509,7 +510,7 @@ let importRuleFromExcel importAllRules fileName =
 
 let importHudData (xlWorkBook : Workbook) =
   let xlWorkSheet = xlWorkBook.Worksheets.["Hud"] :?> Worksheet
-  [1..10000]
+  [3..10000]
   |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("E" + row.ToString()))
   |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
   |> Seq.map (fun vs ->  

@@ -26,15 +26,6 @@ module Decide =
   let rules = Seq.concat [rulesIP;rulesAdvancedOOP.Always;rulesAdvancedOOP.LimpFoldLow;rulesOOP]
   let decidePre stack odds = decideOnRules rules stack odds
 
-  let hud villainName = 
-    let fuzzyNameMatch (parsed: string) full = 
-      if parsed = full then true
-      else
-        let parsedPart = parsed.Replace("?", "")
-        parsedPart.Length >= 7 && full.IndexOf(parsedPart) > 0
-    let matching = hudData |> List.tryFind (fun s -> fuzzyNameMatch s.VillainName villainName)
-    defaultArg matching (List.head hudData)
-
   let understandHistory (screen: Screen) =
     let raise bet bb = 
       let b = (bet |> decimal) / (bb |> decimal)
@@ -62,7 +53,7 @@ module Decide =
         let effectiveStack = decimal stack / decimal b.BB
         let callSize = min (vb - hb) hs
         let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
-        let hudStats = hud screen.VillainName
+        let hudStats = hud hudData screen.VillainName
         let openRaise = (if b.BB >= 20 then hudStats.OpenRaise20_25 else if b.BB >= 16 then hudStats.OpenRaise16_19 else hudStats.OpenRaise14_15) |> decimal
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen

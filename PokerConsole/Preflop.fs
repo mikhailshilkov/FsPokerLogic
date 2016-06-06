@@ -38,6 +38,15 @@ type VillainStats =
     OpenRaise14_15: int
     LimpFold: int }
 
+let hud (data: VillainStats list) villainName = 
+  let fuzzyNameMatch (parsed: string) full = 
+    if parsed = full then true
+    else
+      let parsedPart = parsed.Replace("?", "")
+      parsedPart.Length >= 7 && full.IndexOf(parsedPart) > 0
+  let matching = data |> List.tryFind (fun s -> fuzzyNameMatch villainName s.VillainName)
+  defaultArg matching (List.head data)
+
 let isHistoryMatching ranges history stack odds openingRange =
   let if3BetShove raiseX callingRange openingRange allinPot =
     (((-((((raiseX+1m))*((100m-((100m*callingRange)/openingRange))/100m))))*(openingRange/callingRange)+((allinPot/2m)-1m))*100m)/allinPot

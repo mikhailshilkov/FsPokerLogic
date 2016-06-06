@@ -150,17 +150,23 @@ let ``decide on imported / call 4bet allin`` () =
   decideOnImported decideOOP "99" 6.66m [WasRaise(2m); WasRaise(4m); WasRaiseAllIn] "Call"
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let rulesAdvancedOOPStruct = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
-let rulesAdvancedOOP = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
-let decideAdvancedOOP x = decideOnRules rulesAdvancedOOP x
+let (rulesAdvancedOOPStruct, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
+let rulesAdvancedOOPLow = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
+let rulesAdvancedOOPBig = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldBig]
+let decideAdvancedOOP x = decideOnRules rulesAdvancedOOPLow x
+let decideAdvancedOOPBig x = decideOnRules rulesAdvancedOOPBig x
 
 [<Fact>]
 let ``decide on PART2 imported / check back after WasLimp`` () =
   decideOnImported decideAdvancedOOP "K5s" 20m [WasLimp] "Check"
 
 [<Fact>]
-let ``decide on PART2 imported / raise after WasLimp`` () =
+let ``decide on PART2 imported / raise FV after WasLimp`` () =
   decideOnImported decideAdvancedOOP "JTs" 20m [WasLimp] "RaiseX3"
+
+[<Fact>]
+let ``decide on PART2 imported / raise FB after WasLimp`` () =
+  decideOnImported decideAdvancedOOPBig "64s" 20m [WasLimp] "RaiseX3"
 
 [<Fact>]
 let ``decide on PART2 imported / all-in after WasLimp`` () =
@@ -182,8 +188,16 @@ let ``decide on PART2 imported / call WasLimp/3bet`` () =
 [<InlineData("K9s", 34)>]
 [<InlineData("K8s", 30)>]
 [<InlineData("K7s", 25)>]
-let ``decide on PART2 imported / call WasLimp/3bet with specfied odds`` hand odds =
+let ``decide on PART2 imported / call WasLimp/raise FV/3bet with specfied odds`` hand odds =
   decideOnImportedWithOdds decideAdvancedOOP hand 25m odds 0m [WasLimp; WasRaise(3m); WasRaise(2.5m)] "Call"
+
+[<Theory>]
+[<InlineData("76s", 30)>]
+[<InlineData("T9o", 28)>]
+[<InlineData("64s", 25)>]
+[<InlineData("43s", 22)>]
+let ``decide on PART2 imported / call WasLimp/raise FB/3bet with specfied odds`` hand odds =
+  decideOnImportedWithOdds decideAdvancedOOPBig hand 25m odds 0m [WasLimp; WasRaise(3m); WasRaise(2.5m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / call pfr`` () =
@@ -212,11 +226,21 @@ let ``decide on PART2 imported / does not 3bet shove based on formula`` () =
 [<Fact>]
 let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =
   let shoveRules = 
-    rulesAdvancedOOP 
+    rulesAdvancedOOPLow 
     |> List.filter (fun r -> r.Action = AllIn && match Seq.head r.History with | RaiseFor3BetShove(_, _) -> true | _ -> false)
   Assert.Equal(5 * 37, List.length shoveRules)
   let sampleRule = 
-    rulesAdvancedOOP
+    rulesAdvancedOOPLow
     |> List.filter (fun r -> r.Action = AllIn && r.StackRange = (18, 19) && r.History = seq [RaiseFor3BetShove(23.44m, 34m)])
     |> List.head
   Assert.Equal("99-22,AQs+,K9s+,QTs+,J4s+,T6s+,T4s,94s+,A2o+,KTo+,QJo", sampleRule.Range)
+
+[<Fact>]
+let ``importHudData imports player stats from excel`` () =
+  let length = List.length hudData
+  Assert.Equal(14, length)
+  let sample = List.filter (fun x -> x.VillainName = "Peterkoven") hudData |> List.head
+  Assert.Equal(31, sample.OpenRaise20_25)
+  Assert.Equal(21, sample.OpenRaise16_19)
+  Assert.Equal(14, sample.OpenRaise14_15)
+  Assert.Equal(59, sample.LimpFold)

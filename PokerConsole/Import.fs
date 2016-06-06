@@ -327,10 +327,19 @@ let importRulesByStack importRules xlWorkBook =
   |> Seq.collect id
   |> List.ofSeq)
 
+type OopAdvancedRules = {
+  Always: DecisionRule list
+  LimpFoldLow: DecisionRule list
+  LimpFoldBig: DecisionRule list
+}
+
 let importOopAdvanced (xlWorkBook : Workbook) =
-  let xlWorkSheetLimp = xlWorkBook.Worksheets.["limp fold low"] :?> Worksheet
-  let cellValuesLimp = getCellValues xlWorkSheetLimp "B3" "B16"
+  let xlWorkSheetLimpLow = xlWorkBook.Worksheets.["limp fold low"] :?> Worksheet
+  let cellValuesLimpLow = getCellValues xlWorkSheetLimpLow "B3" "B16"
   let rangeLimp = (16, 25)
+
+  let xlWorkSheetLimpBig = xlWorkBook.Worksheets.["limp fold big"] :?> Worksheet
+  let cellValuesLimpBig = getCellValues xlWorkSheetLimpBig "B3" "B27"
 
   let xlWorkSheetRaise = xlWorkBook.Worksheets.["preflop ranges vs minr"] :?> Worksheet
   let cellValuesRaise = getCellValues xlWorkSheetRaise "B1" "B3"
@@ -339,87 +348,152 @@ let importOopAdvanced (xlWorkBook : Workbook) =
   let xlWorkSheetCallingRange = xlWorkBook.Worksheets.["EQ 3b shove - default, formula"] :?> Worksheet
   let cellValuesCallingRange = getCellValues xlWorkSheetCallingRange "B12" "B16"
 
-  Array.concat
-    [|
-      [| 
-       { StackRange = rangeLimp
-         History = [Limp]
-         Range = cellValuesLimp.[0]
-         Action = Check };
-       { StackRange = rangeLimp
-         History = [Limp]
-         Range = cellValuesLimp.[1]
-         Action = RaiseX 3m };
-       { StackRange = rangeLimp
-         History = [Limp]
-         Range = cellValuesLimp.[2]
-         Action = AllIn } 
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-         Range = cellValuesLimp.[8]
-         Action = AllIn }
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); RaiseAllIn]
-         Range = cellValuesLimp.[9]
-         Action = Call }
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
-         Range = cellValuesLimp.[10]
-         Action = Call }
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
-         Range = cellValuesLimp.[11]
-         Action = Call }
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
-         Range = cellValuesLimp.[12]
-         Action = Call }
-       { StackRange = rangeLimp
-         History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
-         Range = cellValuesLimp.[13]
-         Action = Call }
-      |];
+  { Always = Array.concat
+              [|
+                [0..4]
+                |> Seq.map (fun i -> 
+                  let r = [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)].[i]
+                  let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
+                  let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+                  let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
+                  let cellValuesBbRanges = getCellValues sheet "B1" "B37"
+                  [0..36]
+                  |> Seq.map (fun row ->
+                    { StackRange = r
+                      History = [RaiseFor3BetShove(parseDouble cellValuesCallingRange.[i], parseDouble cellValuesBbThresholds.[row])]
+                      Range = cellValuesBbRanges.[row]
+                      Action = AllIn })
+                  |> Array.ofSeq)
+                |> Array.concat;
 
-      [0..4]
-      |> Seq.map (fun i -> 
-        let r = [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)].[i]
-        let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
-        let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-        let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
-        let cellValuesBbRanges = getCellValues sheet "B1" "B37"
-        [0..36]
-        |> Seq.map (fun row ->
-          { StackRange = r
-            History = [RaiseFor3BetShove(parseDouble cellValuesCallingRange.[i], parseDouble cellValuesBbThresholds.[row])]
-            Range = cellValuesBbRanges.[row]
-            Action = AllIn })
-        |> Array.ofSeq)
-      |> Array.concat;
-
-      [|
-       { StackRange = rangeRaise
-         History = [Raise(0m, 100m)]
-         Range = cellValuesRaise.[0]
-         Action = RaiseX 2.5m }
-       { StackRange = rangeRaise
-         History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
-         Range = cellValuesRaise.[0]
-         Action = AllIn }
-       { StackRange = rangeRaise
-         History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
-         Range = cellValuesRaise.[0]
-         Action = Call }
-       // No bluff raise yet
-       //{ StackRange = (20, 25)
-       //  History = [Raise(0m, 100m)]
-       //  Range = cellValuesRaise.[1]
-       //  Action = RaiseX 2.5m }
-       { StackRange = rangeRaise
-         History = [Raise(0m, 100m)]
-         Range = cellValuesRaise.[2]
-         Action = Call }
-      |]
-    |]
+                [|
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m)]
+                   Range = cellValuesRaise.[0]
+                   Action = RaiseX 2.5m }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
+                   Range = cellValuesRaise.[0]
+                   Action = AllIn }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
+                   Range = cellValuesRaise.[0]
+                   Action = Call }
+                 // No bluff raise yet
+                 //{ StackRange = (20, 25)
+                 //  History = [Raise(0m, 100m)]
+                 //  Range = cellValuesRaise.[1]
+                 //  Action = RaiseX 2.5m }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m)]
+                   Range = cellValuesRaise.[2]
+                   Action = Call }
+                |]
+              |]
+            |> List.ofArray
+    LimpFoldLow = 
+              [ 
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[0]
+                  Action = Check };
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[1]
+                  Action = RaiseX 3m };
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[2]
+                  Action = AllIn } 
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = cellValuesLimpLow.[8]
+                  Action = AllIn }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseAllIn]
+                  Range = cellValuesLimpLow.[9]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = cellValuesLimpLow.[10]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
+                  Range = cellValuesLimpLow.[11]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
+                  Range = cellValuesLimpLow.[12]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
+                  Range = cellValuesLimpLow.[13]
+                  Action = Call }
+              ]
+    LimpFoldBig = 
+              [ 
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[0]
+                  Action = Check };
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[1]
+                  Action = RaiseX 3m };
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[2]
+                  Action = RaiseX 3m };
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = cellValuesLimpLow.[3]
+                  Action = AllIn } 
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = cellValuesLimpLow.[9]
+                  Action = AllIn }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseAllIn]
+                  Range = cellValuesLimpLow.[10]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = cellValuesLimpLow.[11]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(34)]
+                  Range = cellValuesLimpLow.[12]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
+                  Range = cellValuesLimpLow.[13]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
+                  Range = cellValuesLimpLow.[14]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(22)]
+                  Range = cellValuesLimpLow.[15]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(30)]
+                  Range = cellValuesLimpLow.[21]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(28)]
+                  Range = cellValuesLimpLow.[22]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
+                  Range = cellValuesLimpLow.[23]
+                  Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); RaiseEQ(22)]
+                  Range = cellValuesLimpLow.[24]
+                  Action = Call }
+              ]
+  }
 
 let importRuleFromExcel importAllRules fileName =
   let xlApp = new ApplicationClass()
@@ -432,3 +506,17 @@ let importRuleFromExcel importAllRules fileName =
   xlApp.Quit()
   Marshal.ReleaseComObject(xlApp) |> ignore
   res
+
+let importHudData (xlWorkBook : Workbook) =
+  let xlWorkSheet = xlWorkBook.Worksheets.["Hud"] :?> Worksheet
+  [1..10000]
+  |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("E" + row.ToString()))
+  |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
+  |> Seq.map (fun vs ->  
+     { VillainName = vs.[0] 
+       OpenRaise20_25 = Int32.Parse(vs.[1]) 
+       OpenRaise16_19 = Int32.Parse(vs.[2]) 
+       OpenRaise14_15 = Int32.Parse(vs.[3])
+       LimpFold = Int32.Parse(vs.[4]) }
+     )
+  |> List.ofSeq

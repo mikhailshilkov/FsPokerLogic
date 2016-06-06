@@ -18,13 +18,22 @@ module Decide =
   open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP |> List.ofSeq
-  let rules = Seq.concat [|rulesIP;rulesAdvancedOOP;rulesOOP|]
+  let (rulesAdvancedOOP, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
+  let rules = Seq.concat [rulesIP;rulesAdvancedOOP.Always;rulesAdvancedOOP.LimpFoldLow;rulesOOP]
   let decidePre stack odds = decideOnRules rules stack odds
+
+  let hud villainName = 
+    let fuzzyNameMatch (parsed: string) full = 
+      if parsed = full then true
+      else
+        let parsedPart = parsed.Replace("?", "")
+        parsedPart.Length >= 7 && full.IndexOf(parsedPart) > 0
+    let matching = hudData |> List.tryFind (fun s -> fuzzyNameMatch s.VillainName villainName)
+    defaultArg matching (List.head hudData)
 
   let understandHistory (screen: Screen) =
     let raise bet bb = 
@@ -53,7 +62,8 @@ module Decide =
         let effectiveStack = decimal stack / decimal b.BB
         let callSize = min (vb - hb) hs
         let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
-        let openRaise = if b.BB >= 20 then 40m else if b.BB >= 16 then 34m else 31m
+        let hudStats = hud screen.VillainName
+        let openRaise = (if b.BB >= 20 then hudStats.OpenRaise20_25 else if b.BB >= 16 then hudStats.OpenRaise16_19 else hudStats.OpenRaise14_15) |> decimal
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen
         let actionPattern = decidePre effectiveStack potOdds openRaise history fullHand

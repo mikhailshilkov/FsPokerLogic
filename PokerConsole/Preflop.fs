@@ -31,6 +31,13 @@ type DecisionRule =
     History : RuleHistoryItem seq
     Action : ActionPattern }
 
+type VillainStats =
+  { VillainName: string
+    OpenRaise20_25: int
+    OpenRaise16_19: int
+    OpenRaise14_15: int
+    LimpFold: int }
+
 let isHistoryMatching ranges history stack odds openingRange =
   let if3BetShove raiseX callingRange openingRange allinPot =
     (((-((((raiseX+1m))*((100m-((100m*callingRange)/openingRange))/100m))))*(openingRange/callingRange)+((allinPot/2m)-1m))*100m)/allinPot

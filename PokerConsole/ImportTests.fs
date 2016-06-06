@@ -150,7 +150,8 @@ let ``decide on imported / call 4bet allin`` () =
   decideOnImported decideOOP "99" 6.66m [WasRaise(2m); WasRaise(4m); WasRaiseAllIn] "Call"
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP |> List.ofSeq
+let rulesAdvancedOOPStruct = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
+let rulesAdvancedOOP = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
 let decideAdvancedOOP x = decideOnRules rulesAdvancedOOP x
 
 [<Fact>]

@@ -23,8 +23,11 @@ module Decide =
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
   let (rulesAdvancedOOP, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
-  let rules = Seq.concat [rulesIP;rulesAdvancedOOP.Always;rulesAdvancedOOP.LimpFoldLow;rulesOOP]
-  let decidePre stack odds = decideOnRules rules stack odds
+  let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
+  let rulesBig = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
+  let decidePre stack odds limpFold = 
+    if limpFold >= 65 then decideOnRules rulesBig stack odds
+    else decideOnRules rulesLow stack odds
 
   let understandHistory (screen: Screen) =
     let raise bet bb = 
@@ -57,7 +60,7 @@ module Decide =
         let openRaise = (if b.BB >= 20 then hudStats.OpenRaise20_25 else if b.BB >= 16 then hudStats.OpenRaise16_19 else hudStats.OpenRaise14_15) |> decimal
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen
-        let actionPattern = decidePre effectiveStack potOdds openRaise history fullHand
+        let actionPattern = decidePre effectiveStack potOdds hudStats.LimpFold openRaise history fullHand
         Option.map (mapPatternToAction vb stack) actionPattern  
       | _ -> None
     let decidePost (screen: Screen) =

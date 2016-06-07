@@ -23,6 +23,7 @@ type RuleHistoryItem =
   | Raise of decimal * decimal
   | RaiseEQ of int
   | RaiseFor3BetShove of decimal * decimal // calling range * opening range threshold
+  | BluffableRaise
   | RaiseAllIn
 
 type DecisionRule = 
@@ -61,6 +62,7 @@ let isHistoryMatching ranges history stack odds openingRange =
       | Raise (min, max), WasRaise v -> min <= v && v <= max
       | RaiseEQ eq, WasRaise _ -> eq >= odds
       | RaiseFor3BetShove(cra, orathres), WasRaise v -> if3BetShove v cra openingRange (stack*2m) < orathres
+      | BluffableRaise, WasRaise v -> openingRange > 60m && v = 2m
       | _ -> false)
   else false
 

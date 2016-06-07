@@ -204,8 +204,12 @@ let ``decide on PART2 imported / call pfr`` () =
   decideOnImported decideAdvancedOOP "J3s" 15m [WasRaise(3m)] "Call"
 
 [<Fact>]
-let ``decide on PART2 imported / 3bet pfr`` () =
+let ``decide on PART2 imported / 3bet pfr FV`` () =
   decideOnImported decideAdvancedOOP "JJ" 15m [WasRaise(3m)] "RaiseX2.5"
+
+[<Fact>]
+let ``decide on PART2 imported / 3bet pfr FB`` () =
+  decideOnImported decideAdvancedOOP "74s" 25m [WasRaise(2m)] "RaiseX2.5"
 
 [<Fact>]
 let ``decide on PART2 imported / 5bet ai`` () =

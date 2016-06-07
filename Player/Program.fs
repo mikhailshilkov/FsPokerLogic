@@ -14,7 +14,7 @@ open Excel.Import
 let main argv = 
 
   printfn "Loading rules..."
-  let rc = Seq.head Decide.rules
+  let rc = Seq.head Decide.rulesLow
   let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
   let xlFlopTurn = openExcel fileNameFlopTurn
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"

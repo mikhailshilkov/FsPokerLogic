@@ -80,16 +80,25 @@ module StringRecognition =
     { Char = 'D'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [B;W;B;B;B;B;W;B;B;B]; [B;B;W;W;W;W;B;B;B;B]] }
     { Char = 'E'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
     { Char = 'F'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;W;B;B;B;B;B;B]; [W;B;B;W;B;B;B;B;B;B]; [W;B;B;W;B;B;B;B;B;B]; [W;B;B;W;B;B;B;B;B;B]] }
+    { Char = 'G'; Pattern = [[B;B;W;W;W;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;W;W;W;B;B]] }
+    { Char = 'H'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'I'; Pattern = [[W;B;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
+    { Char = 'K'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;W;W;B;B;B;B;B]; [B;B;W;B;B;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
     { Char = 'L'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = 'M'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'N'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'O'; Pattern = [[B;B;W;W;W;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [B;W;B;B;B;B;W;B;B;B]; [B;B;W;W;W;W;B;B;B;B]] }
+    { Char = 'P'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;W;B;B;B;B;B]; [W;B;B;B;W;B;B;B;B;B]; [W;B;B;B;W;B;B;B;B;B]; [B;W;W;W;B;B;B;B;B;B]] }
+    { Char = 'Q'; Pattern = [[B;B;W;W;W;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;W;B]; [B;W;B;B;B;B;W;B;B;W]; [B;B;W;W;W;W;B;B;B;W]] }
     { Char = 'R'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;W;B;B;B;B;B]; [W;B;B;B;W;B;B;B;B;B]; [W;B;B;B;W;W;B;B;B;B]; [B;W;W;W;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = 'S'; Pattern = [[B;W;W;B;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;B;W;W;W;B;B;B]] }
     { Char = 'T'; Pattern = [[W;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;B;B]] }
+    { Char = 'U'; Pattern = [[W;W;W;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;B;B;B]] }
     { Char = 'V'; Pattern = [[W;W;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;W;W;W;B;B;B;B]; [W;W;W;B;B;B;B;B;B;B]] }
+    { Char = 'W'; Pattern = [[W;W;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;W;W;W;B;B;B;B]; [W;W;W;B;B;B;B;B;B;B]; [B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B]; [B;B;B;W;W;W;B;B;B;B]; [W;W;W;B;B;B;B;B;B;B]] }
+    { Char = 'X'; Pattern = [[W;W;B;B;B;B;W;W;B;B]; [B;B;W;B;B;W;B;B;B;B]; [B;B;B;W;W;B;B;B;B;B]; [B;B;W;B;B;W;B;B;B;B]; [W;W;B;B;B;B;W;W;B;B]] }
     { Char = 'Y'; Pattern = [[W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;W;W;B;B]; [B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B]] }
+    { Char = 'Z'; Pattern = [[W;B;B;B;B;B;W;W;B;B]; [W;B;B;B;B;W;B;W;B;B]; [W;B;B;W;W;B;B;W;B;B]; [W;B;W;B;B;B;B;W;B;B]; [W;W;B;B;B;B;B;W;B;B]] }
     { Char = 'a'; Pattern = [[B;B;B;B;B;W;W;B;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;W;B;W;B;B;W;B;B]; [B;B;B;W;W;W;W;W;B;B]] }
     { Char = 'b'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;B;W;W;W;W;B;B;B]] }
     { Char = 'c'; Pattern = [[B;B;B;W;W;W;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]; [B;B;W;B;B;B;B;W;B;B]] }
@@ -121,8 +130,10 @@ module StringRecognition =
     { Char = '2'; Pattern = [[B;W;B;B;B;B;W;W;B;B]; [W;B;B;B;B;W;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;B;B;B;W;B;B]] }
     { Char = '3'; Pattern = [[B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;W;W;W;B;B;B]] }
     { Char = '4'; Pattern = [[B;B;B;W;W;B;B;B;B;B]; [B;B;W;B;W;B;B;B;B;B]; [B;W;B;B;W;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;W;B;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;B;W;W;W;B;B;B]] }
     { Char = '6'; Pattern = [[B;B;W;W;W;W;W;B;B;B]; [B;W;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;B;B;B;W;W;W;B;B;B]] }
     { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;W;W;B;B]; [W;B;B;B;W;W;B;B;B;B]; [W;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;B;W;W;W;B;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [W;B;B;W;B;B;B;W;B;B]; [B;W;W;B;W;W;W;B;B;B]] }
     { Char = '9'; Pattern = [[B;W;W;W;B;B;B;B;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;W;B;B;B]; [B;W;W;W;W;W;B;B;B;B]] }
   |]
 

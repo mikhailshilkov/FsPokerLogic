@@ -36,7 +36,8 @@ module ScreenRecognition =
   }
 
   let print screen =
-    [sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
+    [sprintf "Villain: %s" screen.VillainName;
+     sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
      sprintf "Blinds: %A" screen.Blinds;
      sprintf "Stacks: %A/%A" (Option.toNullable screen.HeroStack) (Option.toNullable screen.VillainStack);
      sprintf "Bets: %A/%A" (Option.toNullable screen.HeroBet) (Option.toNullable screen.VillainBet);
@@ -49,19 +50,21 @@ module ScreenRecognition =
       bitmap.GetPixel(offsetX + x, offsetY + y)
 
     let parseNumber (s : string) = 
-      try
-        Int32.Parse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture) |> Some
-      with
-        | e -> None
+      if not(String.IsNullOrEmpty s) then
+        let (s, r) = Int32.TryParse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
+        if s then Some r else None
+      else None
 
     let parseBlinds (s : string) =
-      try
-        let parts = s.Split('/')
-        let sb = parseNumber parts.[0]
-        let bb = parseNumber parts.[1]
-        Option.bind (fun v -> Option.map (fun vb -> { SB = v; BB = vb }) bb ) sb
-      with
-        | e -> None
+      if not(String.IsNullOrEmpty s) then
+        try
+          let parts = s.Split('/')
+          let sb = parseNumber parts.[0]
+          let bb = if parts.Length > 1 then parseNumber parts.[1] else None
+          Option.bind (fun v -> Option.map (fun vb -> { SB = v; BB = vb }) bb ) sb
+        with
+          | e -> None
+      else None
 
     let chooseGoodNumber minLength (ss : string list) =
       ss 

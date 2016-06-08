@@ -380,7 +380,6 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                    History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
                    Range = cellValuesRaise.[0]
                    Action = Call }
-                 // No bluff raise yet
                  { StackRange = (20, 25)
                    History = [BluffableRaise]
                    Range = cellValuesRaise.[1]

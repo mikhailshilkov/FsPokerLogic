@@ -209,7 +209,7 @@ let ``decide on PART2 imported / 3bet pfr FV`` () =
 
 [<Fact>]
 let ``decide on PART2 imported / 3bet pfr FB`` () =
-  decideOnImported decideAdvancedOOP "74s" 25m [WasRaise(2m)] "RaiseX2.5"
+  decideOnImportedWithOdds decideAdvancedOOP "74s" 25m 0 61m [WasRaise(2m)] "RaiseX2.5"
 
 [<Fact>]
 let ``decide on PART2 imported / 5bet ai`` () =
@@ -221,7 +221,11 @@ let ``decide on PART2 imported / call 4bet ai`` () =
 
 [<Fact>]
 let ``decide on PART2 imported / 3bet shove based on formula`` () =
-  decideOnImportedWithOdds decideAdvancedOOP "87o" 25m 0 40m [WasRaise(2m)] "AllIn"
+  decideOnImportedWithOdds decideAdvancedOOP "98o" 25m 0 40m [WasRaise(2m)] "AllIn"
+
+[<Fact>]
+let ``decide on PART2 imported Q3s / does not 3bet shove based on formula`` () =
+  decideOnImportedWithOdds decideAdvancedOOP "Q3s" 21m 0 67m [WasRaise(2m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / does not 3bet shove based on formula`` () =

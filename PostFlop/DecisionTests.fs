@@ -8,7 +8,7 @@ module DecisionTests =
   open Decision
   open Xunit
 
-  let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = ForValueStackOff  }
+  let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold  }
   let defaultOopOptions = { First = Check; Then = Fold; Special = [] }
   let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}|]; Pot = 180; VillainStack = 440; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
@@ -269,6 +269,13 @@ module DecisionTests =
     let options = { defaultOptions with CbetFactor = CBet.Undefined }
     let actual = Decision.decide defaultFlop options
     Assert.Equal(None, actual)
+
+  [<Fact>]
+  let ``Stakes off with undefined check-raise but stack off donk`` () =
+    let snapshot = { defaultTurn with VillainBet = 300; HeroBet = 120 }
+    let options = { defaultOptions with CheckRaise = OnCheckRaise.Undefined; Donk = ForValueStackOffX 250 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Some Action.AllIn, actual)
 
   [<Fact>]
   let ``Makes no decision on undefined check-raise`` () =

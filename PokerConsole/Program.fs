@@ -52,9 +52,9 @@ let rec enterPosition () =
 let main argv =   
   Console.Write "Importing excel files..."
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP 25) fileNameIP |> List.ofSeq
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP 14) fileNameOOP |> List.ofSeq
   let rules = Seq.concat [|rulesIP;rulesOOP|]
   let decide = decideOnRules rules
   Console.Write " done!\n\n"

@@ -8,15 +8,20 @@ open FsCheck
 open FsCheck.Xunit
 
 let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
+let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP 25) fileNameIP |> List.ofSeq
 let decideIP = decideOnRules rulesIP
 
-type BigBets =
+type BigBets25 =
     static member Int() =
         Arb.Default.Decimal()
         |> Arb.filter (fun c -> 1m <= c && c <= 25m)
 
-[<Property(Arbitrary = [| typeof<BigBets> |])>]
+type BigBets14 =
+    static member Int() =
+        Arb.Default.Decimal()
+        |> Arb.filter (fun c -> 1m <= c && c <= 14m)
+
+[<Property(Arbitrary = [| typeof<BigBets25> |])>]
 let ``decide on IP import has value for any stack and hand`` bb h =
   let action = decideIP bb 0 0m [] h
   not (action = None)
@@ -83,27 +88,23 @@ let ``decide on imported / raise allin`` handString stack expected =
   decideOnImported decideIP handString stack [WasRaise(2m); WasRaiseAllIn] expected
 
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP 14) fileNameOOP |> List.ofSeq
 let decideOOP = decideOnRules rulesOOP
 
-[<Property(Arbitrary = [| typeof<BigBets> |])>]
+[<Property(Arbitrary = [| typeof<BigBets14> |])>]
 let ``decide on OOP import has value for any stack and hand`` bb history h =
   let action = decideOOP bb 0 0m [history] h
   Assert.NotEqual(None, action)
 
 [<Theory>]
-[<InlineData("QQ", 25, 2.3, "AllIn")>]
-[<InlineData("JJ", 25, 2.3, "Fold")>]
-[<InlineData("AA", 25, 2.7, "AllIn")>]
-[<InlineData("JJ", 25, 2.7, "Fold")>]
+[<InlineData("QQ", 13, 2.3, "AllIn")>]
+[<InlineData("AA", 13, 2.7, "AllIn")>]
 let ``decide on imported / 4bet`` handString stack raiseSize expected =
   decideOnImported decideOOP handString stack [WasRaise(raiseSize); WasRaise(2.5m); WasRaise(2m)] expected
 
 [<Theory>]
-[<InlineData("JJ", 25, 2.3, "Call")>]
-[<InlineData("T3s", 25, 2.3, "Fold")>]
-[<InlineData("KK", 25, 2.7, "Call")>]
-[<InlineData("T2s", 25, 2.7, "Fold")>]
+[<InlineData("JJ", 14, 2.3, "Call")>]
+[<InlineData("KK", 14, 2.7, "Call")>]
 let ``decide on imported / 4bet allin`` handString stack raiseSize expected =
   decideOnImported decideOOP handString stack [WasRaise(raiseSize); WasRaise(2.5m); WasRaiseAllIn] expected
 

@@ -18,9 +18,9 @@ module Decide =
   open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP 25) fileNameIP
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP 14) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
   let (rulesAdvancedOOP, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
   let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]

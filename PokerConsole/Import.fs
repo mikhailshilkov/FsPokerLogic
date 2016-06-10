@@ -322,8 +322,8 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
           Action = Call }
       |]
 
-let importRulesByStack importRules xlWorkBook =
-  ([1..25]
+let importRulesByStack importRules maxStack xlWorkBook =
+  ([1..maxStack]
   |> Seq.map (fun bb -> importRules xlWorkBook bb)
   |> Seq.collect id
   |> List.ofSeq)

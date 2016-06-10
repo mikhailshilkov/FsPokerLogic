@@ -83,6 +83,7 @@ module StringRecognition =
     { Char = 'G'; Pattern = [[B;B;W;W;W;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;B;B;W;B;B]; [W;B;B;B;W;W;W;W;B;B]] }
     { Char = 'H'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]] }
     { Char = 'I'; Pattern = [[W;B;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
+    { Char = 'J'; Pattern = [[B;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;B;B;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;B;B;B]] }    
     { Char = 'K'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;W;W;B;B;B;B;B]; [B;B;W;B;B;W;B;B;B;B]; [B;W;B;B;B;B;W;B;B;B]; [W;B;B;B;B;B;B;W;B;B]] }
     { Char = 'L'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = 'M'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B]; [B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;B;B]] }

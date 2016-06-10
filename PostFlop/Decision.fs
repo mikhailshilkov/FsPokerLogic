@@ -117,7 +117,11 @@ module Decision =
       | OnCheckRaise.Call -> callraise snapshot |> Some
       | OnCheckRaise.AllIn -> Some Action.AllIn
       | OnCheckRaise.Fold -> Some Action.Fold
-      | OnCheckRaise.Undefined -> None
+      | OnCheckRaise.Undefined -> 
+        match options.Donk with
+        | ForValueStackOffX(x) -> stackOffDonkX x snapshot |> Some
+        | ForValueStackOff -> stackOffDonk snapshot |> Some
+        | _ -> None
     else 
       match options.CbetFactor with
       | Always f -> cbet snapshot.Pot f |> RaiseToAmount |> Some

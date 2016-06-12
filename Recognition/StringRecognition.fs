@@ -24,6 +24,19 @@ module StringRecognition =
     { Char = ','; Pattern = [[B;B;B;B;B;B;W;W]] }
   |]
 
+  let number9Patterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;B];[W;B;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;B;W];[B;W;W;W;W;W;W;W;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;B;W];[B;W;B;B;B;B;B;B;W];[W;W;W;W;W;W;W;W;W];[B;B;B;B;B;B;B;B;W];[B;B;B;B;B;B;B;B;W]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;B;B;W;W];[W;B;B;B;B;B;W;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;W;B;B;B;W];[B;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;B;W;B];[W;B;B;B;B;B;B;B;W];[W;B;B;B;W;B;B;B;W];[W;B;B;B;W;B;B;B;W];[W;B;B;B;W;B;B;B;W];[B;W;W;W;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;W;W;B;B;B];[B;B;B;W;B;W;B;B;B];[B;B;W;B;B;W;B;B;B];[B;W;B;B;B;W;B;B;B];[W;W;W;W;W;W;W;W;W];[B;B;B;B;B;W;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;B;W;B];[W;B;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[W;B;B;B;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;W;W;W;B];[B;W;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[W;B;B;W;B;B;B;B;W];[B;B;B;B;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B];[W;B;B;B;B;B;B;B;W];[W;B;B;B;B;B;W;W;B];[W;B;B;B;W;W;B;B;B];[W;B;W;W;B;B;B;B;B];[W;W;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;W;B;W;W;W;B];[W;B;B;B;W;B;B;B;W];[W;B;B;B;W;B;B;B;W];[W;B;B;B;W;B;B;B;W];[W;B;B;B;W;B;B;B;W];[B;W;W;W;B;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;W;B;B;B;B];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;W;B];[B;W;W;W;W;W;W;B;B]] }
+  |]
+
   let blindNumberPatterns = [|  
     { Char = '0'; Pattern = [[B;W;W;W;W;W;W;B];[W;W;W;W;W;W;W;W];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[B;W;W;W;W;W;W;B]] }
     { Char = '1'; Pattern = [[B;W;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[B;B;B;B;B;B;B;W]] }
@@ -156,6 +169,7 @@ module StringRecognition =
   let lessThanXWhite x seq =
     (Seq.filter ((=) W) seq |> Seq.length) >= x
 
+
   let removePadding threshold minHeight pixels =
       let maxWidth = Array2D.length1 pixels - 1
       let maxHeight = Array2D.length2 pixels - 1
@@ -235,6 +249,9 @@ module StringRecognition =
       [0..5]
       |> Seq.map (fun dy -> recognizeString (getChar textPatterns) 0 10 (getPixel (y+dy)) width height)
     o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
+
+  let recognizeBetSize x =
+    recognizeString (getChar number9Patterns) 2 9 x
 
   let recognizeButton x y z =
     let b = recognizeString (getChar buttonPatterns) 2 8 x y z

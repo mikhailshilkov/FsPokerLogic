@@ -56,3 +56,14 @@ let ``recognize board from predefined file`` () =
 [<Fact>]
 let ``recognize villain name from predefined file`` () =
   test (fun r -> r.VillainName.Replace("?", "-")) "Name"
+
+[<Fact>]
+let ``recognize input bet size from predefined file`` () =
+  let testFile (name : string) =
+    let image = new Bitmap(name)
+
+    let result = recognizeBetSize image
+    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
+    Assert.Equal(expected, result)
+
+  Directory.GetFiles(@"..\..\TestCases\BetSizes") |> Array.iter testFile

@@ -131,3 +131,13 @@ module ScreenRecognition =
       Blinds = blinds
       Board = flop
       Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown }
+
+  let recognizeBetSize (bitmap : Bitmap) =    
+    let getPixel offsetX offsetY x y = 
+      bitmap.GetPixel(offsetX + x, offsetY + y)
+
+    let (dxo, dyo) = findCardStart (getPixel 576 404) 8 8
+    match (dxo, dyo) with 
+    | Some dx, Some dy ->
+      recognizeBetSize (getPixel (575 + dx) (403 + dy)) 40 14
+    | _ -> null

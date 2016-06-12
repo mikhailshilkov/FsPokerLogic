@@ -50,7 +50,9 @@ let hud (data: VillainStats list) villainName =
 
 let isHistoryMatching ranges history stack odds openingRange =
   let if3BetShove raiseX callingRange openingRange allinPot =
-    (((-((((raiseX+1m))*((100m-((100m*callingRange)/openingRange))/100m))))*(openingRange/callingRange)+((allinPot/2m)-1m))*100m)/allinPot
+    if openingRange < 0.01m then 100m
+    else
+      (((-((((raiseX+1m))*((100m-((100m*callingRange)/openingRange))/100m))))*(openingRange/callingRange)+((allinPot/2m)-1m))*100m)/allinPot
 
   if Seq.length ranges = Seq.length history 
   then

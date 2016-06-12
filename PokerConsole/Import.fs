@@ -5,6 +5,8 @@ open Microsoft.Office.Interop.Excel
 open Preflop
 open System.Runtime.InteropServices
 
+let fullRange = "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,72o+,62o+,52o+,42o+,32o"
+
 let parseDouble (s: string) =
   let s2 = s.Replace(",", ".")
   System.Decimal.Parse(s2, System.Globalization.CultureInfo.InvariantCulture)
@@ -215,6 +217,58 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
           Range = getCellValueBB "G20"
           Action = Call }
     |]
+  else if bb = 15 then
+     [| { StackRange = range
+          History = [Limp]
+          Range = getCellValueBB "G3"
+          Action = Check } 
+        { StackRange = range
+          History = [Limp]
+          Range = getCellValuesBB ["G4";"G5";"G6";"G7";"G8";"G9"]
+          Action = RaiseX 3m } 
+        { StackRange = range
+          History = [Limp]
+          Range = getCellValueBB "G10"
+          Action = AllIn } 
+        { StackRange = range
+          History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+          Range = getCellValueBB "G5"
+          Action = Fold } 
+        { StackRange = range
+          History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+          Range = getCellValueBB "G6"
+          Action = Call } 
+        { StackRange = range
+          History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+          Range = getCellValueBB "G7"
+          Action = AllIn } 
+        { StackRange = range
+          History = [Limp; Raise(0m, 100m); RaiseAllIn]
+          Range = getCellValueBB "G8"
+          Action = Fold } 
+        { StackRange = range
+          History = [Limp; Raise(0m, 100m); RaiseAllIn]
+          Range = getCellValueBB "G9"
+          Action = Call }     
+        { StackRange = range
+          History = [RaiseAllIn]
+          Range = getCellValueBB "G27"
+          Action = Call }
+        { StackRange = range
+          History = [RaiseAllIn]
+          Range = getCellValueBB "G26"
+          Action = Fold }
+    |]
+  else if bb >= 16 then
+    [| { StackRange = range
+         History = [RaiseAllIn]
+         Range = getCellValueBB "G27"
+         Action = Call }
+       { StackRange = range
+         History = [RaiseAllIn]
+         Range = getCellValueBB "G26"
+         Action = Fold }
+    |]
   else
      [| { StackRange = range
           History = [Limp]
@@ -322,8 +376,8 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
           Action = Call }
       |]
 
-let importRulesByStack importRules maxStack xlWorkBook =
-  ([1..maxStack]
+let importRulesByStack importRules xlWorkBook =
+  ([1..25]
   |> Seq.map (fun bb -> importRules xlWorkBook bb)
   |> Seq.collect id
   |> List.ofSeq)
@@ -388,6 +442,18 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                    History = [Raise(0m, 100m)]
                    Range = cellValuesRaise.[2]
                    Action = Call }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m)]
+                   Range = fullRange
+                   Action = Fold }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
+                   Range = fullRange
+                   Action = Fold }
+                 { StackRange = rangeRaise
+                   History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
+                   Range = fullRange
+                   Action = Fold }
                 |]
               |]
             |> List.ofArray
@@ -429,6 +495,14 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                   History = [Limp; Raise(0m, 100m); RaiseEQ(25)]
                   Range = cellValuesLimpLow.[13]
                   Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = fullRange
+                  Action = Fold }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = fullRange
+                  Action = Fold }
               ]
     LimpFoldBig = 
               [ 
@@ -492,6 +566,14 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                   History = [Limp; Raise(0m, 100m); RaiseEQ(22)]
                   Range = cellValuesLimpBig.[24]
                   Action = Call }
+                { StackRange = rangeLimp
+                  History = [Limp]
+                  Range = fullRange
+                  Action = Fold }
+                { StackRange = rangeLimp
+                  History = [Limp; Raise(0m, 100m); Raise(0m, 100m)]
+                  Range = fullRange
+                  Action = Fold }
               ]
   }
 

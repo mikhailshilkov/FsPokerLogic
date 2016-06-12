@@ -18,9 +18,9 @@ module Decide =
   open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP 25) fileNameIP
+  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP 14) fileNameOOP
+  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
   let (rulesAdvancedOOP, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
   let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
@@ -115,7 +115,7 @@ module Decide =
 
     match (action, button) with
     | (Action.AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
-    | (Action.RaiseToAmount x, Some b) -> [| Click(599, 407, 18, 9); Amount(x); Click(b.Region)|]
+    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b.Region)|]
     | (_, Some b) -> [|Click(b.Region)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
@@ -131,7 +131,7 @@ module Decide =
     match state with
     | Some s when s.LastScreen = screen -> (None, state)
     | _ ->
-      print screen |> List.iter (printfn "%s: %s" "Hand")
+      //print screen |> List.iter (printfn "%s: %s" "Hand")
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
       history |> List.iter (printfn "History: %A")

@@ -8,7 +8,7 @@ open FsCheck
 open FsCheck.Xunit
 
 let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP 25) fileNameIP |> List.ofSeq
+let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
 let decideIP = decideOnRules rulesIP
 
 type BigBets25 =
@@ -88,13 +88,8 @@ let ``decide on imported / raise allin`` handString stack expected =
   decideOnImported decideIP handString stack [WasRaise(2m); WasRaiseAllIn] expected
 
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP 14) fileNameOOP |> List.ofSeq
+let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
 let decideOOP = decideOnRules rulesOOP
-
-[<Property(Arbitrary = [| typeof<BigBets14> |])>]
-let ``decide on OOP import has value for any stack and hand`` bb history h =
-  let action = decideOOP bb 0 0m [history] h
-  Assert.NotEqual(None, action)
 
 [<Theory>]
 [<InlineData("QQ", 13, 2.3, "AllIn")>]
@@ -156,10 +151,29 @@ let rulesAdvancedOOPLow = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvan
 let rulesAdvancedOOPBig = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldBig]
 let decideAdvancedOOP x = decideOnRules rulesAdvancedOOPLow x
 let decideAdvancedOOPBig x = decideOnRules rulesAdvancedOOPBig x
+let rulesAllOOPLow = List.concat [rulesOOP; rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
+let decideAllOOP x = decideOnRules rulesAllOOPLow x
+
+[<Property(Arbitrary = [| typeof<BigBets25> |])>]
+let ``decide on OOP import has value for any stack and hand`` bb history h =
+  let action = decideAllOOP bb 0 0m [history] h
+  Assert.NotEqual(None, action)
 
 [<Fact>]
-let ``decide on PART2 imported / check back after WasLimp`` () =
-  decideOnImported decideAdvancedOOP "K5s" 20m [WasLimp] "Check"
+let ``decide on all imported / check back after WasLimp`` () =
+  decideOnImported decideAllOOP "K5s" 20m [WasLimp] "Check"
+
+[<Fact>]
+let ``decide on all imported / fold crap on pfr`` () =
+  decideOnImported decideAllOOP "T2s" 23m [WasRaise 7m] "Fold"
+
+[<Fact>]
+let ``decide on all imported / fold weak hand on 4bet`` () =
+  decideOnImported decideAllOOP "K9o" 23m [WasRaise 2m; WasRaise 2m; WasRaise 2m] "Fold"
+
+[<Fact>]
+let ``decide on all imported / shove vs limp`` () =
+  decideOnImported decideAllOOP "99" 23m [WasLimp] "AllIn"
 
 [<Fact>]
 let ``decide on PART2 imported / raise FV after WasLimp`` () =
@@ -231,6 +245,10 @@ let ``decide on PART2 imported Q3s / does not 3bet shove based on formula`` () =
 [<Fact>]
 let ``decide on PART2 imported / does not 3bet shove based on formula`` () =
   decideOnImportedWithOdds decideAdvancedOOP "97o" 25m 0 40m [WasRaise(2m)] "Call"
+
+[<Fact>]
+let ``decide on PART2 imported / fold(check) crap vs limp`` () =
+  decideOnImported decideAdvancedOOP "K3s" 18m [WasLimp] "Check"
 
 [<Fact>]
 let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =

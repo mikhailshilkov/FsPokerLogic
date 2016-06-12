@@ -26,14 +26,25 @@ module Click =
     Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
     Thread.Sleep(100)
 
-  let enterAmount i =
-    Clicker.backspace 3
-    Clicker.enterText <| i.ToString()
+  let enterAmount window i =
+    let rec imp attempts =
+      executeClickAction window (599, 407, 18, 9); 
+      Clicker.backspace 3
+      Clicker.enterText <| i.ToString()
+      Thread.Sleep(100)
+      if attempts > 1 then
+        // Check that amount is OK
+        let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
+        let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
+        if b <> i.ToString() then 
+          Dumper.SaveBitmap(w.Bitmap, w.TableName)
+          imp (attempts-1)
+    imp 3
 
   let executeAction window action =
     match action with
     | Click x -> executeClickAction window x
-    | Amount x -> enterAmount x
+    | Amount x -> enterAmount window x
 
   let r = new Random()
   let click' msg =

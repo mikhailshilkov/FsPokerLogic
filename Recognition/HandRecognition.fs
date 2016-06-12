@@ -182,7 +182,7 @@ module HandRecognition =
   |]
 
   let findCardStart getPixel width height = 
-    let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
+    let isWhite (c : Color) = c.B > 160uy && c.G > 160uy && c.R > 160uy
     let firstX = [0..width] |> Seq.tryFindIndex (fun x -> [0..height] |> List.map (fun y -> getPixel x y |> isWhite)  |> Seq.exists id)
     let firstY = [0..height] |> Seq.tryFindIndex (fun y -> [0..width] |> List.map (fun x -> getPixel x y |> isWhite) |> Seq.exists id)
     (Option.map ((+) 1) firstX, Option.map ((+) 1) firstY)

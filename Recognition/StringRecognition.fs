@@ -155,13 +155,13 @@ module StringRecognition =
     { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
   |]
 
-  let getChar patterns bws =
+  let getChar allowDirtySymbols patterns bws =
     let samePatterns h p =
       Seq.zip h p
       |> Seq.forall (fun (v1, v2) -> v1 = v2)
     let matchingPattern = 
       patterns 
-        |> Array.filter (fun p -> List.length p.Pattern = List.length bws)
+        |> Array.filter (fun p -> allowDirtySymbols || List.length p.Pattern = List.length bws)
         |> Array.filter (fun p -> samePatterns bws p.Pattern)
         |> Array.tryHead
     defaultArg (Option.map (fun p -> p.Char) matchingPattern) '?'
@@ -242,23 +242,23 @@ module StringRecognition =
     |> String.Concat
 
   let recognizeNumber x =
-    recognizeString (getChar numberPatterns) 2 8 x
+    recognizeString (getChar false numberPatterns) 2 8 x
 
   let recognizeText getPixel (y:int) width height =
     let o = 
       [0..5]
-      |> Seq.map (fun dy -> recognizeString (getChar textPatterns) 0 10 (getPixel (y+dy)) width height)
+      |> Seq.map (fun dy -> recognizeString (getChar false textPatterns) 0 10 (getPixel (y+dy)) width height)
     o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
 
   let recognizeBetSize x =
-    recognizeString (getChar number9Patterns) 2 9 x
+    recognizeString (getChar true number9Patterns) 2 9 x
 
   let recognizeButton x y z =
-    let b = recognizeString (getChar buttonPatterns) 2 8 x y z
+    let b = recognizeString (getChar false buttonPatterns) 2 8 x y z
     if b <> "?" then b else null
 
   let recognizeBlinds x y z =
-    let s = recognizeString (getChar blindNumberPatterns) 3 8 x y z
+    let s = recognizeString (getChar false blindNumberPatterns) 3 8 x y z
     s.Replace("?", "")
 
   let parseStringPattern getPixel width height =

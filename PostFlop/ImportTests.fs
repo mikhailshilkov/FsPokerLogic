@@ -116,7 +116,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let actual = importOopFlop (fst xl) "limp and check" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = { defaultOptions with Then = CallEQ 27 } |> Some
+    let expected = { defaultOptions with Then = RaiseCallEQ 20 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -125,7 +125,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let actual = importOopFlop (fst xl) "hero call raise pre" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = { defaultOptions with Then = CallEQ 33; Special = [CallEQPlusXvsAI 10] } |> Some
+    let expected = { defaultOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 10] } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -194,7 +194,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver (fst xl) "limp and check" (Flush(NotNut King)) texture
-    let expected = { defaultOptions with First = Donk(50m); Then = Call } |> Some
+    let expected = { defaultOptions with First = Donk(62.5m); Then = Call } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -204,7 +204,7 @@ module ImportTests =
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 5 }
     let actual = importOopRiver (fst xl) "limp and check" (Flush(Board)) texture
-    let expected = { defaultOptions with Then = CallEQ 15 } |> Some
+    let expected = { defaultOptions with Then = CallEQ 25 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
 

@@ -166,6 +166,7 @@ let ``Top pair`` handS flopS =
 [<InlineData("Jc5c", "Th8cKdJh", "5")>]
 [<InlineData("QhQc", "KdJhTh8c5d", "A")>]
 [<InlineData("QhQc", "KdJhKh8c5d", "A")>]
+[<InlineData("Ts7c", "Ac7sAd", "T")>]
 let ``Second pair`` handS flopS kicker =
   Pair(Second(parseFace kicker)) |> test handS flopS
 

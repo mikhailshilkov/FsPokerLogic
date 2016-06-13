@@ -201,14 +201,15 @@ module HandValues =
 
     let pairs = 
       boardFaces
-      |> Seq.mapi (fun i x -> (x, i))
-      |> Seq.filter (fun (x, i) -> x = hand.Card1.Face || x = hand.Card2.Face)
+      |> Seq.filter (fun x -> x = hand.Card1.Face || x = hand.Card2.Face)
       |> List.ofSeq
 
     let pairIndex = 
-      pairs 
+      boardFaces
+      |> Seq.distinct
+      |> Seq.mapi (fun i x -> (x, i + 1))
+      |> Seq.filter (fun (x, _) -> x = hand.Card1.Face || x = hand.Card2.Face)
       |> Seq.map snd
-      |> Seq.map ((+) 1)
       |> Seq.tryHead
 
     let isPairedHand = hand.Card1.Face = hand.Card2.Face
@@ -221,8 +222,8 @@ module HandValues =
     else if flush.IsSome then Flush(flush.Value)
     else if isStraight combined then 
       if isWeakStraight hand board then Straight(Weak) else Straight(Normal)
-    else if Seq.length pairs = 2 && fst pairs.[0] = fst pairs.[1] then ThreeOfKind
-    else if pairs |> Seq.filter (fun (x, _) -> faceValue x > defaultArg boardHighestPair 0) |> Seq.length = 2 then TwoPair
+    else if Seq.length pairs = 2 && pairs.[0] = pairs.[1] then ThreeOfKind
+    else if pairs |> Seq.filter (fun x -> faceValue x > defaultArg boardHighestPair 0) |> Seq.length = 2 then TwoPair
     else if isPairedHand then 
       if pairIndex.IsSome then ThreeOfKind
       else

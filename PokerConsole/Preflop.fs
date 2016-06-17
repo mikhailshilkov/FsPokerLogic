@@ -7,6 +7,7 @@ type ActionPattern =
   | AllIn
   | MinRaise
   | RaiseX of decimal
+  | RaiseBluffX of decimal
   | Call
   | Check
   | Fold

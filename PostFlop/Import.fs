@@ -6,6 +6,7 @@ open System.Runtime.InteropServices
 open Options
 open Hands
 open Cards.HandValues
+open Excel.Import
 
 module Import =
   open System.Globalization
@@ -30,11 +31,9 @@ module Import =
 
   let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) = 
     Console.Write "."
-    let toArray (arr:_[,]) = 
-      Array.init arr.Length (fun i -> arr.[1, i+1])
     let result = sheet.Cells.Range(name1, name2).Value2 :?> Object[,]
     result
-      |> toArray 
+      |> excelRangeToArray 
       |> Seq.map (fun x -> x |> string)
       |> Seq.map (fun x -> if x = null then "" else x)
       |> Array.ofSeq
@@ -311,7 +310,7 @@ module Import =
         | Top(_), NoFD, NoSD -> 11
         | Second(_), Draw(_), _ | Third, Draw(_), _ -> 38
         | Second(_), _, OpenEnded | Third, _, OpenEnded -> 31
-        | Second(_), _, GutShot | Third, _, GutShot -> 25
+        | Second(_), _, GutShot | Third, _, GutShot -> 26
         | Second(k), NoFD, NoSD when highKicker k -> 12
         | Second(_), NoFD, NoSD -> 13
         | Third, NoFD, NoSD -> 14
@@ -481,3 +480,10 @@ module Import =
     let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
 
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] ""
+
+  let importFlopList sheetName (xlWorkBook : Workbook) =
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    getCellValues xlWorkSheet "D2" "D100" 
+    |> List.ofArray
+    |> List.takeWhile (String.IsNullOrEmpty >> not)
+    |> List.map (fun x -> x.Split(' ') |> List.ofArray |> List.map (fun c -> parseFace c.[0]))

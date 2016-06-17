@@ -35,6 +35,7 @@ let decideOnImportedWithOdds decide handString stack odds openRange history expe
       | Some MinRaise -> "Raise"
       | Some(RaiseX 2.5m) -> "RaiseX2.5"
       | Some(RaiseX 3m) -> "RaiseX3"
+      | Some(RaiseBluffX 3m) -> "RaiseBluffX3"
       | Some x -> sprintf "%A" x))
 
 let decideOnImported decide handString stack history expected =
@@ -181,7 +182,7 @@ let ``decide on PART2 imported / raise FV after WasLimp`` () =
 
 [<Fact>]
 let ``decide on PART2 imported / raise FB after WasLimp`` () =
-  decideOnImported decideAdvancedOOPBig "64s" 20m [WasLimp] "RaiseX3"
+  decideOnImported decideAdvancedOOPBig "64s" 20m [WasLimp] "RaiseBluffX3"
 
 [<Fact>]
 let ``decide on PART2 imported / all-in after WasLimp`` () =

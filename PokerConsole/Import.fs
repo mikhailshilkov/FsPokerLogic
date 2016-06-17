@@ -4,6 +4,7 @@ open System
 open Microsoft.Office.Interop.Excel
 open Preflop
 open System.Runtime.InteropServices
+open Excel.Import
 
 let fullRange = "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,72o+,62o+,52o+,42o+,32o"
 
@@ -17,12 +18,9 @@ let getCellValue (sheet : Worksheet) (name : string) =
 
 let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) = 
   Console.Write "."
-  let toArray (arr:_[,]) = 
-    let byRows = Array2D.length1 arr = 1
-    Array.init arr.Length (fun i -> if byRows then arr.[1, i+1] else arr.[i+1, 1])
   let result = sheet.Cells.Range(name1, name2).Value2 :?> Object[,]
   result 
-    |> toArray 
+    |> excelRangeToArray 
     |> Seq.map (fun x -> if x = null then "" else x.ToString())
     |> Array.ofSeq
 
@@ -581,7 +579,7 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                 { StackRange = rangeLimp
                   History = [Limp]
                   Range = cellValuesLimpBig.[2]
-                  Action = RaiseX 3m };
+                  Action = RaiseBluffX 3m };
                 { StackRange = rangeLimp
                   History = [Limp]
                   Range = cellValuesLimpBig.[3]

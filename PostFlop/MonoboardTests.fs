@@ -7,7 +7,7 @@ open PostFlop.HandValue
 open PostFlop.Facade
 open Hands
 open Cards.HandValues
-open Cards
+open Cards.Actions
 
 let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}; {Face = King; Suit = Clubs}|]; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
 

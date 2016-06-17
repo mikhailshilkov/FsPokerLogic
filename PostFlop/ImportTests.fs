@@ -303,3 +303,12 @@ module ImportTests =
     let actual = parseOopSpecialRules "AI, A, 61"
     let expected = [CallEQPlusXvsAI 10; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 100m, CallEQ 25)]
     Assert.Equal<System.Collections.Generic.IEnumerable<OopSpecialCondition>>(expected, actual)
+
+  [<Fact>]
+  let ``importFlopList imports list of boards`` () =
+    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
+    let xl = openExcel fileName
+    let actual = importFlopList "bluffy hero ch-r flop vs limp" (fst xl)
+    Assert.Equal(75, Seq.length actual)
+    Assert.Equal("238", System.String.Join("", Seq.head actual |> Seq.map (fun x -> faceToChar x)))
+    closeExcel xl

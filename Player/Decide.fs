@@ -4,6 +4,7 @@ open Akka.FSharp
 open Cards
 open Click
 open Import
+open PostFlop.Import
 open Preflop
 open System.Drawing
 open Hands
@@ -22,7 +23,7 @@ module Decide =
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let (rulesAdvancedOOP, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
+  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlops) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x, importFlopList "bluffy hero ch-r flop vs limp" x)) fileNameAdvancedOOP
   let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 
@@ -48,8 +49,8 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise ((hb + bb) / 2) bb; raise hb bb; raise vb bb]
     | _ -> failwith "History is not clear"
 
-  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop (screen: Screen) history: Action option =
-    let decidePre (screen: Screen): Action option =
+  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop (screen: Screen) history: MotivatedAction option =
+    let decidePre (screen: Screen) =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
         let stack = min (hs + hb) (vs + vb)
@@ -76,14 +77,14 @@ module Decide =
         if screen.Button = Hero then 
           decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
         else
-          decidePostFlopOop history s value special xlPostFlopOop
+          decidePostFlopOop history s value special xlPostFlopOop bluffyCheckRaiseFlops
       | _ -> None
 
     match screen.Sitout, screen.Board with
-    | Villain, _ -> Some Action.MinRaise
-    | Hero, _ -> Some Action.SitBack
+    | Villain, _ -> Action.MinRaise |> notMotivated |> Some
+    | Hero, _ -> Action.SitBack |> notMotivated |> Some
     | _, null -> decidePre screen
-    | _, _ -> decidePost screen
+    | _, _ -> decidePost screen |> Option.map notMotivated
 
   type DecisionMessage = {
     WindowTitle: string
@@ -94,7 +95,7 @@ module Decide =
 
   type DecisionState = {
     LastScreen: Screen
-    PreviousActions: Action list
+    PreviousActions: MotivatedAction list
   }
 
   let mapAction action buttons : ClickAction[] =
@@ -122,6 +123,7 @@ module Decide =
   let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop msg (state:DecisionState option) =
     let pushAction state action reset =
       match state, action with
+      | s, Some { Action = SitBack; Motivation = _ } -> defaultArg (Option.map (fun x -> x.PreviousActions) s) []
       | Some s, Some a -> if reset then [a] else List.append s.PreviousActions [a]
       | Some s, None -> s.PreviousActions
       | None, Some a -> [a]
@@ -141,7 +143,7 @@ module Decide =
       match decision with
       | Some d ->
         printfn "Decision is: %A" d
-        let action = mapAction d screen.Actions
+        let action = mapAction d.Action screen.Actions
         printfn "Action is: %A" action
         let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
         (Some outMsg, newState)

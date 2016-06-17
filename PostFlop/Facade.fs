@@ -11,6 +11,8 @@ open HandValue
 open SpecialRules
 
 module Facade =
+  open Cards.Actions
+
   let defaultArgLazy o (p:'a Lazy) = match o with | Some v -> v | None -> p.Force()
 
   let decidePostFlop s value texture xlFlopTurn xlTurnDonkRiver =
@@ -34,21 +36,25 @@ module Facade =
 
   let rec pickOopSheet history s =
     match history with
-    | Cards.Action.Check::_ -> Some "limp and check"
-    | Cards.Action.Call::_ -> Some "hero call raise pre"
-    | Cards.Action.RaiseToAmount a :: _ when a < s.BB * 4 -> Some "hero raise FV vs limp"
-    | Cards.Action.RaiseToAmount _ :: _ -> Some "hero 3b chips FV vs minr"
-    | Cards.Action.SitBack::rem -> pickOopSheet rem s
+    | (Action.Check, _)::_ -> Some "limp and check"
+    | (Action.Call, _)::_ -> Some "hero call raise pre"
+    | (Action.RaiseToAmount a, Some Bluff) :: _ when a < s.BB * 4 -> Some "hero raise FB vs limp"
+    | (Action.RaiseToAmount a, None) :: _ when a < s.BB * 4 -> Some "hero raise FV vs limp"
+    | (Action.RaiseToAmount _, _) :: _ -> Some "hero 3b chips FV vs minr"
+    | (Action.SitBack, _)::rem -> pickOopSheet rem s
     | [] when s.Pot = s.VillainBet + s.HeroBet + 2 * s.BB -> Some "limp and check"
     | [] -> Some "hero call raise pre"
     | _ -> None
 
-  let decidePostFlopOop history s value texture xl =
-    let preFlopPattern = pickOopSheet history s
+  let decidePostFlopOop history s value texture xl bluffyCheckRaiseFlops =
+    let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
+    let historySimple = List.map fst historyTuples
+    let preFlopPattern = pickOopSheet historyTuples s
     match street s, preFlopPattern with
     | Flop, Some p -> importOopFlop (fst xl) p value texture
     | Turn, Some p -> importOopTurn (fst xl) p value texture
     | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
     | _ -> None
-    |> Option.map (specialRulesOop s history)
+    |> Option.map (specialRulesOop s historySimple)
+    |> Option.map (strategicRulesOop s value historySimple texture bluffyCheckRaiseFlops)
     |> Option.bind (decideOop s)

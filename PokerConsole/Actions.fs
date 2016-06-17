@@ -1,7 +1,7 @@
 ﻿module Actions
 
 open Preflop
-open Cards
+open Cards.Actions
 
 let raiseSize x villainBet stack =
   let rawSize = villainBet |> decimal |> (*) x |> int
@@ -11,10 +11,13 @@ let raiseSize x villainBet stack =
     RaiseToAmount roundedSize
 
 let mapPatternToAction vb stack (pattern : ActionPattern) =
-  match pattern with
-  | ActionPattern.AllIn -> AllIn
-  | ActionPattern.MinRaise -> MinRaise
-  | ActionPattern.RaiseX x -> raiseSize x vb stack
-  | ActionPattern.Call -> Call
-  | ActionPattern.Check -> Check
-  | ActionPattern.Fold -> Fold
+  let action =
+    match pattern with
+    | ActionPattern.AllIn -> AllIn
+    | ActionPattern.MinRaise -> MinRaise
+    | ActionPattern.RaiseX x | ActionPattern.RaiseBluffX x -> raiseSize x vb stack
+    | ActionPattern.Call -> Call
+    | ActionPattern.Check -> Check
+    | ActionPattern.Fold -> Fold
+  let motivation = match pattern with | ActionPattern.RaiseBluffX x -> Some Bluff | _ -> None
+  { Action = action; Motivation = motivation }

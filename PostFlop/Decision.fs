@@ -1,6 +1,6 @@
 ﻿namespace PostFlop
 
-open Cards
+open Cards.Actions
 open Hands
 open Options
 
@@ -26,8 +26,17 @@ module Decision =
     | 3 -> Flop
     | _ -> failwith "Weird board length"
 
+  let streetIndex s = 
+    match s with
+    | River -> 5
+    | Turn -> 4
+    | Flop -> 3
+
+  let boardAtStreen street board = Array.take (streetIndex street) board
+
   let roundTo5 v = (v + 2) / 5 * 5
   let potPre s = s.Pot - s.HeroBet - s.VillainBet
+  let pot s = s.Pot - max 0 (s.VillainBet - s.HeroBet - s.HeroStack)
   let betPre s = (potPre s) / 2
   let stackPre s = betPre s + min (s.HeroStack + s.HeroBet) (s.VillainStack + s.VillainBet)
   let stack s = min s.HeroStack s.VillainStack
@@ -35,7 +44,7 @@ module Decision =
   let effectiveStackPre s = (stackPre s + s.BB / 2 - 1) / s.BB
   let callSize s = min (s.VillainBet - s.HeroBet) s.HeroStack
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
-  let potOdds s = (callSize s |> decimal) * 100m / (s.Pot + (callSize s) |> decimal) |> ceil |> int
+  let potOdds s = (callSize s |> decimal) * 100m / (pot s + (callSize s) |> decimal) |> ceil |> int
   let times i d = ((i |> decimal) * d) |> int
   let wasRaisedPre s = betPre s > s.BB
 

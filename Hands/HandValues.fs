@@ -264,3 +264,7 @@ module HandValues =
     { Streety = isStreety 4 1 board 
       DoublePaired = isDoublePaired board
       Monoboard = monoboardLength board }
+
+  open System
+  let inputString = "2.23"
+  let (success, result) = Double.TryParse inputString

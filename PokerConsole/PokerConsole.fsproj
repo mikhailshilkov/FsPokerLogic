@@ -107,6 +107,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Excel\Excel.fsproj">
+      <Name>Excel</Name>
+      <Project>{9fa0db48-55aa-47ad-b1f5-933bf8c59f41}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Hands\Cards.fsproj">
       <Name>Cards</Name>
       <Project>{a1b0af49-be85-4678-8bb2-3bcb46392a9f}</Project>

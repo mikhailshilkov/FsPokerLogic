@@ -3,7 +3,7 @@
 module DecisionTests =
 
   open Hands
-  open Cards
+  open Cards.Actions
   open Options
   open Decision
   open Xunit
@@ -322,9 +322,16 @@ module DecisionTests =
   [<Fact>]
   let ``Call small check-raise on river`` () =
     let snapshot = { defaultRiver with Pot = 820; VillainBet = 430; HeroBet = 160; HeroStack = 90; VillainStack = 0 }
-    let options = { defaultOptions with CheckRaise = OnCheckRaise.CallEQ 11 }
+    let options = { defaultOptions with CheckRaise = OnCheckRaise.CallEQ 13 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Action.Call |> Some, actual)
+
+  [<Fact>]
+  let ``Fold all-in-check-raise on flop when villain had more chips`` () =
+    let snapshot = { defaultFlop with Pot = 570; VillainStack = 0; HeroStack = 130; VillainBet = 685; HeroBet = 125 }
+    let options = { defaultOptions with CheckRaise = OnCheckRaise.CallEQ 20 }
+    let actual = Decision.decide snapshot options
+    Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Check flop OOP`` () =

@@ -1,6 +1,6 @@
 ﻿namespace PostFlop
 
-open Cards
+open Cards.Actions
 open Cards.HandValues
 open Hands
 open Options
@@ -44,3 +44,59 @@ module SpecialRules =
         else imp rem
       | [] -> o
     imp o.Special
+
+  // Game Plan OOP -> Main rule 2
+  let mainRule2 s h texture o =
+    if List.tryHead h = Some Action.Check
+      && boardAtStreen Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
+      && texture.Monoboard < 3
+      && s.BB <= 30
+      && effectiveStackOnCurrentStreet s >= s.BB * 12
+    then 
+      if street s = Turn 
+         && List.tryLast h = Some Action.Check then { o with First = Donk 75m }
+      else 
+      if street s = River 
+         && match List.tryLast h with | Some(Action.RaiseToAmount x) -> x >= s.Pot * 3 / 10 - 1 | _ -> false
+      then { o with First = Donk 50m } 
+      else o
+    else o
+
+  let increaseTurnBetEQvsAI s o =
+    match street s, o.First, o.Then, s.VillainStack with
+      | Turn, Donk _, CallEQ x, 0 -> { o with Then = CallEQ (x + 6) }
+      | _ -> o
+
+  let allInTurnAfterCheckRaiseInLimpedPot s h o =
+    match street s, h with
+      | Turn, Action.Check :: Action.Check :: RaiseToAmount x :: [] when x + stack s <= 11 * s.BB -> { o with First = OopDonk.AllIn }
+      | _ -> o
+
+  let checkCallPairedTurnAfterCallWithSecondPairOnFlop s value h o =
+    let turnDuplicated() =
+      let maxFlopCard = s.Board |> Array.take 3 |> Array.maxBy (fun x -> faceValue x.Face)
+      let turnCard = s.Board.[3].Face
+      maxFlopCard.Face = turnCard
+    match street s, value, List.tryLast h with
+    | Turn, Pair(Second(_)), Some(Action.Call) when turnDuplicated() -> { o with First = Check; Then = Call }
+    | _ -> o
+
+  let bluffyCheckRaiseFlop flops s value o =
+    let flopAndStack () =
+      let flopString = s.Board |> Array.take 3 |> Array.map (fun c -> c.Face) |> Array.sortBy faceValue |> List.ofArray
+      flops |> List.exists (fun x -> x = flopString)
+    match street s, s.BB, s.Pot, s.VillainBet, o.Then with
+    | Flop, 20, 120, 40, Fold when effectiveStackPre s >= 18 && flopAndStack() -> { o with Then = RaiseFold }
+    | Turn, 20, 300, 0, _ when stack s >= 210 && flopAndStack() && (value.Made <> Nothing || value.FD <> NoFD || value.SD <> NoSD || isLastBoardCardOvercard s.Board) 
+      -> { o with First = OopDonk.AllIn }
+    | _ -> o
+
+  let strategicRulesOop s value h texture bluffyCheckRaiseFlops o =
+    let rules = [
+      mainRule2 s h texture
+      increaseTurnBetEQvsAI s
+      allInTurnAfterCheckRaiseInLimpedPot s h
+      checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made h
+      bluffyCheckRaiseFlop bluffyCheckRaiseFlops s value
+    ]
+    rules |> List.fold (fun options rule -> rule options) o

@@ -406,7 +406,7 @@ module DecisionTests =
   [<Fact>]
   let ``Raise/fold: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
-    let options = { defaultOopOptions with Then = RaiseFold }
+    let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
     let actual = Decision.decideOop snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
@@ -427,7 +427,7 @@ module DecisionTests =
   [<Fact>]
   let ``Raise/fold: Fold 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
-    let options = { defaultOopOptions with Then = RaiseFold }
+    let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
     let actual = Decision.decideOop snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 

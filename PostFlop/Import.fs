@@ -268,7 +268,7 @@ module Import =
         match parts.[1] with 
         | StartsWith "r/" p3 -> 
           match p3 with 
-          | "f" -> OopOnCBet.RaiseFold
+          | "f" -> OopOnCBet.RaiseFold(2.75m)
           | "c" -> OopOnCBet.RaiseCall
           | Int i -> OopOnCBet.RaiseCallEQ i
           | _ -> failwith "Failed parsing Flop Oop OnCbet raise"

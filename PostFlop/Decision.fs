@@ -32,7 +32,7 @@ module Decision =
     | Turn -> 4
     | Flop -> 3
 
-  let boardAtStreen street board = Array.take (streetIndex street) board
+  let boardAtStreet street board = Array.take (streetIndex street) board
 
   let roundTo5 v = (v + 2) / 5 * 5
   let potPre s = s.Pot - s.HeroBet - s.VillainBet
@@ -145,10 +145,10 @@ module Decision =
     if raiseSize * 5 / 4 > effectiveStackOnCurrentStreet s then Action.AllIn
     else raiseSize |> RaiseToAmount
 
-  let raiseOop xlimped xraised xraisedonebb s =
+  let raiseOop xlimped xraised xraisedonkbb s =
     let k = 
       if not (wasRaisedPre s) then xlimped
-      else if s.VillainBet = s.BB then xraisedonebb
+      else if s.VillainBet = s.BB then xraisedonkbb
       else xraised
     let raiseSize = s.VillainBet |> decimal |> (*) k |> int |> roundTo5 
     if raiseSize * 100 / 65 > effectiveStackOnCurrentStreet s then Action.AllIn
@@ -165,8 +165,9 @@ module Decision =
       match options.Then with
       | StackOff -> raiseOop 3m 2.75m 5m s
       | StackOffFast -> raiseOop 4m 3.5m 6m s
-      | RaiseFold | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
-      | Fold | RaiseFold -> Action.Fold
+      | RaiseFold x when s.HeroBet = 0 -> raiseOop x x 4m s
+      | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
+      | Fold | RaiseFold _ -> Action.Fold
       | Call | RaiseCall -> Action.Call
       | CallEQ i | RaiseCallEQ i -> callEQ s i
       | AllIn -> Action.AllIn

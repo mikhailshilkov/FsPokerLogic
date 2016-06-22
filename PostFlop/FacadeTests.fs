@@ -73,8 +73,8 @@ let testPostFlop h s made sd mono expected =
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   let xl = openExcel fileName
   let mh = h |> List.map notMotivated
-  let actual = decidePostFlopOop mh s v t xl []
-  Assert.Equal(expected |> Some, actual)
+  let actual = decidePostFlopOop mh s v t xl ([], [], [])
+  Assert.Equal(expected, actual.Value.Action)
   closeExcel xl
 
 [<Fact>]

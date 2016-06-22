@@ -23,7 +23,12 @@ module Decide =
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlops) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x, importFlopList "bluffy hero ch-r flop vs limp" x)) fileNameAdvancedOOP
+  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) = 
+    importRuleFromExcel (fun x -> (importOopAdvanced x, 
+                                   importHudData x, 
+                                   importFlopList "bluffy hero ch-r flop vs limp" x,
+                                   importFlopList "bluffy hero ch-r flop vs minr" x,
+                                   importFlopList "bluffy overtaking, vill ch b fl" x)) fileNameAdvancedOOP
   let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 
@@ -75,16 +80,16 @@ module Decide =
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         if screen.Button = Hero then 
-          decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
+          decidePostFlop s value special xlFlopTurn xlTurnDonkRiver |> Option.map notMotivated
         else
-          decidePostFlopOop history s value special xlPostFlopOop bluffyCheckRaiseFlops
+          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking)
       | _ -> None
 
     match screen.Sitout, screen.Board with
     | Villain, _ -> Action.MinRaise |> notMotivated |> Some
     | Hero, _ -> Action.SitBack |> notMotivated |> Some
     | _, null -> decidePre screen
-    | _, _ -> decidePost screen |> Option.map notMotivated
+    | _, _ -> decidePost screen
 
   type DecisionMessage = {
     WindowTitle: string

@@ -220,7 +220,7 @@ module ImportTests =
   let ``parseFlopOop 62.5%/30 works`` () = testParseFlopOop "62.5%/30" (Donk 62.5m) (CallEQ 30)
 
   [<Fact>]
-  let ``parseFlopOop ch/r/f works`` () = testParseFlopOop "ch/r/f" Check RaiseFold
+  let ``parseFlopOop ch/r/f works`` () = testParseFlopOop "ch/r/f" Check (RaiseFold(2.75m))
 
   [<Fact>]
   let ``parseFlopOop ch/r/c works`` () = testParseFlopOop "ch/r/c" Check RaiseCall

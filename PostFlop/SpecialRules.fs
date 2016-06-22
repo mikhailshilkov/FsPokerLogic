@@ -40,7 +40,7 @@ module SpecialRules =
           List.contains key bluffyFlops
         if s.BB = 20 && potPre s = 4 * s.BB && effectiveStackPre s >= 18 && s.VillainBet * 3 = s.Pot
           && (isGutShot s.Hand s.Board || overcards s.Hand s.Board >= 1) && isBlufyBoard s.Board then
-          { o with First = Check; Then = RaiseFold } 
+          { o with First = Check; Then = RaiseFold(2.75m) } 
         else imp rem
       | [] -> o
     imp o.Special
@@ -48,7 +48,7 @@ module SpecialRules =
   // Game Plan OOP -> Main rule 2
   let mainRule2 s h texture o =
     if List.tryHead h = Some Action.Check
-      && boardAtStreen Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
+      && boardAtStreet Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
       && texture.Monoboard < 3
       && s.BB <= 30
       && effectiveStackOnCurrentStreet s >= s.BB * 12
@@ -81,22 +81,75 @@ module SpecialRules =
     | Turn, Pair(Second(_)), Some(Action.Call) when turnDuplicated() -> { o with First = Check; Then = Call }
     | _ -> o
 
-  let bluffyCheckRaiseFlop flops s value o =
-    let flopAndStack () =
-      let flopString = s.Board |> Array.take 3 |> Array.map (fun c -> c.Face) |> Array.sortBy faceValue |> List.ofArray
-      flops |> List.exists (fun x -> x = flopString)
-    match street s, s.BB, s.Pot, s.VillainBet, o.Then with
-    | Flop, 20, 120, 40, Fold when effectiveStackPre s >= 18 && flopAndStack() -> { o with Then = RaiseFold }
-    | Turn, 20, 300, 0, _ when stack s >= 210 && flopAndStack() && (value.Made <> Nothing || value.FD <> NoFD || value.SD <> NoSD || isLastBoardCardOvercard s.Board) 
+  let flopMatches s flops =
+    let flopString = s.Board |> Array.take 3 |> Array.map (fun c -> c.Face) |> Array.sortBy faceValue |> List.ofArray
+    flops |> List.exists (fun x -> x = flopString)
+
+  let bluffyCheckRaiseFlopInLimpedPotFlop flops s value history o =
+    let weakHand = match value with | Nothing | TwoOvercards | Pair(Under) | Pair(Fifth) | Pair(Fourth) | Pair(Third) -> true | _ -> false
+    match street s, s.BB, potPre s, o.Then, weakHand with
+    | Flop, 20, 40, Fold, true when effectiveStackPre s >= 15 && flopMatches s flops && s.VillainBet > 0 && s.VillainBet <= 40 -> 
+      let raiseSize = 
+        match s.VillainBet with
+        | 40 -> 3m
+        | x when x >= 31 && x <= 39 -> 3.5m
+        | _ -> 4m
+      { o with Then = RaiseFold(raiseSize) }
+    | _ -> o
+
+  let bluffyCheckRaiseFlopInLimpedPotTurnRiver flops s value history o =
+    let limpedPre = match List.tryHead history with | Some { Action = Action.Check; Motivation = _ } -> true | _ -> false
+    let lastActionBluff = match List.tryLast history with | Some { Action = RaiseToAmount(_); Motivation = Some Bluff } -> true | _ -> false
+    match street s, s.BB with
+    | Turn, 20 when lastActionBluff && limpedPre && flopMatches s flops
+      -> { o with First = OopDonk.Donk 62.5m }
+    | River, 20 when lastActionBluff && limpedPre && flopMatches s flops && isLastBoardCardOvercard s.Board
       -> { o with First = OopDonk.AllIn }
     | _ -> o
 
-  let strategicRulesOop s value h texture bluffyCheckRaiseFlops o =
+  let bluffyCheckRaiseFlopInRaisedPot flops s value history o =
+    match street s, s.BB, s.Pot, s.VillainBet, o.Then with
+    | Flop, 20, 120, 40, Fold when effectiveStackPre s >= 18 && flopMatches s flops -> { o with Then = RaiseFold(2.75m) }
+    | Turn, 20, 300, 0, _ 
+      when stack s >= 210 && flopMatches s flops 
+           && (value.Made <> Nothing || value.FD <> NoFD || value.SD <> NoSD || isLastBoardCardOvercard s.Board) 
+           && history |> List.exists (fun ma -> ma.Motivation = Some Bluff)
+      -> { o with First = OopDonk.AllIn }
+    | _ -> o
+
+  let bluffyOvertakingTurn flops s value history o = 
+    let weakHand = 
+      match value.Made with | Nothing | TwoOvercards -> true | _ -> false
+      && value.SD <> OpenEnded
+      && value.FD = NoFD
+    let lastCard = Array.last s.Board |> (fun x -> x.Face)
+    match street s, history with
+    | Turn, Action.Call :: Action.Check :: _ 
+      when weakHand && effectiveStackPre s >= 18 && lastCard <> Ace && flopMatches s flops
+      -> { o with First = OopDonk.Donk 75m }
+    | _ -> o
+
+  let bluffyOvertakingRiver flops s history o = 
+    let lastCard = Array.last s.Board |> (fun x -> x.Face)
+    let lastActionBluff = match List.tryLast history with | Some { Action = RaiseToAmount(_); Motivation = Some Bluff } -> true | _ -> false
+    match street s with
+    | River when lastCard <> Ace && flopMatches s flops && lastActionBluff
+      -> { o with First = OopDonk.Donk 62.5m }
+    | _ -> o
+
+  let strategicRulesOop s value history texture (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) o =
+    let historySimple = List.map (fun x -> x.Action) history
     let rules = [
-      mainRule2 s h texture
-      increaseTurnBetEQvsAI s
-      allInTurnAfterCheckRaiseInLimpedPot s h
-      checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made h
-      bluffyCheckRaiseFlop bluffyCheckRaiseFlops s value
+      (mainRule2 s historySimple texture, None);
+      (increaseTurnBetEQvsAI s, None);
+      (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
+      (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);
+      (bluffyCheckRaiseFlopInLimpedPotFlop bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);
+      (bluffyCheckRaiseFlopInLimpedPotTurnRiver bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);
+      (bluffyCheckRaiseFlopInRaisedPot bluffyCheckRaiseFlopsMinr s value history, Some Bluff);
+      (bluffyOvertakingTurn bluffyOvertaking s value historySimple, Some Bluff);
+      (bluffyOvertakingRiver bluffyOvertaking s history, Some Bluff)
     ]
-    rules |> List.fold (fun options rule -> rule options) o
+    rules |> List.fold (fun (options, motivation) (rule, ruleMotiv) -> 
+                          let newO = rule options
+                          if newO <> options then (newO, ruleMotiv) else (options, motivation)) (o, None)

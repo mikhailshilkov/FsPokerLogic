@@ -167,7 +167,7 @@ let ``specialRulesOop does no change based on KHighOnPaired on higher blind leve
 let ``specialRulesOop returns based on CheckRaiseBluffOnFlop with all conditions true`` () =
   let options = { defaultOptions with Special = [CheckRaiseBluffOnFlop] }
   let s = { defaultFlop with Pot = 120; VillainBet = 40; Board = parseBoard "6s4cJd"; Hand = parseSuitedHand "Ks2d" }
-  let expected = { options with First = Check; Then = RaiseFold }
+  let expected = { options with First = Check; Then = RaiseFold(2.75m) }
   let actual = specialRulesOop s [] options
   Assert.Equal(expected, actual)
 
@@ -190,61 +190,107 @@ let ``specialRulesOop applies many rules in order`` () =
 
 let strategicRulesOop' s h texture bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
+  let history = h |> List.map (fun x -> { Action = x; Motivation = None })
+  strategicRulesOop s value history texture bluffyCheckRaiseFlops defaultOptions
+
+let strategicRulesOop2' s h texture bluffyCheckRaiseFlops =
+  let value = handValueWithDraws s.Hand s.Board
   strategicRulesOop s value h texture bluffyCheckRaiseFlops defaultOptions
 
 [<Fact>]
 let ``strategicRulesOop takes over Turn check-check on flop, no Ace and low deep stack`` () =
   let expected = { defaultOptions with First = Donk 75m }
-  let actual = strategicRulesOop' defaultTurn [Action.Check; Action.Check] defaultTexture []
-  Assert.Equal(expected, actual)
+  let actual = strategicRulesOop' defaultTurn [Action.Check; Action.Check] defaultTexture ([], [], [])
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
 let ``strategicRulesOop cbets River after take over Turn`` () =
   let s = { defaultRiver with Pot = 248 }
   let expected = { defaultOptions with First = Donk 50m }
-  let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 75] defaultTexture []
-  Assert.Equal(expected, actual)
+  let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 75] defaultTexture ([], [], [])
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
 let ``strategicRulesOop CallEQ + 6 vs AI on turn`` () =
   let s = { defaultTurn with VillainStack = 0 }
   let o = { defaultOptions with First = Donk 75m; Then = CallEQ 20 }
   let value = handValueWithDraws s.Hand s.Board
-  let actual = strategicRulesOop s value [] defaultTexture [] o
+  let actual = strategicRulesOop s value [] defaultTexture ([], [], []) o
   let expected = { o with Then = CallEQ 26 }
-  Assert.Equal(expected, actual)
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
 let ``strategicRulesOop AI on turn after c/r on flop with small stack in limped pot`` () =
   let s = { defaultTurn with HeroStack = 120 }
-  let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 90] defaultTexture []
+  let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 90] defaultTexture ([], [], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
-  Assert.Equal(expected, actual)
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
 let ``strategicRulesOop check/call paired turn after calling flop with second pair`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "Ks9c"; Board = parseBoard "Qd9h6dQs" }
-  let actual = strategicRulesOop' s [Action.RaiseToAmount 60; Action.Call] defaultTexture []
+  let actual = strategicRulesOop' s [Action.RaiseToAmount 60; Action.Call] defaultTexture ([], [], [])
   let expected = { defaultOptions with Then = Call }
-  Assert.Equal(expected, actual)
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
-let ``strategicRulesOop bluffy check raise flop`` () =
+let ``strategicRulesOop bluffy check raise flop minraised pf`` () =
   let s = { defaultFlop with Hand = parseSuitedHand "7s2c"; Board = parseBoard "3d3h6s"; VillainBet = 40; Pot = 120 }
-  let actual = strategicRulesOop' s [Action.Call; Action.Check] defaultTexture [[Three;Three;Six]]
-  let expected = { defaultOptions with Then = RaiseFold }
-  Assert.Equal(expected, actual)
+  let actual = strategicRulesOop' s [Action.Call; Action.Check] defaultTexture ([], [[Three;Three;Six]], [])
+  let expected = { defaultOptions with Then = RaiseFold(2.75m) }
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
-let ``strategicRulesOop all in turn with Nothing & overcard after bluffy check raise flop`` () =
+let ``strategicRulesOop all in turn with Nothing & overcard after bluffy check raise flop minraised pf`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "7s2c"; Board = parseBoard "3d3h6s8d"; Pot = 300 }
-  let actual = strategicRulesOop' s [Action.Call; Action.Check; Action.RaiseToAmount 110] defaultTexture [[Three;Three;Six]]
+  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 110; Motivation = Some Bluff}]
+  let actual = strategicRulesOop2' s h defaultTexture ([], [[Three;Three;Six]], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
-  Assert.Equal(expected, actual)
+  Assert.Equal(expected, fst actual)
 
 [<Fact>]
-let ``strategicRulesOop all in turn with Gutshot after bluffy check raise flop`` () =
+let ``strategicRulesOop all in turn with Gutshot after bluffy check raise flop minraised pf`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "7s4c"; Board = parseBoard "3d3hTs5d"; Pot = 300 }
-  let actual = strategicRulesOop' s [Action.Call; Action.Check; Action.RaiseToAmount 110] defaultTexture [[Three;Three;Ten]]
+  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 110; Motivation = Some Bluff}]
+  let actual = strategicRulesOop2' s h defaultTexture ([], [[Three;Three;Ten]], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
-  Assert.Equal(expected, actual)
+  Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``strategicRulesOop bluffy check raise flop limped pf`` () =
+  let s = { defaultFlop with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs"; VillainBet = 30; Pot = 70 }
+  let actual = strategicRulesOop' s [Action.Check; Action.Check] defaultTexture ([[Five;Eight;Ten]], [], [])
+  let expected = { defaultOptions with Then = RaiseFold(4m) }
+  Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``strategicRulesOop donk any turn after bluffy check raise flop limped pf`` () =
+  let s = { defaultTurn with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs2s"; Pot = 280 }
+  let h = [{Action = Action.Check; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 120; Motivation = Some Bluff}]
+  let actual = strategicRulesOop2' s h defaultTexture ([[Five;Eight;Ten]], [], [])
+  let expected = { defaultOptions with First = Donk 62.5m }
+  Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``strategicRulesOop AI overcard river after bluffy check raise flop and donk turn limped pf`` () =
+  let s = { defaultRiver with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs2sJd"; Pot = 630 }
+  let h = [{Action = Action.Check; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 120; Motivation = Some Bluff}; {Action = Action.RaiseToAmount 175; Motivation = Some Bluff}]
+  let actual = strategicRulesOop2' s h defaultTexture ([[Five;Eight;Ten]], [], [])
+  let expected = { defaultOptions with First = OopDonk.AllIn }
+  Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``strategicRulesOop bluff overtake non-A turn after no cbet after pfr`` () =
+  let s = { defaultTurn with Hand = parseSuitedHand "9s8c"; Board = parseBoard "Qs2dThKs"; Pot = 100 }
+  let h = [Action.Call; Action.Check]
+  let actual = strategicRulesOop' s h defaultTexture ([], [], [[Two;Ten;Queen]])
+  let expected = { defaultOptions with First = Donk 75m }
+  Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``strategicRulesOop bet non-A river after bluff overtake after no cbet after pfr`` () =
+  let s = { defaultRiver with Hand = parseSuitedHand "5s5c"; Board = parseBoard "Qs2dThKs4c"; Pot = 250 }
+  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 75; Motivation = Some Bluff}; {Action = Action.RaiseToAmount 175; Motivation = Some Bluff}]
+  let actual = strategicRulesOop2' s h defaultTexture ([], [], [[Two;Ten;Queen]])
+  let expected = { defaultOptions with First = Donk 62.5m }
+  Assert.Equal(expected, fst actual)

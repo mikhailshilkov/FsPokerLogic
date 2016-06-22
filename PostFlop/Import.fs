@@ -410,7 +410,7 @@ module Import =
       | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> (8, 9)
       | 3, Draw(_) -> (6, 7)
       | _ -> (0, 3)
-    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] ""
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] cellValues.[1]
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
     let defaultMapping () =
@@ -479,7 +479,7 @@ module Import =
       | _ -> (Some 2, 3)
     let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
 
-    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] ""
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] cellValues.[1]
 
   let importFlopList sheetName (xlWorkBook : Workbook) =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet

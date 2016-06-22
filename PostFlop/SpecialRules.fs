@@ -107,7 +107,7 @@ module SpecialRules =
       -> { o with First = OopDonk.AllIn }
     | _ -> o
 
-  let bluffyCheckRaiseFlopInRaisedPot flops s value history o =
+  let bluffyCheckRaiseInRaisedPot flops s value history o =
     match street s, s.BB, s.Pot, s.VillainBet, o.Then with
     | Flop, 20, 120, 40, Fold when effectiveStackPre s >= 18 && flopMatches s flops -> { o with Then = RaiseFold(2.75m) }
     | Turn, 20, 300, 0, _ 
@@ -124,7 +124,7 @@ module SpecialRules =
       && value.FD = NoFD
     let lastCard = Array.last s.Board |> (fun x -> x.Face)
     match street s, history with
-    | Turn, Action.Call :: Action.Check :: _ 
+    | Turn, [Action.Call; Action.Check]
       when weakHand && effectiveStackPre s >= 18 && lastCard <> Ace && flopMatches s flops
       -> { o with First = OopDonk.Donk 75m }
     | _ -> o
@@ -146,7 +146,7 @@ module SpecialRules =
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);
       (bluffyCheckRaiseFlopInLimpedPotFlop bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);
       (bluffyCheckRaiseFlopInLimpedPotTurnRiver bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);
-      (bluffyCheckRaiseFlopInRaisedPot bluffyCheckRaiseFlopsMinr s value history, Some Bluff);
+      (bluffyCheckRaiseInRaisedPot bluffyCheckRaiseFlopsMinr s value history, Some Bluff);
       (bluffyOvertakingTurn bluffyOvertaking s value historySimple, Some Bluff);
       (bluffyOvertakingRiver bluffyOvertaking s history, Some Bluff)
     ]

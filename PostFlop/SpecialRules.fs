@@ -46,8 +46,10 @@ module SpecialRules =
     imp o.Special
 
   // Game Plan OOP -> Main rule 2
-  let mainRule2 s h texture o =
-    if List.tryHead h = Some Action.Check
+  let mainRule2 s value h texture o =
+    let weakHand = match value with | Nothing | TwoOvercards | Pair(Under) | Pair(Fifth) | Pair(Fourth) | Pair(Third) -> true | _ -> false
+    if weakHand
+      && List.tryHead h = Some Action.Check      
       && boardAtStreet Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
       && texture.Monoboard < 3
       && s.BB <= 30
@@ -140,7 +142,7 @@ module SpecialRules =
   let strategicRulesOop s value history texture (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) o =
     let historySimple = List.map (fun x -> x.Action) history
     let rules = [
-      (mainRule2 s historySimple texture, None);
+      (mainRule2 s value.Made historySimple texture, None);
       (increaseTurnBetEQvsAI s, None);
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);

@@ -29,8 +29,8 @@ module Decide =
                                    importFlopList "bluffy hero ch-r flop vs limp" x,
                                    importFlopList "bluffy hero ch-r flop vs minr" x,
                                    importFlopList "bluffy overtaking, vill ch b fl" x)) fileNameAdvancedOOP
-  let rulesLow = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
-  let rulesBig = Seq.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
+  let rulesLow = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
+  let rulesBig = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 
     if limpFold >= 65 then decideOnRules rulesBig stack odds
     else decideOnRules rulesLow stack odds

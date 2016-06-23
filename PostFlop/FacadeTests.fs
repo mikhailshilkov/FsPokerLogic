@@ -110,6 +110,11 @@ let ``decidePostFlop ovso special rule on turn`` () =
   testPostFlop [Action.RaiseToAmount 40; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 135)
 
 [<Fact>]
+let ``decidePostFlop ovso special rule on turn 2`` () =
+  let s = { Hand = parseSuitedHand "Jh9c"; Board = parseBoard "5sJc5dKs"; Pot = 240; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.RaiseToAmount 60; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 160)
+
+[<Fact>]
 let ``decidePostFlop A/f special rule on turn`` () =
   let s = { Hand = parseSuitedHand "7sTs"; Board = parseBoard "8cKsJdAc"; Pot = 200; VillainStack = 300; HeroStack = 600; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.RaiseToAmount 40; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 135)
@@ -118,6 +123,11 @@ let ``decidePostFlop A/f special rule on turn`` () =
 let ``decidePostFlop 61 special rule on turn`` () =
   let s = { Hand = parseSuitedHand "Td7s"; Board = parseBoard "5hTh9sAs"; Pot = 220; VillainStack = 380; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 30 }
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 80] s 0 (Action.RaiseToAmount 220)
+
+[<Fact>]
+let ``decidePostFlop 61 special rule on turn 2`` () =
+  let s = { Hand = parseSuitedHand "7d5s"; Board = parseBoard "3d7h2cAh"; Pot = 40; VillainStack = 480; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Check; Action.Check] s 0 (Action.RaiseToAmount 40)
 
 [<Fact>]
 let ``decidePostFlop 7 special rule on turn`` () =
@@ -135,9 +145,9 @@ let ``decidePostFlop give up turn after bluffy flop check raise`` () =
   testPostFlop [Action.Call; Action.Check; Action.RaiseToAmount 110] s 0 Action.Check
 
 [<Fact>]
-let ``decidePostFlop no check raise on bluffy flop with nothing`` () =
-  let s = { Hand = parseSuitedHand "6h9h"; Board = parseBoard "Jd7h3d"; Pot = 120; VillainStack = 410; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.Call; Action.Check] s 0 Action.Fold
+let ``decidePostFlop cbet flop after raising limp pre`` () =
+  let s = { Hand = parseSuitedHand "Qc9d"; Board = parseBoard "TdKs9c"; Pot = 120; VillainStack = 440; HeroStack = 440; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 60)
 
 [<Fact>]
 let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
@@ -146,3 +156,9 @@ let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
             { Action = Action.Check; Motivation = None }; 
             { Action = Action.RaiseToAmount 110; Motivation = Some Bluff } ]
   testPostFlopMotivated h s 0 Action.AllIn
+
+
+[<Fact>]
+let ``decidePostFlop bet half pot on turn with FD+2nd pair`` () =
+  let s = { Hand = parseSuitedHand "Ts8s"; Board = parseBoard "2dAs2sTc"; Pot = 80; VillainStack = 350; HeroStack = 350; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 40)

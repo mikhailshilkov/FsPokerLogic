@@ -55,7 +55,7 @@ let main argv =
   let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
-  let rules = Seq.concat [|rulesIP;rulesOOP|]
+  let rules = List.concat [|rulesIP;rulesOOP|]
   let decide = decideOnRules rules
   Console.Write " done!\n\n"
 

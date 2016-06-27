@@ -120,12 +120,15 @@ module Decide =
       |> findButton
 
     match (action, button) with
-    | (Action.AllIn, Some b) -> [|Click(368, 389, 42, 7); Click(b.Region)|]
-    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b.Region)|]
-    | (_, Some b) -> [|Click(b.Region)|]
+    | (Action.AllIn, Some b) -> [|Click({ Region = (368, 389, 42, 7); Name = "Max" }); Click(b)|]
+    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b)|]
+    | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
   let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop msg (state:DecisionState option) =
+    let log (s: string) =
+      System.IO.File.AppendAllLines(sprintf "%s.log" msg.TableName, [s])
+      System.Console.WriteLine(s)
     let pushAction state action reset =
       match state, action with
       | s, Some { Action = SitBack; Motivation = _ } -> defaultArg (Option.map (fun x -> x.PreviousActions) s) []
@@ -138,21 +141,23 @@ module Decide =
     match state with
     | Some s when s.LastScreen = screen -> (None, state)
     | _ ->
-      print screen |> List.iter (printfn "%s: %s" "Hand")
+      print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
-      history |> List.iter (printfn "History: %A")
+      history |> List.iter (sprintf "History: %A" >> log)
 
       let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop screen history
       let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
       match decision with
       | Some d ->
-        printfn "Decision is: %A" d
+        sprintf "Decision is: %A" d |> log
         let action = mapAction d.Action screen.Actions
-        printfn "Action is: %A" action
+        sprintf "Action is: %A" action |> log
+        if (d.Action = Fold && System.String.IsNullOrEmpty(screen.Board) && screen.HeroHand.Contains("A") && history.IsEmpty) then
+          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
         let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
         (Some outMsg, newState)
       | None ->
-        printfn "Could not make a decision, dumping the screenshot..."
+        log "Could not make a decision, dumping the screenshot..."
         Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
         (None, newState)

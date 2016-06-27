@@ -141,3 +141,9 @@ module ScreenRecognition =
     | Some dx, Some dy ->
       recognizeBetSize (getPixel (575 + dx) (403 + dy)) 40 14
     | _ -> null
+
+  let isHeroSitout (bitmap : Bitmap) =    
+    let getPixel offsetX offsetY x y = 
+      bitmap.GetPixel(offsetX + x, offsetY + y)
+
+    isHeroSitout (getPixel 489 469) 11 11

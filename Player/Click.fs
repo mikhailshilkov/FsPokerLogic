@@ -9,9 +9,8 @@ open Recognition.ScreenRecognition
 
 module Click =
 
-  type ClickTarget = (int * int * int * int)
   type ClickAction =
-    | Click of ClickTarget
+    | Click of ActionButton
     | Amount of int
 
   type ClickerMessage = {
@@ -21,14 +20,22 @@ module Click =
     Screen: Screen
   }
 
-  let executeClickAction window (x, y, w, h) =
-    let l = InteractionFacade.Focus(window)
-    Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
-    Thread.Sleep(100)
+  let executeClickAction window b =
+    let preconditionMet = 
+      match b.Name with
+      | "SitBack" -> 
+        let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
+        ScreenRecognition.isHeroSitout(w.Bitmap)
+      | _ -> true
+    if preconditionMet then
+      let (x, y, w, h) = b.Region
+      let l = InteractionFacade.Focus(window)
+      Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
+      Thread.Sleep(100)
 
   let enterAmount window i =
     let rec imp attempts =
-      executeClickAction window (599, 407, 18, 9); 
+      executeClickAction window { Region = (599, 407, 18, 9); Name = "AmountInput" }
       Clicker.backspace 3
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)
@@ -37,7 +44,6 @@ module Click =
         let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
         let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
         if b <> i.ToString() then 
-          Dumper.SaveBitmap(w.Bitmap, w.TableName)
           imp (attempts-1)
     imp 3
 

@@ -16,10 +16,8 @@ let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\Postflo
 let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
 let rules = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
 
-[<Fact>]
-let ``3bet allin for 2.5 raise based on old rules`` () =
+let test vb hand openRange =
   let hb = 20
-  let vb = 50
   let bb = 20
   let hs = 500 - hb
   let vs = 500 - vb
@@ -27,7 +25,15 @@ let ``3bet allin for 2.5 raise based on old rules`` () =
   let effectiveStack = decimal stack / decimal bb
   let callSize = min (vb - hb) hs
   let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
-  let fullHand = parseFullHand "AhKh"
-  let history = [WasRaise(2.5m)]
-  let result = decideOnRules rules effectiveStack potOdds 60m history fullHand
+  let fullHand = parseFullHand hand
+  let history = [WasRaise(decimal(vb) / decimal(bb))]
+  let result = decideOnRules rules effectiveStack potOdds openRange history fullHand
   Assert.Equal(Some AllIn, result)
+
+[<Fact>]
+let ``3bet allin for 2.5 raise based on old rules`` () =
+  test 50 "AhKh" 60m
+
+[<Fact>]
+let ``3bet allin for 2 raise based on 3b shove rules with stats on the edge of two rows`` () =
+  test 40 "Ad8c" 48m

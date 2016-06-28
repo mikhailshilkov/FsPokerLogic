@@ -20,7 +20,16 @@ module Click =
     Screen: Screen
   }
 
-  let executeClickAction window b =
+  let ensureAmount window screen check repeat =
+    // Check that amount is OK
+    let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
+    let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
+    if check b then 
+      let currentScreen = ScreenRecognition.recognizeScreen(w.Bitmap)
+      if currentScreen = screen then
+        repeat()
+
+  let executeClickAction window s b =
     let preconditionMet = 
       match b.Name with
       | "SitBack" -> 
@@ -29,33 +38,34 @@ module Click =
       | _ -> true
     if preconditionMet then
       let (x, y, w, h) = b.Region
-      let l = InteractionFacade.Focus(window)
-      Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
-      Thread.Sleep(100)
+      let rec imp attempts =
+        let l = InteractionFacade.Focus(window)
+        Clicker.clickRegion (l.X + x + w / 10, l.Y + y + h / 10, l.X + x + w * 9 / 10, l.Y + y + h * 9 / 10)
+        Thread.Sleep(100)
+        if attempts > 1 then
+          if b.Name = "Max" && s.HeroStack.IsSome then
+            ensureAmount window s (fun b -> int(b) >= s.HeroStack.Value) (fun () -> imp (attempts-1))
+      imp 3
 
-  let enterAmount window i =
+  let enterAmount window s i =
     let rec imp attempts =
-      executeClickAction window { Region = (599, 407, 18, 9); Name = "AmountInput" }
+      executeClickAction window s { Region = (599, 407, 18, 9); Name = "AmountInput" }
       Clicker.backspace 3
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)
       if attempts > 1 then
-        // Check that amount is OK
-        let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
-        let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
-        if b <> i.ToString() then 
-          imp (attempts-1)
+        ensureAmount window s (fun b -> b = i.ToString()) (fun () -> imp (attempts-1))
     imp 3
 
-  let executeAction window action =
+  let executeAction window s action =
     match action with
-    | Click x -> executeClickAction window x
-    | Amount x -> enterAmount window x
+    | Click x -> executeClickAction window s x
+    | Amount x -> enterAmount window s x
 
   let r = new Random()
   let click' msg =
     let rec imp attempts =
-      msg.Clicks |> Array.iter (executeAction msg.WindowTitle)
+      msg.Clicks |> Array.iter (executeAction msg.WindowTitle msg.Screen)
       if attempts > 1 then
         // Check that button click OK
         let w = InteractionFacade.GetWindow(msg.WindowTitle, new System.Drawing.Size(650, 490))

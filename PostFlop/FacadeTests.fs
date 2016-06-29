@@ -162,3 +162,33 @@ let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
 let ``decidePostFlop bet half pot on turn with FD+2nd pair`` () =
   let s = { Hand = parseSuitedHand "Ts8s"; Board = parseBoard "2dAs2sTc"; Pot = 80; VillainStack = 350; HeroStack = 350; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 40)
+
+[<Fact>]
+let ``decidePostFlop bet turn for value after 3bet pf and bet flop`` () =
+  let s = { Hand = parseSuitedHand "JhJs"; Board = parseBoard "3c2h6d7c"; Pot = 80; VillainStack = 300; HeroStack = 300; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.RaiseToAmount 100; Action.RaiseToAmount 100] s 0 (Action.RaiseToAmount 300)
+
+[<Fact>]
+let ``decidePostFlop cbet flop after bluffy 3bet pf`` () =
+  let s = { Hand = parseSuitedHand "5c4d"; Board = parseBoard "AhKcJh"; Pot = 200; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.RaiseToAmount 100] s 0 (Action.RaiseToAmount 100)
+
+[<Fact>]
+let ``decidePostFlop does not bluffy overtake turn after wrong flop`` () =
+  let s = { Hand = parseSuitedHand "5c8c"; Board = parseBoard "7d4s3hTs"; Pot = 200; VillainStack = 610; HeroStack = 290; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check] s 0 Action.Check
+
+[<Fact>]
+let ``decidePostFlop overtake turn on main rule 2`` () =
+  let s = { Hand = parseSuitedHand "3d8h"; Board = parseBoard "7d3hTd6h"; Pot = 60; VillainStack = 590; HeroStack = 350; VillainBet = 0; HeroBet = 0; BB = 30 }
+  testPostFlop [Action.Check; Action.Check] s 0 (Action.RaiseToAmount 45)
+
+[<Fact>]
+let ``decidePostFlop bet river after overtake turn on main rule 2`` () =
+  let s = { Hand = parseSuitedHand "3sKh"; Board = parseBoard "3dJc9d2sAd"; Pot = 100; VillainStack = 340; HeroStack = 560; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
+
+[<Fact>]
+let ``decidePostFlop bet river after overtake turn on main rule 2 (2)`` () =
+  let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "8h3h4dKsJh"; Pot = 100; VillainStack = 390; HeroStack = 610; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)

@@ -127,7 +127,7 @@ module Import =
       TurnFDCbetCards = cellValues.[11].Replace(" ", "")
       TurnFDCbetFactor = 
         match parseDecimal cellValues.[12] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 2.5m; IfPreStackLessThan = 15 }
         | None -> Never 
     }
 

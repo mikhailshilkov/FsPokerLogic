@@ -51,7 +51,7 @@ module ImportTests =
       TurnFBCbetCards = "T,J,K,A"
       TurnFBCbetFactor = OrCheck { Factor = 62.5m; IfStackFactorLessThan = 2.8m; IfPreStackLessThan = 18 }
       TurnFDCbetCards = "8,T,J,Q"
-      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 2m; IfPreStackLessThan = 15 }
+      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 2.5m; IfPreStackLessThan = 15 }
     }
     Assert.Equal(expected, actual)
     closeExcel xl
@@ -309,6 +309,6 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
     let xl = openExcel fileName
     let actual = importFlopList "bluffy hero ch-r flop vs limp" (fst xl)
-    Assert.Equal(75, Seq.length actual)
-    Assert.Equal("238", System.String.Join("", Seq.head actual |> Seq.map (fun x -> faceToChar x)))
+    Assert.Equal(107, Seq.length actual)
+    Assert.Equal("235", System.String.Join("", Seq.head actual |> Seq.map (fun x -> faceToChar x)))
     closeExcel xl

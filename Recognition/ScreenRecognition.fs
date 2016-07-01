@@ -42,6 +42,7 @@ module ScreenRecognition =
      sprintf "Stacks: %A/%A" (Option.toNullable screen.HeroStack) (Option.toNullable screen.VillainStack);
      sprintf "Bets: %A/%A" (Option.toNullable screen.HeroBet) (Option.toNullable screen.VillainBet);
      sprintf "Hand: %s (%s)" screen.HeroHand (match screen.Button with | Hero -> "IP" | Villain -> "OOP" | Unknown -> "?");
+     sprintf "Board: %s" screen.Board;
      sprintf "Actions: %A" screen.Actions]
 
   let recognizeScreen (bitmap : Bitmap) =

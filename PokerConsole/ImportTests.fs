@@ -217,11 +217,11 @@ let ``decide on PART2 imported / call WasLimp/raise FB/3bet with specfied odds``
 
 [<Fact>]
 let ``decide on PART2 imported / call pfr`` () =
-  decideOnImported decideAdvancedOOP "J3s" 15m [WasRaise(3m)] "Call"
+  decideOnImported decideAdvancedOOP "J3s" 15m [WasRaise(2.5m)] "Call"
 
 [<Fact>]
 let ``decide on PART2 imported / 3bet pfr FV`` () =
-  decideOnImported decideAdvancedOOP "JJ" 15m [WasRaise(3m)] "RaiseX2.5"
+  decideOnImported decideAdvancedOOP "JJ" 15m [WasRaise(2.5m)] "RaiseX2.5"
 
 [<Fact>]
 let ``decide on PART2 imported / 3bet pfr FB`` () =
@@ -259,14 +259,14 @@ let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =
   Assert.Equal(5 * 37, List.length shoveRules)
   let sampleRule = 
     rulesAdvancedOOPLow
-    |> List.filter (fun r -> r.Action = AllIn && r.StackRange = (18, 19) && r.History = seq [RaiseFor3BetShove(23.44m, 34m)])
+    |> List.filter (fun r -> r.Action = AllIn && r.StackRange = (18, 19) && r.History = seq [RaiseFor3BetShove(24m, 34m)])
     |> List.head
-  Assert.Equal("99-22,AQs+,K9s+,QTs+,J4s+,T6s+,T4s,94s+,A2o+,KTo+,QJo", sampleRule.Range)
+  Assert.Equal("AA-22, A2s+, K4s-K2s, Q6s-Q2s, J6s-J3s, T6s, 96s-95s, 86s-85s, 75s-74s, 64s+, 53s+, 43s, A2o+", sampleRule.Range)
 
 [<Fact>]
 let ``importHudData imports player stats from excel`` () =
   let length = List.length hudData
-  Assert.Equal(14, length)
+  Assert.Equal(16, length)
   let sample = List.filter (fun x -> x.VillainName = "Peterkoven") hudData |> List.head
   Assert.Equal(31, sample.OpenRaise20_25)
   Assert.Equal(21, sample.OpenRaise16_19)

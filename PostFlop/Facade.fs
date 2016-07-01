@@ -40,6 +40,7 @@ module Facade =
     | (Action.Call, _)::_ -> Some "hero call raise pre"
     | (Action.RaiseToAmount a, Some Bluff) :: _ when a < s.BB * 4 -> Some "hero raise FB vs limp"
     | (Action.RaiseToAmount a, None) :: _ when a < s.BB * 4 -> Some "hero raise FV vs limp"
+    | (Action.RaiseToAmount a, Some Bluff) :: _ -> Some "hero 3b chips FB vs minr"
     | (Action.RaiseToAmount _, _) :: _ -> Some "hero 3b chips FV vs minr"
     | (Action.SitBack, _)::rem -> pickOopSheet rem s
     | [] when s.Pot = s.VillainBet + s.HeroBet + 2 * s.BB -> Some "limp and check"
@@ -56,6 +57,6 @@ module Facade =
     | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
     | _ -> None
     |> Option.map (specialRulesOop s historySimple)
-    |> Option.map (strategicRulesOop s value history texture bluffyFlops)
+    |> Option.map (strategicRulesOop s value history bluffyFlops)
     |> Option.map (fun (o, m) -> (decideOop s o, m))
     |> Option.bind (fun (ao, m) -> ao |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m }))

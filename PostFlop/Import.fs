@@ -257,8 +257,14 @@ module Import =
     |> List.map parseOopSpecialRule
 
   let parseOopOption (strategy: string) (specialRules: string) =
-    let parts = strategy.Split([|'/'|], 2)
-    if parts.Length = 2 then
+    let parts = strategy.Trim().ToLowerInvariant().Split([|'/'|], 2)
+    if System.String.IsNullOrEmpty(strategy) then None
+    else if parts.Length = 1 then
+      match parts.[0] with 
+      | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialRules  }
+      | "x" -> None
+      | _ -> failwith "Failed parsing Flop Oop (1)"
+    else if parts.Length = 2 then
       let donk = 
         match parts.[0] with 
         | "ch" -> OopDonk.Check
@@ -280,7 +286,7 @@ module Import =
         | Int i -> CallEQ i
         | _ -> failwith "Failed parsing Flop Oop OnCbet" 
       Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialRules  }
-    else None
+    else failwith "Failed parsing Flop Oop (2)"
 
   let parseOopOptionWithSpecialBoard (strategy: string) isSpecialBoard (specialBoardStrategy:string) (specialRules: string) =
     if isSpecialBoard then
@@ -483,7 +489,7 @@ module Import =
 
   let importFlopList sheetName (xlWorkBook : Workbook) =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    getCellValues xlWorkSheet "D2" "D100" 
+    getCellValues xlWorkSheet "D2" "D150" 
     |> List.ofArray
     |> List.takeWhile (String.IsNullOrEmpty >> not)
     |> List.map (fun x -> x.Split(' ') |> List.ofArray |> List.map (fun c -> parseFace c.[0]))

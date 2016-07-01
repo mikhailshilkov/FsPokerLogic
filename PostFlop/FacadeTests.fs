@@ -166,12 +166,12 @@ let ``decidePostFlop bet half pot on turn with FD+2nd pair`` () =
 [<Fact>]
 let ``decidePostFlop bet turn for value after 3bet pf and bet flop`` () =
   let s = { Hand = parseSuitedHand "JhJs"; Board = parseBoard "3c2h6d7c"; Pot = 80; VillainStack = 300; HeroStack = 300; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.RaiseToAmount 100; Action.RaiseToAmount 100] s 0 (Action.RaiseToAmount 300)
+  testPostFlop [Action.RaiseToAmount 100; Action.RaiseToAmount 100] s 0 Action.AllIn
 
 [<Fact>]
 let ``decidePostFlop cbet flop after bluffy 3bet pf`` () =
   let s = { Hand = parseSuitedHand "5c4d"; Board = parseBoard "AhKcJh"; Pot = 200; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.RaiseToAmount 100] s 0 (Action.RaiseToAmount 100)
+  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff }] s 0 (Action.RaiseToAmount 100)
 
 [<Fact>]
 let ``decidePostFlop does not bluffy overtake turn after wrong flop`` () =
@@ -192,3 +192,20 @@ let ``decidePostFlop bet river after overtake turn on main rule 2`` () =
 let ``decidePostFlop bet river after overtake turn on main rule 2 (2)`` () =
   let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "8h3h4dKsJh"; Pot = 100; VillainStack = 390; HeroStack = 610; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
+
+
+//let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
+//let xlFlopTurn = openExcel fileNameFlopTurn
+//let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+//let xlTurnDonk = openExcel fileNameTurnDonk
+
+//let testIP s expected =
+//  let v = handValueWithDraws s.Hand s.Board
+//  let t = { Streety = false; DoublePaired = false; Monoboard = 2 }
+//  let actual = decidePostFlop s v t xlFlopTurn xlTurnDonk
+//  Assert.Equal(expected |> Some, actual)
+//
+//[<Fact>]
+//let ``decidePostFlopIP x`` () =
+//  let s = { Hand = parseSuitedHand "Jd8c"; Board = parseBoard "Jh6c4s"; Pot = 120; VillainStack = 390; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
+//  testIP s (Action.RaiseToAmount 150)

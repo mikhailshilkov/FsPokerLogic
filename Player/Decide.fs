@@ -120,7 +120,7 @@ module Decide =
       |> findButton
 
     match (action, button) with
-    | (Action.AllIn, Some b) -> [|Click({ Region = (368, 389, 42, 7); Name = "Max" }); Click(b)|]
+    | (Action.AllIn, Some b) when b.Name <> "AllIn" -> [|Click({ Region = (368, 389, 42, 7); Name = "Max" }); Click(b)|]
     | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b)|]
     | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"
@@ -154,7 +154,7 @@ module Decide =
         let action = mapAction d.Action screen.Actions
         sprintf "Action is: %A" action |> log
         if (d.Action = Fold && System.String.IsNullOrEmpty(screen.Board) && screen.HeroHand.Contains("A") && history.IsEmpty) then
-          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+          Dumper.SaveBitmap(msg.Bitmap, "Ax_" + msg.TableName)
         let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
         (Some outMsg, newState)
       | None ->

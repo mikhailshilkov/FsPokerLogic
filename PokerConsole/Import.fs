@@ -339,7 +339,7 @@ let importRulesOOP (xlWorkBook : Workbook) bb =
           Range = getCellValueBB "G26"
           Action = Fold }
     |]
-  else
+  else // 8 - 14
      [| { StackRange = range
           History = [Limp]
           Range = getCellValueBB "G3"
@@ -493,15 +493,15 @@ let importOopAdvanced (xlWorkBook : Workbook) =
 
                 [|
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m)]
+                   History = [Raise(0m, 2.5m)]
                    Range = cellValuesRaise.[0]
                    Action = RaiseX 2.5m }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
+                   History = [Raise(0m, 2.5m); Raise(0m, 100m); Raise(0m, 100m)]
                    Range = cellValuesRaise.[0]
                    Action = AllIn }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
+                   History = [Raise(0m, 2.5m); Raise(0m, 100m); RaiseAllIn]
                    Range = cellValuesRaise.[0]
                    Action = Call }
                  { StackRange = (20, 25)
@@ -509,19 +509,19 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                    Range = cellValuesRaise.[1]
                    Action = RaiseX 2.5m }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m)]
+                   History = [Raise(0m, 2.5m)]
                    Range = cellValuesRaise.[2]
                    Action = Call }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m)]
+                   History = [Raise(0m, 2.5m)]
                    Range = fullRange
                    Action = Fold }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m); Raise(0m, 100m); Raise(0m, 100m)]
+                   History = [Raise(0m, 2.5m); Raise(0m, 100m); Raise(0m, 100m)]
                    Range = fullRange
                    Action = Fold }
                  { StackRange = rangeRaise
-                   History = [Raise(0m, 100m); Raise(0m, 100m); RaiseAllIn]
+                   History = [Raise(0m, 2.5m); Raise(0m, 100m); RaiseAllIn]
                    Range = fullRange
                    Action = Fold }
                 |]

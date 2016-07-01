@@ -46,12 +46,14 @@ module SpecialRules =
     imp o.Special
 
   // Game Plan OOP -> Main rule 2
-  let mainRule2 s value h texture o =
+  let mainRule2 s value h o =
+    let monoboardAtFlop = monoboardLength (s.Board |> Array.take 3)
     if List.tryHead h = Some Action.Check      
       && boardAtStreet Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
-      && texture.Monoboard < 3
+      && monoboardAtFlop < 3
       && s.BB <= 30
       && effectiveStackPre s >= 12
+      && o.First = OopDonk.Check
     then 
       if street s = Turn 
          && List.tryLast h = Some Action.Check then { o with First = Donk 75m }
@@ -65,11 +67,6 @@ module SpecialRules =
   let increaseTurnBetEQvsAI s o =
     match street s, o.First, o.Then, s.VillainStack with
       | Turn, Donk _, CallEQ x, 0 -> { o with Then = CallEQ (x + 6) }
-      | _ -> o
-
-  let betSizeOnTurnWithFlushDraw s mono o =
-    match street s, o.First with
-      | Turn, Donk _ when mono >= 2 && mono <= 3 -> { o with First = Donk 62.5m }
       | _ -> o
 
   let allInTurnAfterCheckRaiseInLimpedPot s h o =
@@ -143,12 +140,11 @@ module SpecialRules =
       -> { o with First = OopDonk.Donk 62.5m }
     | _ -> o
 
-  let strategicRulesOop s value history texture (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) o =
+  let strategicRulesOop s value history (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) o =
     let historySimple = List.map (fun x -> x.Action) history    
     let rules = [
-      (mainRule2 s value.Made historySimple texture, None);
+      (mainRule2 s value.Made historySimple, None);
       (increaseTurnBetEQvsAI s, None);
-      (betSizeOnTurnWithFlushDraw s texture.Monoboard, None)
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);
       (bluffyCheckRaiseFlopInLimpedPotFlop bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);

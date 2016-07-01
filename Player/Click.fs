@@ -24,9 +24,10 @@ module Click =
     // Check that amount is OK
     let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
     let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
-    if check b then 
+    if not (check b) then 
       let currentScreen = ScreenRecognition.recognizeScreen(w.Bitmap)
       if currentScreen = screen then
+        //Dumper.SaveBitmap(w.Bitmap, window)
         repeat()
 
   let executeClickAction window s b =
@@ -44,7 +45,7 @@ module Click =
         Thread.Sleep(100)
         if attempts > 1 then
           if b.Name = "Max" && s.HeroStack.IsSome then
-            ensureAmount window s (fun b -> int(b) >= s.HeroStack.Value) (fun () -> imp (attempts-1))
+            ensureAmount window s (fun b -> b <> null && int(b) >= s.HeroStack.Value) (fun () -> imp (attempts-1))
       imp 3
 
   let enterAmount window s i =
@@ -53,7 +54,7 @@ module Click =
       Clicker.backspace 3
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)
-      if attempts > 1 then
+      if attempts > 1 then        
         ensureAmount window s (fun b -> b = i.ToString()) (fun () -> imp (attempts-1))
     imp 3
 

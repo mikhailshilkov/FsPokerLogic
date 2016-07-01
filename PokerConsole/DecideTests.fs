@@ -41,3 +41,7 @@ let ``3bet allin for 2 raise based on 3b shove rules with stats on the edge of t
 [<Fact>]
 let ``3bet allin for 5x raise based on old rules`` () =
   test 100 "Js8c" 60m
+
+[<Fact>]
+let ``3bet 1`` () =
+  test 60 "4h8h" 48m

@@ -16,32 +16,37 @@ let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\Postflo
 let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
 let rules = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
 
-let test vb hand openRange =
+let test s vb hand history openRange =
   let hb = 20
   let bb = 20
-  let hs = 500 - hb
-  let vs = 500 - vb
+  let hs = s - hb
+  let vs = 1000 - s - vb
   let stack = min (hs + hb) (vs + vb)
   let effectiveStack = decimal stack / decimal bb
   let callSize = min (vb - hb) hs
   let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
   let fullHand = parseFullHand hand
-  let history = [WasRaise(decimal(vb) / decimal(bb))]
   let result = decideOnRules rules effectiveStack potOdds openRange history fullHand
   Assert.Equal(Some AllIn, result)
 
+let testVsPfr vb hand openRange = test 500 vb hand [WasRaise(decimal(vb) / 20m)] openRange
+
 [<Fact>]
 let ``3bet allin for 2.5 raise based on old rules`` () =
-  test 50 "AhKh" 60m
+  testVsPfr 50 "AhKh" 60m
 
 [<Fact>]
 let ``3bet allin for 2 raise based on 3b shove rules with stats on the edge of two rows`` () =
-  test 40 "Ad8c" 48m
+  testVsPfr 40 "Ad8c" 48m
 
 [<Fact>]
 let ``3bet allin for 5x raise based on old rules`` () =
-  test 100 "Js8c" 60m
+  testVsPfr 100 "Js8c" 60m
 
 [<Fact>]
 let ``3bet 1`` () =
-  test 60 "4h8h" 48m
+  testVsPfr 60 "4h8h" 48m
+
+[<Fact>]
+let ``push AI with 4bb`` () =
+  test 80 15 "TcTd" [] 0m

@@ -170,13 +170,13 @@ module StringRecognition =
     (Seq.filter ((=) W) seq |> Seq.length) >= x
 
 
-  let removePadding threshold minHeight pixels =
+  let removePadding upThreshold downThreshold minHeight pixels =
       let maxWidth = Array2D.length1 pixels - 1
       let maxHeight = Array2D.length2 pixels - 1
       let firstX = [0..maxWidth] |> Seq.tryFindIndex (fun y -> lessThanXWhite 1 pixels.[y, 0..maxHeight])
       let lastX = [0..maxWidth] |> Seq.tryFindIndexBack (fun y -> lessThanXWhite 1 pixels.[y, 0..maxHeight])
-      let firstY = [0..maxHeight] |> Seq.tryFindIndex (fun x -> lessThanXWhite threshold pixels.[0..maxWidth, x])
-      let lastY = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThanXWhite threshold pixels.[0..maxWidth, x])
+      let firstY = [0..maxHeight] |> Seq.tryFindIndex (fun x -> lessThanXWhite upThreshold pixels.[0..maxWidth, x])
+      let lastY = [0..maxHeight] |> Seq.tryFindIndexBack (fun x -> lessThanXWhite downThreshold pixels.[0..maxWidth, x])
 
       match (firstX, lastX, firstY, lastY) with
       | (Some fx, Some lx, Some fy, Some ly) when fy + minHeight - 1 <= maxHeight -> 
@@ -187,7 +187,7 @@ module StringRecognition =
     if c.B > 180uy && c.G > 180uy && c.R > 180uy then W
     else B
 
-  let recognizeString (matchSymbol: BW list list -> char) threshold minHeight getPixel width height =
+  let recognizeString (matchSymbol: BW list list -> char) upThreshold downThreshold minHeight getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
     let invertifWhiteBackground pixels = 
@@ -229,7 +229,7 @@ module StringRecognition =
     let pixels = 
       Array2D.init width height (fun x y -> isWhite (getPixel x y))
       |> invertifWhiteBackground
-      |> removePadding threshold minHeight
+      |> removePadding upThreshold downThreshold minHeight
         
     let pixelColumns =
       [0..Array2D.length1 pixels - 1] 
@@ -242,23 +242,23 @@ module StringRecognition =
     |> String.Concat
 
   let recognizeNumber x =
-    recognizeString (getChar false numberPatterns) 2 8 x
+    recognizeString (getChar false numberPatterns) 1 2 8 x
 
   let recognizeText getPixel (y:int) width height =
     let o = 
       [0..5]
-      |> Seq.map (fun dy -> recognizeString (getChar false textPatterns) 0 10 (getPixel (y+dy)) width height)
+      |> Seq.map (fun dy -> recognizeString (getChar false textPatterns) 0 0 10 (getPixel (y+dy)) width height)
     o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
 
   let recognizeBetSize x =
-    recognizeString (getChar true number9Patterns) 2 9 x
+    recognizeString (getChar true number9Patterns) 2 2 9 x
 
   let recognizeButton x y z =
-    let b = recognizeString (getChar false buttonPatterns) 2 8 x y z
+    let b = recognizeString (getChar false buttonPatterns) 2 2 8 x y z
     if b <> "?" then b else null
 
   let recognizeBlinds x y z =
-    let s = recognizeString (getChar false blindNumberPatterns) 3 8 x y z
+    let s = recognizeString (getChar false blindNumberPatterns) 3 3 8 x y z
     s.Replace("?", "")
 
   let parseStringPattern getPixel width height =

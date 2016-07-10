@@ -81,10 +81,11 @@ let decideOnRules rules stack odds openingRange history h =
       && stack <= stackMaxF + 0.5m 
       && (isHistoryMatching rule.History history stack odds openingRange)
   let findMatching rs =
-    rs
-    |> Seq.filter (fun r -> isMatching r (normalize h))    
-    |> Seq.tryHead 
-    |> Option.map (fun x -> x.Action)
+    let a =
+      rs
+      |> Seq.filter (fun r -> isMatching r (normalize h))    
+      |> Seq.tryHead 
+    a |> Option.map (fun x -> x.Action)
 
   let (nonFoldRules, foldRules) = rules |> List.partition (fun x -> x.Action <> Fold)
   let nonFold = findMatching nonFoldRules

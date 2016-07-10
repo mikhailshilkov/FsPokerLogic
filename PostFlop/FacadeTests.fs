@@ -198,6 +198,21 @@ let ``2`` () =
   let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "8h3h4dKsJh"; Pot = 100; VillainStack = 390; HeroStack = 610; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
 
+[<Fact>]
+let ``13`` () =
+  let s = { Hand = parseSuitedHand "9sJh"; Board = parseBoard "9cKs7c5d"; Pot = 272; VillainStack = 308; HeroStack = 420; VillainBet = 112; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check; Action.Call; Action.Check] s 0 Action.Fold
+
+[<Fact>]
+let ``14f`` () =
+  let s = { Hand = parseSuitedHand "4hJh"; Board = parseBoard "7d5s8s"; Pot = 120; VillainStack = 290; HeroStack = 590; VillainBet = 40; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 110)
+
+[<Fact>]
+let ``14`` () =
+  let s = { Hand = parseSuitedHand "4hJh"; Board = parseBoard "7d5s8s6d"; Pot = 300; VillainStack = 220; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check; Action.RaiseToAmount 110] s 0 Action.AllIn
+
 
 //let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
 //let xlFlopTurn = openExcel fileNameFlopTurn

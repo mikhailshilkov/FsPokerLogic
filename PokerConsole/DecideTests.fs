@@ -16,8 +16,7 @@ let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\Postflo
 let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
 let rules = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
 
-let test s vb hand history openRange =
-  let hb = 20
+let test s vb hb hand history openRange expected =
   let bb = 20
   let hs = s - hb
   let vs = 1000 - s - vb
@@ -27,9 +26,9 @@ let test s vb hand history openRange =
   let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
   let fullHand = parseFullHand hand
   let result = decideOnRules rules effectiveStack potOdds openRange history fullHand
-  Assert.Equal(Some AllIn, result)
+  Assert.Equal(Some expected, result)
 
-let testVsPfr vb hand openRange = test 500 vb hand [WasRaise(decimal(vb) / 20m)] openRange
+let testVsPfr vb hand openRange = test 500 vb 20 hand [WasRaise(decimal(vb) / 20m)] openRange AllIn
 
 [<Fact>]
 let ``3bet allin for 2.5 raise based on old rules`` () =
@@ -44,9 +43,13 @@ let ``3bet allin for 5x raise based on old rules`` () =
   testVsPfr 100 "Js8c" 60m
 
 [<Fact>]
-let ``3bet 1`` () =
-  testVsPfr 60 "4h8h" 48m
+let ``3bet for bluff`` () =
+  test 500 40 20 "5c6d" [WasRaise 2m] 78m (RaiseBluffX 2.5m)
 
 [<Fact>]
 let ``push AI with 4bb`` () =
-  test 80 15 "TcTd" [] 0m
+  test 80 15 20 "TcTd" [] 0m AllIn
+
+[<Fact>]
+let ``call 4b AI`` () =
+  test 400 400 100 "TsTh" [WasRaise 3m; WasRaise 5m; WasRaiseAllIn] 0m Call

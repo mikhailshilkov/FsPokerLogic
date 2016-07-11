@@ -73,10 +73,18 @@ let ``specialRulesOop does no change based on CallEQOnPairedBoard when board is 
   Assert.Equal(options, actual)
 
 [<Fact>]
-let ``specialRulesOop returns based on CheckCheck`` () =
+let ``specialRulesOop returns Donk based on CheckCheck`` () =
   let options = { defaultOptions with Special = [CheckCheck (Donk 75m, StackOff)] }
-  let expected = { options with First = Donk 75m; Then = StackOff }
+  let expected = { options with First = Donk 75m }
   let history = [Action.Call; Action.Check] // preflop call - flop check check
+  let actual = specialRulesOop defaultFlop history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop returns Stack Off based on CheckCheck`` () =
+  let options = { defaultOptions with Special = [CheckCheck (Donk 75m, StackOff)] }
+  let expected = { options with Then = StackOff }
+  let history = [Action.Call; Action.Check; RaiseToAmount 75] // preflop call - flop check check
   let actual = specialRulesOop defaultFlop history options
   Assert.Equal(expected, actual)
 
@@ -90,7 +98,7 @@ let ``specialRulesOop does no change based on CheckCheck when last action is not
 [<Fact>]
 let ``specialRulesOop does no change based on CheckCheck when last action turn check but flop was call`` () =
   let options = { defaultOptions with Special = [CheckCheck (Donk 75m, StackOff)] }
-  let history = [Action.Call; Action.Check; Action.Call; Action.Check] // preflop call - flop check call - turn check
+  let history = [Action.Call; Action.Check; Action.Call; Action.RaiseToAmount 75] // preflop call - flop check call - turn donk
   let actual = specialRulesOop defaultFlop history options
   Assert.Equal(options, actual)
 

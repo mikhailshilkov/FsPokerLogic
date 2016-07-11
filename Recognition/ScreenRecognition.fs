@@ -36,7 +36,7 @@ module ScreenRecognition =
   }
 
   let print screen =
-    [sprintf "Villain: %s" screen.VillainName;
+    [sprintf "Villain: %s %s" screen.VillainName (if screen.Sitout = Villain then "(sitout)" else "");
      sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
      sprintf "Blinds: %A" screen.Blinds;
      sprintf "Stacks: %A/%A" (Option.toNullable screen.HeroStack) (Option.toNullable screen.VillainStack);

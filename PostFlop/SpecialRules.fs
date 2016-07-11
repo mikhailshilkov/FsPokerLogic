@@ -9,6 +9,12 @@ open Decision
 
 module SpecialRules = 
   let specialRulesOop s history o = 
+    let checkCheckMatch f t other = 
+      match history with
+      | [_; Action.Check] -> { o with First = f } 
+      | [_; Action.Check; Action.RaiseToAmount _]  -> { o with Then = t } 
+      | _ -> other
+
     let rec imp remaining =
       match remaining with
       | CallEQPlusXvsAI dx::rem ->
@@ -24,10 +30,9 @@ module SpecialRules =
           && s.Board |> Array.filter (fun x -> x.Face = Ace) |> Array.length = 1 then 
           { o with First = f; Then = t } 
         else imp rem
-      | CheckCheck(f, t)::rem ->
-        if List.tryLast history = Some Action.Check then { o with First = f; Then = t } else imp rem
-      | CheckCheckAndBoardOvercard(f, t)::rem ->
-        if List.tryLast history = Some Action.Check && isLastBoardCardOvercard s.Board then { o with First = f; Then = t } else imp rem
+      | CheckCheck(f, t)::rem -> checkCheckMatch f t (imp rem)
+      | CheckCheckAndBoardOvercard(f, t)::rem -> 
+        if isLastBoardCardOvercard s.Board then checkCheckMatch f t (imp rem) else imp rem
       | KHighOnPaired::rem ->
         if o.Then = Fold && isPaired s.Board && isXHigh King s.Hand && s.BB <= 30 then 
           { o with Then = CallEQ (if s.BB = 20 then 30 else 25) } 

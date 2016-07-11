@@ -88,6 +88,13 @@ let ``specialRulesOop does no change based on CheckCheck when last action is not
   Assert.Equal(options, actual)
 
 [<Fact>]
+let ``specialRulesOop does no change based on CheckCheck when last action turn check but flop was call`` () =
+  let options = { defaultOptions with Special = [CheckCheck (Donk 75m, StackOff)] }
+  let history = [Action.Call; Action.Check; Action.Call; Action.Check] // preflop call - flop check call - turn check
+  let actual = specialRulesOop defaultFlop history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
 let ``specialRulesOop does not fail CheckCheck when no last action`` () =
   let options = { defaultOptions with Special = [CheckCheck (Donk 75m, StackOff)] }
   let actual = specialRulesOop defaultFlop [] options

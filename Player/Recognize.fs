@@ -15,7 +15,9 @@ module Recognize =
 
   let recognizeActor (window : WindowInfo) =
     let result = recognize' window.Bitmap
+    let heroBet = defaultArg result.HeroBet 0
+    let villainBet = defaultArg result.VillainBet 0
     if not(Array.isEmpty result.Actions) 
-       && (defaultArg result.HeroBet 0 <= defaultArg result.VillainBet 0) then
+       && (heroBet < villainBet || (heroBet = 0 && villainBet = 0)) then
       Some { WindowTitle = window.Title; TableName = window.TableName; Screen = result; Bitmap = window.Bitmap }
     else None    

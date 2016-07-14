@@ -4,10 +4,10 @@ module Options =
 
   type CBetOr = {
     Factor: decimal
-    IfStackFactorLessThan: decimal
+    IfStackFactorLessThan: decimal option
     IfPreStackLessThan: int
   }
-  type CBet = Always of decimal | OrAllIn of CBetOr | OrCheck of CBetOr | Never | Undefined
+  type CBet = Always of decimal | OrAllIn of CBetOr | Never | Undefined
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
   type OnDonk = ForValueStackOff | ForValueStackOffX of int | CallRaisePet | CallEQ of int | Call | Fold | Undefined
 
@@ -27,7 +27,7 @@ module Options =
     | CheckCheck of OopDonk * OopOnCBet
     | CheckCheckAndBoardOvercard of OopDonk * OopOnCBet
     | KHighOnPaired
-    | CheckRaiseBluffOnFlop
+    | NotUsed
   type OptionsOop = {
     First: OopDonk
     Then: OopOnCBet

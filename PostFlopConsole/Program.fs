@@ -56,7 +56,7 @@ let main argv =
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
   let s = { Hand = suitedHand; Board = board; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2 - villainBet; HeroStack = heroStack - bb*2 - heroBet; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let decision = decidePostFlop s value special xlFlopTurn xlTurnDonkRiver
+  let decision = decidePostFlop [] s value special xlFlopTurn xlTurnDonkRiver
 
   try    
     match decision with

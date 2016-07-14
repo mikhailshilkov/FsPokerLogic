@@ -81,7 +81,7 @@ let testPostFlopMotivated h s mono expected =
 
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   let xl = openExcel fileName
-  let actual = decidePostFlopOop h s v t xl bluffy
+  let actual = decidePostFlopOop h s v t xl bluffy (fun _ -> false)
   Assert.Equal(expected, actual.Value.Action)
   closeExcel xl
 
@@ -199,6 +199,11 @@ let ``2`` () =
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
 
 [<Fact>]
+let ``8`` () =
+  let s = { Hand = parseSuitedHand "5s7c"; Board = parseBoard "4cAdQc"; Pot = 200; VillainStack = 370; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff }] s 0 (Action.RaiseToAmount 100)
+
+[<Fact>]
 let ``13`` () =
   let s = { Hand = parseSuitedHand "9sJh"; Board = parseBoard "9cKs7c5d"; Pot = 272; VillainStack = 308; HeroStack = 420; VillainBet = 112; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Call; Action.Check; Action.Call; Action.Check] s 0 Action.Fold
@@ -211,7 +216,7 @@ let ``14f`` () =
 [<Fact>]
 let ``14`` () =
   let s = { Hand = parseSuitedHand "4hJh"; Board = parseBoard "7d5s8s6d"; Pot = 300; VillainStack = 220; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.Call; Action.Check; Action.RaiseToAmount 110] s 0 Action.AllIn
+  testPostFlopMotivated [{ Action = Action.Call; Motivation = None }; { Action = Action.Check; Motivation = None }; { Action = Action.RaiseToAmount 110; Motivation = Some Bluff }] s 0 Action.AllIn
 
 
 //let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"

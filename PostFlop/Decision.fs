@@ -52,7 +52,7 @@ module Decision =
 
   let cbetOr s f defaultAction =
     let size = cbet s.Pot f.Factor
-    if times size f.IfStackFactorLessThan < stack s
+    if times size (defaultArg f.IfStackFactorLessThan 0m) < stack s
       && effectiveStackPre s > f.IfPreStackLessThan 
     then size |> RaiseToAmount
     else defaultAction
@@ -135,7 +135,6 @@ module Decision =
       match options.CbetFactor with
       | Always f -> cbet snapshot.Pot f |> RaiseToAmount |> Some
       | OrAllIn f -> cbetOr snapshot f Action.AllIn |> Some
-      | OrCheck f -> cbetOr snapshot f Action.Check |> Some
       | Never -> Action.Check |> Some
       | CBet.Undefined -> None      
       |> Option.map (ensureMinRaise snapshot)

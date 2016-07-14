@@ -14,7 +14,7 @@ let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face
 let test5MonoboardRiver s combo expected =
   let v = { Made = Flush(combo); FD = NoFD; FD2 = NoFD; SD = NoSD }
   let t = { Streety = false; DoublePaired = false; Monoboard = 5 }
-  let actual = decidePostFlop s v t (null, 1) (null, 2)
+  let actual = decidePostFlop [] s v t (null, 1) (null, 2)
   Assert.Equal(expected |> Some, actual)
 
 [<Fact>]

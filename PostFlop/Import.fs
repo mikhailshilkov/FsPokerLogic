@@ -103,7 +103,7 @@ module Import =
     >> Seq.sum 
     >> (+) 6
 
-  let importOptions (xlWorkBook : Workbook) (hand: SuitedHand) (board: Board) =
+  let importOptions (xlWorkBook : Workbook) (hand: SuitedHand) (board: Board) limpedPot =
     let h = toHand hand
     let worksheetName = [h.Face1; h.Face2] |> List.sortByDescending faceValue |> List.map faceToChar |> String.Concat
     let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
@@ -116,18 +116,18 @@ module Import =
       TurnFVCbetCards = cellValues.[6].Replace(" ", "")
       TurnFVCbetFactor = 
         match parseDecimal cellValues.[7] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 1.35m; IfPreStackLessThan = 14 }
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = None; IfPreStackLessThan = if limpedPot then 8 else 14 }
         | None -> Never 
       TurnCheckRaise = parseCheckRaise cellValues.[8] "100"
       TurnFBCbetCards = cellValues.[9].Replace(" ", "")
       TurnFBCbetFactor =
         match parseDecimal cellValues.[10] with
-        | Some n -> OrCheck { Factor = n; IfStackFactorLessThan = 2.8m; IfPreStackLessThan = 18 }
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = None; IfPreStackLessThan = if limpedPot then 8 else 14 }
         | None -> Never 
       TurnFDCbetCards = cellValues.[11].Replace(" ", "")
       TurnFDCbetFactor = 
         match parseDecimal cellValues.[12] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = 2.5m; IfPreStackLessThan = 15 }
+        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = if limpedPot then 8 else 15 }
         | None -> Never 
     }
 
@@ -188,7 +188,7 @@ module Import =
 
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with
-    | "stack off" -> (OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 4m/3m; IfPreStackLessThan = 0 }, OnCheckRaise.StackOff)
+    | "stack off" -> (OrAllIn { Factor = 62.5m; IfStackFactorLessThan = Some(4m/3m); IfPreStackLessThan = 0 }, OnCheckRaise.StackOff)
     | "check" -> (Never, OnCheckRaise.Undefined)
     | Decimal d -> (Always(d), OnCheckRaise.CallEQ 11)
     | _ -> failwith "Failed parsing River on check"
@@ -249,7 +249,7 @@ module Import =
       | "7" -> CheckCheck (Donk 75m, StackOff)
       | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
       | "60" -> KHighOnPaired
-      | "1" -> CheckRaiseBluffOnFlop
+      | "1" -> NotUsed
       | _ -> failwith "Failed parsing special rules"
     specialRules.Split(',') 
     |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
@@ -493,3 +493,7 @@ module Import =
     |> List.ofArray
     |> List.takeWhile (String.IsNullOrEmpty >> not)
     |> List.map (fun x -> x.Split(' ') |> List.ofArray |> List.map (fun c -> parseFace c.[0]))
+
+  let importRange sheetName (xlWorkBook : Workbook) =
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    (getCellValues xlWorkSheet "A2" "B2" ).[0]

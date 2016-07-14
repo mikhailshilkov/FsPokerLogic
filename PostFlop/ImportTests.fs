@@ -32,26 +32,27 @@ module ImportTests =
     Assert.Equal(expected, actual)
 
   [<Theory>]
-  [<InlineData("3c4s5d")>]
-  [<InlineData("3c4s5dQd")>]
-  let ``importOptions returns correct options for a sample cell`` boardString =
+  [<InlineData("3c4s5d", false, 14, 14, 15)>]
+  [<InlineData("3c4s5dQd", false, 14, 14, 15)>]
+  [<InlineData("3c4s5dQd", true, 8, 8, 8)>]
+  let ``importOptions returns correct options for a sample cell`` boardString limpedPot ifPre1 ifPre2 ifPre3 =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
     let xl = openExcel fileName
     let board = parseBoard boardString
     let hand = { Card1 = { Face = Ace; Suit = Clubs; }; Card2 = { Face = Two; Suit = Spades } }
-    let actual = importOptions (fst xl) hand board
+    let actual = importOptions (fst xl) hand board limpedPot
     let expected = { 
       CbetFactor = Always 50m
       CheckRaise = OnCheckRaise.CallEQ 1
       Donk = OnDonk.CallEQ 17
       DonkFlashDraw = Some OnDonk.ForValueStackOff
       TurnFVCbetCards = "8,Q"
-      TurnFVCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 1.35m; IfPreStackLessThan = 14 }
+      TurnFVCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = None; IfPreStackLessThan = ifPre1 }
       TurnCheckRaise = OnCheckRaise.StackOff
       TurnFBCbetCards = "T,J,K,A"
-      TurnFBCbetFactor = OrCheck { Factor = 62.5m; IfStackFactorLessThan = 2.8m; IfPreStackLessThan = 18 }
+      TurnFBCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = None; IfPreStackLessThan = ifPre2 }
       TurnFDCbetCards = "8,T,J,Q"
-      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = 2.5m; IfPreStackLessThan = 15 }
+      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = ifPre3 }
     }
     Assert.Equal(expected, actual)
     closeExcel xl
@@ -294,9 +295,6 @@ module ImportTests =
 
   [<Fact>]
   let ``parseOopSpecialRules 60 works`` () = testParseOopSpecialRules "60" KHighOnPaired
-
-  [<Fact>]
-  let ``parseOopSpecialRules 1 works`` () = testParseOopSpecialRules "1" CheckRaiseBluffOnFlop
 
   [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =

@@ -15,14 +15,16 @@ module Texture =
     else
       { Options.CbetFactor = eo.CbetFactor; CheckRaise = eo.CheckRaise; Donk = eo.Donk }
 
-  let toTurnOptions turnFace isFlush isFlushDraw onDonk (eo:ExcelOptions) =
+  let toTurnOptions turnFace isFlush isFlushDraw onDonk monoboard (eo:ExcelOptions) =
     let turn = turnFace |> faceToChar |> string
     if isFlush then
       { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = onDonk }
     else if isFlushDraw && eo.TurnFDCbetCards.Contains(turn) then
       { Options.CbetFactor = eo.TurnFDCbetFactor; CheckRaise = OnCheckRaise.AllIn; Donk = onDonk }
     else if eo.TurnFVCbetCards.Contains(turn) then
-      { Options.CbetFactor = eo.TurnFVCbetFactor; CheckRaise = eo.TurnCheckRaise; Donk = onDonk }
+      { Options.CbetFactor = (if monoboard < 2 then eo.TurnFVCbetFactor else Always 62.5m) 
+        CheckRaise = eo.TurnCheckRaise
+        Donk = onDonk }
     else if eo.TurnFBCbetCards.Contains(turn) then
       { Options.CbetFactor = eo.TurnFBCbetFactor; CheckRaise = OnCheckRaise.Fold; Donk = onDonk }
     else

@@ -15,19 +15,20 @@ module Facade =
 
   let defaultArgLazy o (p:'a Lazy) = match o with | Some v -> v | None -> p.Force()
 
-  let decidePostFlop s value texture xlFlopTurn xlTurnDonkRiver =
+  let decidePostFlop history s value texture xlFlopTurn xlTurnDonkRiver =
+    let limpedPot = match history with | { Action = Action.Call; Motivation = _ } :: _ -> true | _ -> false
     (match street s with
     | River ->
       let mono = if texture.Monoboard >= 4 then monoboardRiver texture.Monoboard value.Made else None
       defaultArgLazy mono (lazy (importRiver (fst xlTurnDonkRiver) texture value.Made))
     | Turn ->
-      let eo = importOptions (fst xlFlopTurn) s.Hand s.Board 
+      let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot
       let turnFace = s.Board.[3].Face
       let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) texture value
-      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) (isFlushDrawWith2 s.Hand s.Board) turnDonkOption eo
+      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) (isFlushDrawWith2 s.Hand s.Board) turnDonkOption texture.Monoboard eo
       |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)
     | Flop ->
-      let eo = importOptions (fst xlFlopTurn) s.Hand s.Board 
+      let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot
       toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eo
       |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
     )
@@ -47,7 +48,7 @@ module Facade =
     | [] -> Some "hero call raise pre"
     | _ -> None
 
-  let decidePostFlopOop history s value texture xl bluffyFlops =
+  let decidePostFlopOop history s value texture xl bluffyFlops bluffyHand =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
     let preFlopPattern = pickOopSheet historyTuples s
@@ -57,6 +58,6 @@ module Facade =
     | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
     | _ -> None
     |> Option.map (specialRulesOop s historySimple)
-    |> Option.map (strategicRulesOop s value history bluffyFlops)
+    |> Option.map (strategicRulesOop s value history bluffyFlops bluffyHand)
     |> Option.map (fun (o, m) -> (decideOop s o, m))
     |> Option.bind (fun (ao, m) -> ao |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m }))

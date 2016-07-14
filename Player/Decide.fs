@@ -23,12 +23,16 @@ module Decide =
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) = 
+  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking, bluffyHandsForFlopCheckRaise) = 
     importRuleFromExcel (fun x -> (importOopAdvanced x, 
                                    importHudData x, 
                                    importFlopList "bluffy hero ch-r flop vs limp" x,
                                    importFlopList "bluffy hero ch-r flop vs minr" x,
-                                   importFlopList "bluffy overtaking, vill ch b fl" x)) fileNameAdvancedOOP
+                                   importFlopList "bluffy overtaking, vill ch b fl" x,
+                                   importRange "herBLUF ch-r flop vsCALL minrPR" x)) fileNameAdvancedOOP
+  let isHandBluffyForFlopCheckRaise hand = 
+    let range = Ranges.parseRange bluffyHandsForFlopCheckRaise
+    Ranges.isHandInRange range (toHand hand)
   let rulesLow = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 
@@ -80,9 +84,9 @@ module Decide =
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         if screen.Button = Hero then 
-          decidePostFlop s value special xlFlopTurn xlTurnDonkRiver |> Option.map notMotivated
+          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map notMotivated
         else
-          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking)
+          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) isHandBluffyForFlopCheckRaise
       | _ -> None
 
     match screen.Sitout, screen.Board with
@@ -153,8 +157,8 @@ module Decide =
         sprintf "Decision is: %A" d |> log
         let action = mapAction d.Action screen.Actions
         sprintf "Action is: %A" action |> log
-        if (d.Action = Fold && System.String.IsNullOrEmpty(screen.Board) && screen.HeroHand.Contains("A") && history.IsEmpty) then
-          Dumper.SaveBitmap(msg.Bitmap, "Ax_" + msg.TableName)
+        if (d.Action = SitBack) then
+          Dumper.SaveBitmap(msg.Bitmap, "SitBack_" + msg.TableName)
         let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
         (Some outMsg, newState)
       | None ->

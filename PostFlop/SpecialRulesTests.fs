@@ -109,9 +109,18 @@ let ``specialRulesOop does not fail CheckCheck when no last action`` () =
   Assert.Equal(options, actual)
 
 [<Fact>]
-let ``specialRulesOop returns based on CheckCheckAndBoardOvercard`` () =
+let ``specialRulesOop returns first based on CheckCheckAndBoardOvercard`` () =
   let options = { defaultOptions with Special = [CheckCheckAndBoardOvercard(Donk 75m,CallEQ 22)] }
-  let expected = { options with First = Donk 75m; Then = CallEQ 22 }
+  let expected = { options with First = Donk 75m }
+  let s = { defaultFlop with Board = parseBoard "Js6c9dQs" }
+  let history = [Action.Call; Action.Check] // preflop call - flop check check
+  let actual = specialRulesOop s history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop returns then based on CheckCheckAndBoardOvercard`` () =
+  let options = { defaultOptions with Special = [CheckCheckAndBoardOvercard(Donk 75m,CallEQ 22)] }
+  let expected = { options with First = Donk 75m }
   let s = { defaultFlop with Board = parseBoard "Js6c9dQs" }
   let history = [Action.Call; Action.Check] // preflop call - flop check check
   let actual = specialRulesOop s history options
@@ -121,7 +130,8 @@ let ``specialRulesOop returns based on CheckCheckAndBoardOvercard`` () =
 let ``specialRulesOop does no change based on CheckCheckAndBoardOvercard when not an overcard`` () =
   let options = { defaultOptions with Special = [CheckCheckAndBoardOvercard(Donk 75m,CallEQ 22)] }
   let s = { defaultFlop with Board = parseBoard "Js6c9dJc" }
-  let history = [Action.Call; Action.Check] // preflop call - flop check check
+  let expected = { options with Then = StackOff }
+  let history = [Action.Call; Action.Check; RaiseToAmount 75] // preflop call - flop check check - turn check
   let actual = specialRulesOop s history options
   Assert.Equal(options, actual)
 
@@ -178,14 +188,6 @@ let ``specialRulesOop does no change based on KHighOnPaired on higher blind leve
   Assert.Equal(options, actual)
 
 [<Fact>]
-let ``specialRulesOop returns based on CheckRaiseBluffOnFlop with all conditions true`` () =
-  let options = { defaultOptions with Special = [CheckRaiseBluffOnFlop] }
-  let s = { defaultFlop with Pot = 120; VillainBet = 40; Board = parseBoard "6s4cJd"; Hand = parseSuitedHand "Ks2d" }
-  let expected = { options with First = Check; Then = RaiseFold(2.75m) }
-  let actual = specialRulesOop s [] options
-  Assert.Equal(expected, actual)
-
-[<Fact>]
 let ``specialRulesOop applies not-first rule from the list too`` () =
   let options = { defaultOptions with Special = [BoardAce(OopDonk.AllIn, AllIn); BoardOvercard(Check,Fold); PairedBoard (Check, CallEQ 22)] }
   let expected = { options with First = Check; Then = CallEQ 22 }
@@ -205,11 +207,11 @@ let ``specialRulesOop applies many rules in order`` () =
 let strategicRulesOop' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
   let history = h |> List.map (fun x -> { Action = x; Motivation = None })
-  strategicRulesOop s value history bluffyCheckRaiseFlops defaultOptions
+  strategicRulesOop s value history bluffyCheckRaiseFlops (fun _ -> false) defaultOptions
 
 let strategicRulesOop2' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
-  strategicRulesOop s value h bluffyCheckRaiseFlops defaultOptions
+  strategicRulesOop s value h bluffyCheckRaiseFlops (fun _ -> false) defaultOptions
 
 [<Fact>]
 let ``strategicRulesOop takes over Turn check-check on flop, no Ace and low deep stack`` () =
@@ -229,7 +231,7 @@ let ``strategicRulesOop CallEQ + 6 vs AI on turn`` () =
   let s = { defaultTurn with VillainStack = 0 }
   let o = { defaultOptions with First = Donk 75m; Then = CallEQ 20 }
   let value = handValueWithDraws s.Hand s.Board
-  let actual = strategicRulesOop s value [] ([], [], []) o
+  let actual = strategicRulesOop s value [] ([], [], []) (fun _ -> false) o
   let expected = { o with Then = CallEQ 26 }
   Assert.Equal(expected, fst actual)
 
@@ -249,7 +251,7 @@ let ``strategicRulesOop check/call paired turn after calling flop with second pa
 
 [<Fact>]
 let ``strategicRulesOop bluffy check raise flop minraised pf`` () =
-  let s = { defaultFlop with Hand = parseSuitedHand "7s2c"; Board = parseBoard "3d3h6s"; VillainBet = 40; Pot = 120 }
+  let s = { defaultFlop with Hand = parseSuitedHand "7s4c"; Board = parseBoard "3d3h6s"; VillainBet = 40; Pot = 120 }
   let actual = strategicRulesOop' s [Action.Call; Action.Check] ([], [[Three;Three;Six]], [])
   let expected = { defaultOptions with Then = RaiseFold(2.75m) }
   Assert.Equal(expected, fst actual)

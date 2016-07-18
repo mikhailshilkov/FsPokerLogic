@@ -494,6 +494,7 @@ module Import =
     |> List.takeWhile (String.IsNullOrEmpty >> not)
     |> List.map (fun x -> x.Split(' ') |> List.ofArray |> List.map (fun c -> parseFace c.[0]))
 
-  let importRange sheetName (xlWorkBook : Workbook) =
+  let importRange sheetName row (xlWorkBook : Workbook) =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    (getCellValues xlWorkSheet "A2" "B2" ).[0]
+    let rowString = row |> string
+    (getCellValues xlWorkSheet ("A" + rowString) ("B" + rowString) ).[0]

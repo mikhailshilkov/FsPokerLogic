@@ -42,7 +42,7 @@ module SpecialRules =
     imp o.Special
 
   // Game Plan OOP -> Main rule 2
-  let mainRule2 s value h o =
+  let overtakeLimpedPot overtakyHand s value h o =
     let monoboardAtFlop = monoboardLength (s.Board |> Array.take 3)
     if List.tryHead h = Some Action.Check      
       && boardAtStreet Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
@@ -50,6 +50,7 @@ module SpecialRules =
       && s.BB <= 30
       && effectiveStackPre s >= 12
       && o.First = OopDonk.Check
+      && (value.Made <> Nothing || value.SD = OpenEnded || overtakyHand s.Hand)
     then 
       if street s = Turn 
          && List.tryLast h = Some Action.Check then { o with First = Donk 75m }
@@ -138,10 +139,10 @@ module SpecialRules =
       -> { o with First = OopDonk.Donk 62.5m }
     | _ -> o
 
-  let strategicRulesOop s value history (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) bluffyHand o =
+  let strategicRulesOop s value history (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (bluffyHand, overtakyHand) o =
     let historySimple = List.map (fun x -> x.Action) history    
     let rules = [
-      (mainRule2 s value.Made historySimple, None);
+      (overtakeLimpedPot overtakyHand s value historySimple, None);
       (increaseTurnBetEQvsAI s, None);
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);

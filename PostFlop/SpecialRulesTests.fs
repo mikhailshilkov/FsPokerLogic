@@ -203,15 +203,16 @@ let ``specialRulesOop applies many rules in order`` () =
   let actual = specialRulesOop s [] options
   Assert.Equal(expected, actual)
 
+let never = fun _ -> false
 
 let strategicRulesOop' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
   let history = h |> List.map (fun x -> { Action = x; Motivation = None })
-  strategicRulesOop s value history bluffyCheckRaiseFlops (fun _ -> false) defaultOptions
+  strategicRulesOop s value history bluffyCheckRaiseFlops (never, never) defaultOptions
 
 let strategicRulesOop2' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
-  strategicRulesOop s value h bluffyCheckRaiseFlops (fun _ -> false) defaultOptions
+  strategicRulesOop s value h bluffyCheckRaiseFlops (never, never) defaultOptions
 
 [<Fact>]
 let ``strategicRulesOop takes over Turn check-check on flop, no Ace and low deep stack`` () =
@@ -231,7 +232,7 @@ let ``strategicRulesOop CallEQ + 6 vs AI on turn`` () =
   let s = { defaultTurn with VillainStack = 0 }
   let o = { defaultOptions with First = Donk 75m; Then = CallEQ 20 }
   let value = handValueWithDraws s.Hand s.Board
-  let actual = strategicRulesOop s value [] ([], [], []) (fun _ -> false) o
+  let actual = strategicRulesOop s value [] ([], [], []) (never, never) o
   let expected = { o with Then = CallEQ 26 }
   Assert.Equal(expected, fst actual)
 

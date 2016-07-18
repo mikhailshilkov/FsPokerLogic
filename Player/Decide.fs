@@ -23,16 +23,20 @@ module Decide =
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
   let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking, bluffyHandsForFlopCheckRaise) = 
+  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking, bluffyHandsForFlopCheckRaise, notOvertakyHandsInLimpedPot) = 
     importRuleFromExcel (fun x -> (importOopAdvanced x, 
                                    importHudData x, 
                                    importFlopList "bluffy hero ch-r flop vs limp" x,
                                    importFlopList "bluffy hero ch-r flop vs minr" x,
                                    importFlopList "bluffy overtaking, vill ch b fl" x,
-                                   importRange "herBLUF ch-r flop vsCALL minrPR" x)) fileNameAdvancedOOP
+                                   importRange "herBLUF ch-r flop vsCALL minrPR" 2 x,
+                                   importRange "extras" 1 x)) fileNameAdvancedOOP
   let isHandBluffyForFlopCheckRaise hand = 
     let range = Ranges.parseRange bluffyHandsForFlopCheckRaise
     Ranges.isHandInRange range (toHand hand)
+  let isHandOvertakyInLimpedPot hand =
+    let range = Ranges.parseRange notOvertakyHandsInLimpedPot
+    Ranges.isHandInRange range (toHand hand) |> not
   let rulesLow = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 
@@ -86,7 +90,7 @@ module Decide =
         if screen.Button = Hero then 
           decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map notMotivated
         else
-          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) isHandBluffyForFlopCheckRaise
+          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot)
       | _ -> None
 
     match screen.Sitout, screen.Board with

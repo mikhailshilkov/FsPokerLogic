@@ -77,7 +77,7 @@ closeExcel adxl
 
 let testPostFlopMotivated h s mono expected =
   let v = handValueWithDraws s.Hand s.Board
-  let t = { Streety = false; DoublePaired = false; Monoboard = mono }
+  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = mono }
 
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   let xl = openExcel fileName

@@ -116,18 +116,18 @@ module Import =
       TurnFVCbetCards = cellValues.[6].Replace(" ", "")
       TurnFVCbetFactor = 
         match parseDecimal cellValues.[7] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = None; IfPreStackLessThan = if limpedPot then 8 else 14 }
+        | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfPreStackLessThan = if limpedPot then 8 else 14 }
         | None -> Never 
       TurnCheckRaise = parseCheckRaise cellValues.[8] "100"
       TurnFBCbetCards = cellValues.[9].Replace(" ", "")
       TurnFBCbetFactor =
         match parseDecimal cellValues.[10] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = None; IfPreStackLessThan = if limpedPot then 8 else 14 }
+        | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfPreStackLessThan = if limpedPot then 8 else 14 }
         | None -> Never 
       TurnFDCbetCards = cellValues.[11].Replace(" ", "")
       TurnFDCbetFactor = 
         match parseDecimal cellValues.[12] with
-        | Some n -> OrAllIn { Factor = n; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = if limpedPot then 8 else 15 }
+        | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = if limpedPot then 8 else 15 }
         | None -> Never 
     }
 
@@ -188,7 +188,7 @@ module Import =
 
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with
-    | "stack off" -> (OrAllIn { Factor = 62.5m; IfStackFactorLessThan = Some(4m/3m); IfPreStackLessThan = 0 }, OnCheckRaise.StackOff)
+    | "stack off" -> (OrAllIn { DefaultCBetOr with Factor = 62.5m; IfStackFactorLessThan = Some(4m/3m) }, OnCheckRaise.StackOff)
     | "check" -> (Never, OnCheckRaise.Undefined)
     | Decimal d -> (Always(d), OnCheckRaise.CallEQ 11)
     | _ -> failwith "Failed parsing River on check"

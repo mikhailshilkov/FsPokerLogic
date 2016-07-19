@@ -214,17 +214,22 @@ let strategicRulesOop2' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
   strategicRulesOop s value h bluffyCheckRaiseFlops (never, never) defaultOptions
 
+let strategicRulesOop3' s h bluffyCheckRaiseFlops hands =
+  let value = handValueWithDraws s.Hand s.Board
+  let history = h |> List.map (fun x -> { Action = x; Motivation = None })
+  strategicRulesOop s value history bluffyCheckRaiseFlops hands defaultOptions
+
 [<Fact>]
 let ``strategicRulesOop takes over Turn check-check on flop, no Ace and low deep stack`` () =
   let expected = { defaultOptions with First = Donk 75m }
-  let actual = strategicRulesOop' defaultTurn [Action.Check; Action.Check] ([], [], [])
+  let actual = strategicRulesOop3' defaultTurn [Action.Check; Action.Check] ([], [], []) (never, never >> not)
   Assert.Equal(expected, fst actual)
 
 [<Fact>]
 let ``strategicRulesOop cbets River after take over Turn`` () =
   let s = { defaultRiver with Pot = 248 }
   let expected = { defaultOptions with First = Donk 50m }
-  let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 75] ([], [], [])
+  let actual = strategicRulesOop3' s [Action.Check; Action.Check; Action.RaiseToAmount 75] ([], [], []) (never, never >> not)
   Assert.Equal(expected, fst actual)
 
 [<Fact>]

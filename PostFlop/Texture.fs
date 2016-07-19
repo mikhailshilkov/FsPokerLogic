@@ -20,7 +20,7 @@ module Texture =
     if isFlush then
       { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = onDonk }
     else if isFlushDraw && eo.TurnFDCbetCards.Contains(turn) then
-      { Options.CbetFactor = eo.TurnFDCbetFactor; CheckRaise = OnCheckRaise.AllIn; Donk = onDonk }
+      { Options.CbetFactor = Always 75m; CheckRaise = OnCheckRaise.AllIn; Donk = onDonk }
     else if eo.TurnFVCbetCards.Contains(turn) then
       { Options.CbetFactor = (if monoboard < 2 then eo.TurnFVCbetFactor else Always 62.5m) 
         CheckRaise = eo.TurnCheckRaise

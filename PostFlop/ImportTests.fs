@@ -11,7 +11,7 @@ module ImportTests =
   open System.Runtime.InteropServices
   open Excel.Import
 
-  let defaultTexture = { Streety = false; DoublePaired = false; Monoboard = 2 }
+  let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = 2 }
   let defaultOptions = { First = Check; Then = Fold; Special = [] }
 
   [<Theory>]
@@ -47,12 +47,12 @@ module ImportTests =
       Donk = OnDonk.CallEQ 17
       DonkFlashDraw = Some OnDonk.ForValueStackOff
       TurnFVCbetCards = "8,Q"
-      TurnFVCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = None; IfPreStackLessThan = ifPre1 }
+      TurnFVCbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfPreStackLessThan = ifPre1 }
       TurnCheckRaise = OnCheckRaise.StackOff
       TurnFBCbetCards = "T,J,K,A"
-      TurnFBCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = None; IfPreStackLessThan = ifPre2 }
+      TurnFBCbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfPreStackLessThan = ifPre2 }
       TurnFDCbetCards = "8,T,J,Q"
-      TurnFDCbetFactor = OrAllIn { Factor = 62.5m; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = ifPre3 }
+      TurnFDCbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = ifPre3 }
     }
     Assert.Equal(expected, actual)
     closeExcel xl

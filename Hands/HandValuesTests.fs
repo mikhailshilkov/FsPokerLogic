@@ -142,6 +142,7 @@ let ``TwoOvercards`` handS flopS =
 
 [<Theory>]
 [<InlineData("7s2c", "AdKdJhTh8c")>]
+[<InlineData("AsKc", "7d2dJhTh8c")>]
 let ``Nothing`` handS flopS =
   Nothing |> test handS flopS
 

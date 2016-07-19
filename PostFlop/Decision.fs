@@ -32,7 +32,9 @@ module Decision =
     | Turn -> 4
     | Flop -> 3
 
-  let boardAtStreet street board = Array.take (streetIndex street) board
+  let boardAtStreet street board = 
+    let indx = min (streetIndex street) (Array.length board)
+    Array.take indx board
 
   let roundTo5 v = (v + 2) / 5 * 5
   let potPre s = s.Pot - s.HeroBet - s.VillainBet

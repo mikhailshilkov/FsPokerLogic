@@ -246,7 +246,7 @@ module HandValues =
       | Some(4) -> Pair(Fourth)
       | Some(5) -> Pair(Fifth)
       | _ -> 
-        if overcards hand board >= 2 then TwoOvercards else Nothing
+        if overcards hand board >= 2 && board.Length < 5 then TwoOvercards else Nothing
 
   let handValueWithDraws hand board =
     { Made = handValue hand board
@@ -258,11 +258,13 @@ module HandValues =
   type BoardTexture = { 
     Streety: bool
     DoublePaired: bool
+    ThreeOfKind: bool
     Monoboard: int }
 
   let boardTexture board =
     { Streety = isStreety 4 1 board 
       DoublePaired = isDoublePaired board
+      ThreeOfKind = cardValueGroups board |> Seq.head = 3
       Monoboard = monoboardLength board }
 
   open System

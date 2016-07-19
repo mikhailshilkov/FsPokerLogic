@@ -6,7 +6,9 @@ module Options =
     Factor: decimal
     IfStackFactorLessThan: decimal option
     IfPreStackLessThan: int
+    IfRemainingChipsLessThan: int
   }
+  let DefaultCBetOr = { Factor = 0m; IfStackFactorLessThan = None; IfPreStackLessThan = 0; IfRemainingChipsLessThan = 0 }
   type CBet = Always of decimal | OrAllIn of CBetOr | Never | Undefined
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
   type OnDonk = ForValueStackOff | ForValueStackOffX of int | CallRaisePet | CallEQ of int | Call | Fold | Undefined

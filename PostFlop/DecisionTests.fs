@@ -217,14 +217,14 @@ module DecisionTests =
 
   [<Fact>]
   let ``Turn: Cbet all-in for value with effective stack 14bb or less`` () =
-    let options = { defaultOptions with CbetFactor = OrAllIn { Factor = 50m; IfPreStackLessThan = 14; IfStackFactorLessThan = None } }
+    let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 50m; IfPreStackLessThan = 14 } }
     let snapshot = { defaultTurn with HeroStack = 200; VillainStack = 620 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Some Action.AllIn, actual)
 
   [<Fact>]
   let ``Turn: Cbet all-in for value with effective stack < 2 bets`` () =
-    let options = { defaultOptions with CbetFactor = OrAllIn { Factor = 75m; IfStackFactorLessThan = Some 2m; IfPreStackLessThan = 100 } }
+    let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfStackFactorLessThan = Some 2m; IfPreStackLessThan = 100 } }
     let snapshot = { defaultTurn with Pot = 160; HeroStack = 230; VillainStack = 610 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Some Action.AllIn, actual)
@@ -238,7 +238,7 @@ module DecisionTests =
 
   [<Fact>]
   let ``Turn: Cbet allin for bluff with effective stack 18bb or less`` () =
-    let options = { defaultOptions with CbetFactor = OrAllIn { Factor = 62.5m; IfPreStackLessThan = 18; IfStackFactorLessThan = None } }
+    let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfPreStackLessThan = 18 } }
     let snapshot = { defaultTurn with HeroStack = 273; VillainStack = 547 }
     let actual = Decision.decide snapshot options
     Assert.Equal(Some Action.AllIn, actual)

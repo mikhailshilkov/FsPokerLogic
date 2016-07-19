@@ -16,7 +16,9 @@ module Facade =
   let defaultArgLazy o (p:'a Lazy) = match o with | Some v -> v | None -> p.Force()
 
   let decidePostFlop history s value texture xlFlopTurn xlTurnDonkRiver =
-    let limpedPot = match history with | { Action = Action.Call; Motivation = _ } :: _ -> true | _ -> false
+    let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
+    let historySimple = List.map fst historyTuples
+    let limpedPot = match historySimple with | Action.Call :: _ -> true | _ -> false
     (match street s with
     | River ->
       let mono = if texture.Monoboard >= 4 then monoboardRiver texture.Monoboard value.Made else None
@@ -32,7 +34,7 @@ module Facade =
       toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eo
       |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
     )
-    |> augmentOptions s value.Made
+    |> augmentOptions s value texture historySimple
     |> decide s
 
   let rec pickOopSheet history s =

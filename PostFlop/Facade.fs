@@ -27,7 +27,7 @@ module Facade =
       let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot
       let turnFace = s.Board.[3].Face
       let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) texture value
-      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) (isFlushDrawWith2 s.Hand s.Board) turnDonkOption texture.Monoboard eo
+      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) turnDonkOption texture.Monoboard eo
       |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)
     | Flop ->
       let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot

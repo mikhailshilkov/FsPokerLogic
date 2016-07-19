@@ -51,8 +51,6 @@ module ImportTests =
       TurnCheckRaise = OnCheckRaise.StackOff
       TurnFBCbetCards = "T,J,K,A"
       TurnFBCbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfPreStackLessThan = ifPre2 }
-      TurnFDCbetCards = "8,T,J,Q"
-      TurnFDCbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = ifPre3 }
     }
     Assert.Equal(expected, actual)
     closeExcel xl

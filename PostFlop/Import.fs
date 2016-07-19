@@ -21,8 +21,6 @@ module Import =
     TurnCheckRaise: OnCheckRaise
     TurnFBCbetCards: string
     TurnFBCbetFactor: CBet
-    TurnFDCbetCards: string
-    TurnFDCbetFactor: CBet
   }
 
   let getCellValue (sheet : Worksheet) (name : string) = 
@@ -123,11 +121,6 @@ module Import =
       TurnFBCbetFactor =
         match parseDecimal cellValues.[10] with
         | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfPreStackLessThan = if limpedPot then 8 else 14 }
-        | None -> Never 
-      TurnFDCbetCards = cellValues.[11].Replace(" ", "")
-      TurnFDCbetFactor = 
-        match parseDecimal cellValues.[12] with
-        | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfStackFactorLessThan = Some 2.5m; IfPreStackLessThan = if limpedPot then 8 else 15 }
         | None -> Never 
     }
 

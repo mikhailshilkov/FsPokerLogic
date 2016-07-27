@@ -230,6 +230,12 @@ module ImportTests =
   [<Fact>]
   let ``parseFlopOop ch/r/20 works`` () = testParseFlopOop "ch/r/20" Check (RaiseCallEQ 20)
 
+  [<Fact>]
+  let ``parseFlopOop ch/25/ovso works`` () = 
+    let actual = parseOopOption "ch/25@ovso" ""
+    let expected = { defaultOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff)] } |> Some
+    Assert.Equal(expected, actual)
+
   let testParseOopSpecialRules s e =
     let actual = parseOopSpecialRules s |> List.head
     Assert.Equal(e, actual)

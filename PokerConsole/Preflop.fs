@@ -66,7 +66,7 @@ let isHistoryMatching ranges history stack odds openingRange =
       | RaiseEQ eq, WasRaise _ -> eq >= odds
       | RaiseFor3BetShove(cra, orathres), WasRaise v when v <= 2.49m -> 
         let k = if3BetShove v cra openingRange (stack*2m)
-        k <= orathres && k > orathres - 0.5m
+        (orathres >= 45m || k <= orathres) && (orathres <= 27m || k > orathres - 0.5m) // 27 is min and 45 is max defined
       | BluffableRaise, WasRaise v -> openingRange > 60m && v = 2m
       | _ -> false)
   else false

@@ -32,11 +32,11 @@ module Decide =
                                    importRange "herBLUF ch-r flop vsCALL minrPR" 2 x,
                                    importRange "extras" 1 x)) fileNameAdvancedOOP
   let isHandBluffyForFlopCheckRaise hand = 
-    let range = Ranges.parseRange bluffyHandsForFlopCheckRaise
-    Ranges.isHandInRange range (toHand hand)
+    let ranges = Ranges.parseRanges bluffyHandsForFlopCheckRaise
+    Ranges.isHandInRanges ranges (toHand hand)
   let isHandOvertakyInLimpedPot hand =
-    let range = Ranges.parseRange notOvertakyHandsInLimpedPot
-    Ranges.isHandInRange range (toHand hand) |> not
+    let ranges = Ranges.parseRanges notOvertakyHandsInLimpedPot
+    Ranges.isHandInRanges ranges (toHand hand) |> not
   let rulesLow = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
   let decidePre stack odds limpFold = 

@@ -47,7 +47,7 @@ module HandValue =
           | Nothing | TwoOvercards | Pair(Under)
           | Pair(Fifth) | Pair(Fourth) | Pair(Third) -> OnCheckRaise.Call
           | _ -> OnCheckRaise.StackOff
-        { o with CbetFactor = OrAllIn { DefaultCBetOr with IfRemainingChipsLessThan = 99 }; CheckRaise = cr } 
+        { o with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfRemainingChipsLessThan = 99 }; CheckRaise = cr } 
       else
         { o with CbetFactor = Never } 
     else o
@@ -65,7 +65,7 @@ module HandValue =
       && hasAceOrTurnOrRiverIsOver 
       && (stackPre >= 20 || stackPre >= 12 && isLimpPre)
       && match value with | Nothing | Pair(Under) | Pair(Fifth) | Pair(Fourth) | Pair(Third) -> true | _ -> false
-      then { o with CbetFactor = OrAllIn { DefaultCBetOr with IfRemainingChipsLessThan = 79 } }
+      then { o with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 70m; IfRemainingChipsLessThan = 79 } }
     else o
 
   let augmentOptions s handValue texture history o =

@@ -233,15 +233,6 @@ let ``strategicRulesOop cbets River after take over Turn`` () =
   Assert.Equal(expected, fst actual)
 
 [<Fact>]
-let ``strategicRulesOop CallEQ + 6 vs AI on turn`` () =
-  let s = { defaultTurn with VillainStack = 0 }
-  let o = { defaultOptions with First = Donk 75m; Then = CallEQ 20 }
-  let value = handValueWithDraws s.Hand s.Board
-  let actual = strategicRulesOop s value [] ([], [], []) (never, never) o
-  let expected = { o with Then = CallEQ 26 }
-  Assert.Equal(expected, fst actual)
-
-[<Fact>]
 let ``strategicRulesOop AI on turn after c/r on flop with small stack in limped pot`` () =
   let s = { defaultTurn with HeroStack = 120 }
   let actual = strategicRulesOop' s [Action.Check; Action.Check; Action.RaiseToAmount 90] ([], [], [])

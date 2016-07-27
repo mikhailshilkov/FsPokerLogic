@@ -249,8 +249,12 @@ module Import =
     |> List.ofArray 
     |> List.map parseOopSpecialRule
 
-  let parseOopOption (strategy: string) (specialRules: string) =
-    let parts = strategy.Trim().ToLowerInvariant().Split([|'/'|], 2)
+  let rec parseOopOption (strategy: string) (specialRules: string) =
+    let canonic = strategy.Trim().ToLowerInvariant()
+    let specialParts = canonic.Split([|'@'|], 2)
+    if specialParts.Length = 2 then parseOopOption specialParts.[0] specialParts.[1]
+    else
+    let parts = canonic.Split([|'/'|], 2)
     if System.String.IsNullOrEmpty(strategy) then None
     else if parts.Length = 1 then
       match parts.[0] with 
@@ -409,7 +413,8 @@ module Import =
       | 3, Draw(Ace) | 3, Draw(King) | 3, Draw(Queen) | 3, Draw(Jack) -> (8, 9)
       | 3, Draw(_) -> (6, 7)
       | _ -> (0, 3)
-    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] cellValues.[1]
+    let specialRules = if texture.Monoboard < 3 then cellValues.[1] else "" // monoboard rules are in the cell itself after @ sign
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
     let defaultMapping () =

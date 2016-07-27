@@ -44,12 +44,11 @@ module SpecialRules =
   // Game Plan OOP -> Main rule 2
   let overtakeLimpedPot overtakyHand s value h o =
     let monoboardAtFlop = monoboardLength (s.Board |> Array.take 3)
-    if List.tryHead h = Some Action.Check      
+    if List.tryHead h = Some Action.Check
       && boardAtStreet Flop s.Board |> Array.forall (fun x -> x.Face <> Ace) 
       && monoboardAtFlop < 3
       && s.BB <= 30
       && effectiveStackPre s >= 12
-      && o.First = OopDonk.Check
       && (value.Made <> Nothing || value.SD = OpenEnded || overtakyHand s.Hand)
     then 
       if street s = Turn 
@@ -60,11 +59,6 @@ module SpecialRules =
       then { o with First = Donk 50m } 
       else o
     else o
-
-  let increaseTurnBetEQvsAI s o =
-    match street s, o.First, o.Then, s.VillainStack with
-      | Turn, Donk _, CallEQ x, 0 -> { o with Then = CallEQ (x + 6) }
-      | _ -> o
 
   let allInTurnAfterCheckRaiseInLimpedPot s h o =
     match street s, h with
@@ -134,8 +128,9 @@ module SpecialRules =
   let bluffyOvertakingRiver flops s history o = 
     let lastCard = Array.last s.Board |> (fun x -> x.Face)
     let lastActionBluff = match List.tryLast history with | Some { Action = RaiseToAmount(_); Motivation = Some Bluff } -> true | _ -> false
+    let raisedPot = match List.tryHead history with | Some { Action = Action.Call; Motivation = _ } -> true | _ -> false
     match street s with
-    | River when lastCard <> Ace && flopMatches s flops && lastActionBluff
+    | River when lastCard <> Ace && flopMatches s flops && lastActionBluff && raisedPot
       -> { o with First = OopDonk.Donk 62.5m }
     | _ -> o
 
@@ -143,7 +138,6 @@ module SpecialRules =
     let historySimple = List.map (fun x -> x.Action) history    
     let rules = [
       (overtakeLimpedPot overtakyHand s value historySimple, None);
-      (increaseTurnBetEQvsAI s, None);
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);
       (bluffyCheckRaiseFlopInLimpedPotFlop bluffyCheckRaiseFlopsLimp s value.Made history, Some Bluff);

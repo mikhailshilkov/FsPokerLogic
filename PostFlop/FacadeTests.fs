@@ -126,8 +126,8 @@ let ``decidePostFlop 61 special rule on turn`` () =
 
 [<Fact>]
 let ``decidePostFlop 61 special rule on turn 2`` () =
-  let s = { Hand = parseSuitedHand "7d5s"; Board = parseBoard "3d7h2cAh"; Pot = 40; VillainStack = 480; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.Check; Action.Check] s 0 (Action.RaiseToAmount 40)
+  let s = { Hand = parseSuitedHand "7d5s"; Board = parseBoard "3d7h2cAh"; Pot = 80; VillainStack = 480; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Check; Action.Check; Action.Call] s 0 (Action.RaiseToAmount 80)
 
 [<Fact>]
 let ``decidePostFlop 7 special rule on turn`` () =
@@ -219,18 +219,18 @@ let ``14`` () =
   testPostFlopMotivated [{ Action = Action.Call; Motivation = None }; { Action = Action.Check; Motivation = None }; { Action = Action.RaiseToAmount 110; Motivation = Some Bluff }] s 0 Action.AllIn
 
 
-//let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-//let xlFlopTurn = openExcel fileNameFlopTurn
-//let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-//let xlTurnDonk = openExcel fileNameTurnDonk
+let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
+let xlFlopTurn = openExcel fileNameFlopTurn
+let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+let xlTurnDonk = openExcel fileNameTurnDonk
 
-//let testIP s expected =
-//  let v = handValueWithDraws s.Hand s.Board
-//  let t = { Streety = false; DoublePaired = false; Monoboard = 2 }
-//  let actual = decidePostFlop s v t xlFlopTurn xlTurnDonk
-//  Assert.Equal(expected |> Some, actual)
-//
-//[<Fact>]
-//let ``decidePostFlopIP x`` () =
-//  let s = { Hand = parseSuitedHand "Jd8c"; Board = parseBoard "Jh6c4s"; Pot = 120; VillainStack = 390; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
-//  testIP s (Action.RaiseToAmount 150)
+let testIP s h expected =
+  let v = handValueWithDraws s.Hand s.Board
+  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = 2 }
+  let actual = decidePostFlop h s v t xlFlopTurn xlTurnDonk
+  Assert.Equal(expected |> Some, actual)
+
+[<Fact>]
+let ``decidePostFlopIP cbet flush draw on turn`` () =
+  let s = { Hand = parseSuitedHand "Jd8d"; Board = parseBoard "Th6d4dQc"; Pot = 120; VillainStack = 390; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testIP s [] (Action.RaiseToAmount 90)

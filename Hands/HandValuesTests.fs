@@ -168,6 +168,9 @@ let ``Top pair`` handS flopS =
 [<InlineData("QhQc", "KdJhTh8c5d", "A")>]
 [<InlineData("QhQc", "KdJhKh8c5d", "A")>]
 [<InlineData("Ts7c", "Ac7sAd", "T")>]
+[<InlineData("9s8c", "Kc9s8d6s6h", "A")>] 
+[<InlineData("Js8c", "KcJs9d9s8h", "8")>] 
+[<InlineData("8s7c", "KcKs8s7h", "7")>] 
 let ``Second pair`` handS flopS kicker =
   Pair(Second(parseFace kicker)) |> test handS flopS
 
@@ -191,6 +194,7 @@ let ``Fifth pair`` handS flopS =
 
 [<Theory>]
 [<InlineData("Kc3c", "Th8cKdJh3h")>]
+[<InlineData("Qc9c", "QhJc9d4h4h")>]
 let ``Two pairs`` handS flopS =
   TwoPair |> test handS flopS
 

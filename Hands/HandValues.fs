@@ -184,10 +184,11 @@ module HandValues =
       let latestCardValue = last.Face |> faceValue
       List.forall (fun x -> faceValue x.Face < latestCardValue) remaining
 
+  let maxBoard b = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
+
   let overcards hand b = 
-    let maxBoard = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
     [hand.Card1; hand.Card2] 
-    |> Seq.filter (fun x -> faceValue x.Face > maxBoard) 
+    |> Seq.filter (fun x -> faceValue x.Face > maxBoard b) 
     |> Seq.length
 
   let handValue hand board =
@@ -223,7 +224,10 @@ module HandValues =
     else if isStraight combined then 
       if isWeakStraight hand board then Straight(Weak) else Straight(Normal)
     else if Seq.length pairs = 2 && pairs.[0] = pairs.[1] then ThreeOfKind
-    else if pairs |> Seq.filter (fun x -> faceValue x > defaultArg boardHighestPair 0) |> Seq.length = 2 then TwoPair
+    else if pairs |> Seq.length = 2 && boardHighestPair.IsNone then TwoPair
+    else if pairs |> Seq.filter (fun x -> faceValue x > defaultArg boardHighestPair 0) |> Seq.length = 2 then 
+      let maxBoardCard = maxBoard board
+      if pairs |> Seq.exists (fun x -> faceValue x = maxBoardCard) then TwoPair else Pair(Second(Ace))
     else if isPairedHand then 
       if pairIndex.IsSome then ThreeOfKind
       else

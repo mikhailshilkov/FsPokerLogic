@@ -140,7 +140,7 @@ module HandValues =
   let findFlushDrawWith2 hand board =
     if hand.Card1.Suit = hand.Card2.Suit 
        && Array.filter (fun x -> x.Suit = hand.Card1.Suit) board |> Array.length = 2
-    then maxFace hand.Card1 hand.Card2 |> Some
+    then maxFace [hand.Card1; hand.Card2] |> Some
     else None
 
   let isFlushDrawWith2 hand board = match findFlushDrawWith2 hand board with | Some _ -> true | None -> false
@@ -167,6 +167,17 @@ module HandValues =
   let isPaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.exists (fun x -> x = 2)
 
+  let pairFace (cards : SuitedCard[]) =
+    cards 
+    |> Seq.countBy (fun x -> x.Face) 
+    |> Seq.sortByDescending snd
+    |> Seq.tryHead
+    |> Option.filter (fun x -> snd x = 2)
+    |> Option.map (fun x -> fst x)
+
+  let topPaired (cards : SuitedCard[]) =
+    pairFace cards |> Option.filter (fun x -> x = maxFace cards) |> Option.isSome
+
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
 
@@ -183,6 +194,14 @@ module HandValues =
     | last::remaining ->
       let latestCardValue = last.Face |> faceValue
       List.forall (fun x -> faceValue x.Face < latestCardValue) remaining
+
+  let isLastBoardCardSecondCard (board: SuitedCard[]) =
+    match Array.rev board |> List.ofArray with
+    | [] | [_] -> false
+    | last::remaining ->
+      let latestCardValue = last.Face |> faceValue
+      let values = remaining |> List.map (fun x -> faceValue x.Face) |> List.distinct |> List.sortDescending
+      List.length values >= 2 && values.[0] > latestCardValue && values.[1] < latestCardValue
 
   let maxBoard b = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
 

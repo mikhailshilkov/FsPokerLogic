@@ -79,6 +79,27 @@ let ``isPaired returns true for boards with a pair`` flopS expected =
   Assert.Equal(expected, actual)
 
 [<Theory>]
+[<InlineData("TsJdTcAc", "T")>]
+[<InlineData("TsJd2c2c", "2")>]
+[<InlineData("Ts8cQcJc", "")>]
+[<InlineData("TsTcTdJc", "")>]
+let ``pairFace returns the face value of board pair`` flopS (expectedS: string) =
+  let board = parseBoard flopS
+  let actual = pairFace board
+  let expected = if expectedS.Length > 0 then parseFace expectedS.[0] |> Some else None
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("TsJdAsAc", true)>]
+[<InlineData("TsJdJs2c", true)>]
+[<InlineData("TsJdTcAc", false)>]
+[<InlineData("Ts8cQcJc", false)>]
+let ``topPaired returns true for boards with paired top card`` flopS expected =
+  let board = parseBoard flopS
+  let actual = topPaired board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
 [<InlineData("KsJd", true)>]
 [<InlineData("2sKs", true)>]
 [<InlineData("QcJc", false)>]
@@ -98,6 +119,17 @@ let ``isXHigh returns true for K-high hand`` s expected =
 let ``isLastBoardCardOvercard returns true for boards with last card being overcard for previous cards`` flopS expected =
   let board = parseBoard flopS
   let actual = isLastBoardCardOvercard board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("Ks7c2dJh", true)>]
+[<InlineData("Qs8c2d9h", true)>]
+[<InlineData("KsKc2dTh", true)>]
+[<InlineData("Ks7c2d6h", false)>]
+[<InlineData("", false)>]
+let ``isLastBoardCardSecondCard returns true for boards with last card being between 1st and 2nd of previous board`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isLastBoardCardSecondCard board
   Assert.Equal(expected, actual)
 
 [<Theory>]

@@ -102,11 +102,11 @@ module SpecialRules =
     | _ -> o
 
   let bluffyCheckRaiseInRaisedPot bluffyHand flops s value history o =
-    match street s, s.BB, s.Pot, s.VillainBet, o.Then with
-    | Flop, 20, 120, 40, Fold 
+    match street s, s.BB, s.Pot, s.VillainBet with
+    | Flop, 20, 120, 40
       when effectiveStackPre s >= 18 && flopMatches s flops && (bluffyHand s.Hand || value.Made = TwoOvercards || value.SD = GutShot)
       -> { o with Then = RaiseFold(2.75m) }
-    | Turn, 20, 300, 0, _ 
+    | Turn, 20, 300, 0
       when stack s >= 210 && flopMatches s flops
            && (value.Made <> Nothing || value.FD <> NoFD || value.SD <> NoSD || isLastBoardCardOvercard s.Board) 
            && history |> List.exists (fun ma -> ma.Motivation = Some Bluff)

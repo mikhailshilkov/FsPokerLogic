@@ -153,10 +153,7 @@ let toHand suited =
     |> List.sortByDescending faceValue
   { Face1 = ordered.[0]; Face2 = ordered.[1]; SameSuit = suited.Card1.Suit = suited.Card2.Suit }
 
-let maxFace card1 card2 = 
-  let face1 = faceValue card1.Face
-  let face2 = faceValue card2.Face
-  if face1 > face2 then card1.Face else card2.Face
+let maxFace cards = cards |> Seq.map (fun x -> x.Face) |> Seq.maxBy faceValue
 
 type Board = SuitedCard[]
 

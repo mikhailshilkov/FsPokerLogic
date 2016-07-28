@@ -179,6 +179,43 @@ module Import =
     let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)    
     parseTurnRiverDonk (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
 
+  let importTurnDonkNew (xlWorkBook : Workbook) specialConditions handValue hand board =
+    let xlWorkSheet = xlWorkBook.Worksheets.["turn vs donkbet"] :?> Worksheet
+    let isTurnOvercard = isLastBoardCardOvercard board
+    let isTurnMiddlecard = isLastBoardCardSecondCard board
+    let isTurnAce = (Array.last board).Face = Ace
+    let handHasAce = hand.Card1.Face = Ace || hand.Card2.Face = Ace
+    let overs = overcards hand board
+    let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+    let highBoardPair = pairFace board |> Option.filter highKicker |> Option.isSome
+    let topPairedBoard = topPaired board
+    let index = 
+      (match handValue.Made with
+      | Nothing -> 
+        if overs = 1 && isTurnOvercard then 13
+        elif overs = 1 then 12
+        elif handHasAce && isTurnOvercard then 10
+        elif handHasAce then 9
+        elif isTurnAce then 8 
+        elif isTurnOvercard then 7 
+        elif isTurnMiddlecard then 11
+        else 6
+      | TwoOvercards ->
+        if isTurnOvercard then 15
+        else 14
+      | Pair(x) -> 
+        match x with
+        | Over -> 17
+        | Top(k) when highKicker k -> 18
+        | Top(_) when highBoardPair -> 20
+        | Top(_) -> 19
+        | Second(_) when topPairedBoard -> 21
+        | _ -> failwith "ouch pair"
+      | _ -> failwith "ouch"
+      ) |> string
+    let cellValues = getCellValues xlWorkSheet ("B" + index) ("D" + index)    
+    parseTurnRiverDonk (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
+
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with
     | "stack off" -> (OrAllIn { DefaultCBetOr with Factor = 62.5m; IfStackFactorLessThan = Some(4m/3m) }, OnCheckRaise.StackOff)

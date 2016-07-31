@@ -77,7 +77,7 @@ closeExcel adxl
 
 let testPostFlopMotivated h s mono expected =
   let v = handValueWithDraws s.Hand s.Board
-  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = mono }
+  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = mono }
 
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   let xl = openExcel fileName
@@ -86,7 +86,7 @@ let testPostFlopMotivated h s mono expected =
   closeExcel xl
 
 let testPostFlop h s mono expected =
-  let mh = h |> List.map notMotivated
+  let mh = h |> List.map (notMotivated Flop s.VillainBet)
   testPostFlopMotivated mh s mono expected
 
 [<Fact>]
@@ -152,9 +152,9 @@ let ``decidePostFlop cbet flop after raising limp pre`` () =
 [<Fact>]
 let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
   let s = { Hand = parseSuitedHand "6h9h"; Board = parseBoard "Jd7h3d5s"; Pot = 300; VillainStack = 340; HeroStack = 340; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let h = [ { Action = Action.Call; Motivation = None }; 
-            { Action = Action.Check; Motivation = None }; 
-            { Action = Action.RaiseToAmount 110; Motivation = Some Bluff } ]
+  let h = [ { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+            { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
+            { Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop } ]
   testPostFlopMotivated h s 0 Action.AllIn
 
 
@@ -171,7 +171,7 @@ let ``decidePostFlop bet turn for value after 3bet pf and bet flop`` () =
 [<Fact>]
 let ``decidePostFlop cbet flop after bluffy 3bet pf`` () =
   let s = { Hand = parseSuitedHand "5c4d"; Board = parseBoard "AhKcJh"; Pot = 200; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff }] s 0 (Action.RaiseToAmount 100)
+  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 (Action.RaiseToAmount 100)
 
 [<Fact>]
 let ``decidePostFlop does not bluffy overtake turn after wrong flop`` () =
@@ -201,7 +201,7 @@ let ``2`` () =
 [<Fact>]
 let ``8`` () =
   let s = { Hand = parseSuitedHand "5s7c"; Board = parseBoard "4cAdQc"; Pot = 200; VillainStack = 370; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff }] s 0 (Action.RaiseToAmount 100)
+  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 (Action.RaiseToAmount 100)
 
 [<Fact>]
 let ``13`` () =
@@ -216,7 +216,10 @@ let ``14f`` () =
 [<Fact>]
 let ``14`` () =
   let s = { Hand = parseSuitedHand "4hJh"; Board = parseBoard "7d5s8s6d"; Pot = 300; VillainStack = 220; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlopMotivated [{ Action = Action.Call; Motivation = None }; { Action = Action.Check; Motivation = None }; { Action = Action.RaiseToAmount 110; Motivation = Some Bluff }] s 0 Action.AllIn
+  testPostFlopMotivated [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
+    { Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 Action.AllIn
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
@@ -226,7 +229,7 @@ let xlTurnDonk = openExcel fileNameTurnDonk
 
 let testIP s h expected =
   let v = handValueWithDraws s.Hand s.Board
-  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = 2 }
+  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
   let actual = decidePostFlop h s v t xlFlopTurn xlTurnDonk
   Assert.Equal(expected |> Some, actual)
 

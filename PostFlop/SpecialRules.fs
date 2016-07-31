@@ -91,7 +91,7 @@ module SpecialRules =
     | _ -> o
 
   let bluffyCheckRaiseFlopInLimpedPotTurnRiver flops s value history o =
-    let limpedPre = match List.tryHead history with | Some { Action = Action.Check; Motivation = _ } -> true | _ -> false
+    let limpedPre = match List.tryHead history with | Some { Action = Action.Check } -> true | _ -> false
     let lastActionBluff = match List.tryLast history with | Some { Action = RaiseToAmount(_); Motivation = Some Bluff } -> true | _ -> false
     match street s, s.BB with
     | Turn, 20 when lastActionBluff && limpedPre && flopMatches s flops

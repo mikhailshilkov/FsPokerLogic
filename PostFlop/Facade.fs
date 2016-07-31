@@ -26,16 +26,17 @@ module Facade =
     | Turn ->
       let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot
       let turnFace = s.Board.[3].Face
-      let turnDonkOption = importTurnDonk (fst xlTurnDonkRiver) texture value
-      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) turnDonkOption texture.Monoboard eo
+      let (turnDonkOption, turnDonkRaiseOption) = if s.VillainBet > 0 then importTurnDonk (fst xlTurnDonkRiver) value texture s history else (OnDonk.Undefined, OnDonkRaise.Undefined)
+      toTurnOptions turnFace (match value.Made with | Flush(_) -> true | _ -> false) turnDonkOption turnDonkRaiseOption texture.Monoboard eo
       |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)
     | Flop ->
       let eo = importOptions (fst xlFlopTurn) s.Hand s.Board limpedPot
       toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eo
       |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
+    | PreFlop -> failwith "We are not playing preflop here"
     )
     |> augmentOptions s value texture historySimple
-    |> decide s
+    |> decide s history
 
   let rec pickOopSheet history s =
     match history with
@@ -62,4 +63,4 @@ module Facade =
     |> Option.map (specialRulesOop s historySimple)
     |> Option.map (strategicRulesOop s value history bluffyFlops bluffyHand)
     |> Option.map (fun (o, m) -> (decideOop s o, m))
-    |> Option.bind (fun (ao, m) -> ao |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m }))
+    |> Option.bind (fun (ao, m) -> ao |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s }))

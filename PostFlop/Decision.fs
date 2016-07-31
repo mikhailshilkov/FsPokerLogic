@@ -6,8 +6,6 @@ open Options
 
 module Decision =
 
-  type Street = Flop | Turn | River
-
   type Snapshot = {
     Pot: int 
     VillainStack: int 
@@ -24,6 +22,7 @@ module Decision =
     | 5 -> River
     | 4 -> Turn 
     | 3 -> Flop
+    | 0 -> PreFlop
     | _ -> failwith "Weird board length"
 
   let streetIndex s = 
@@ -31,6 +30,7 @@ module Decision =
     | River -> 5
     | Turn -> 4
     | Flop -> 3
+    | PreFlop -> 1
 
   let boardAtStreet street board = 
     let indx = min (streetIndex street) (Array.length board)
@@ -79,10 +79,14 @@ module Decision =
     else if s.VillainBet = s.BB then 4 * s.VillainBet
     else d
 
+  let orAllIn threshold s action =
+    match action with
+    | RaiseToAmount x when x + threshold > effectiveStackOnCurrentStreet s -> Action.AllIn
+    | _ -> action
+
   let stackOffDonkX x s = 
     let raiseSize = s.VillainBet * x / 100 |> preventMicroRaises s
-    if raiseSize + 100 > effectiveStackOnCurrentStreet s then Action.AllIn
-    else Action.RaiseToAmount raiseSize
+    Action.RaiseToAmount raiseSize |> orAllIn 100 s
 
   let callRaiseRiver s =
     if s.VillainBet * 2 < (s.Pot - s.VillainBet) then stackOffDonkX 250 s
@@ -94,8 +98,7 @@ module Decision =
       if calculatedRaiseSize > s.VillainBet * 2 then calculatedRaiseSize
       else (9 * s.VillainBet / 4)
       |> roundTo5 
-    if raiseSize < s.HeroStack then RaiseToAmount raiseSize
-    else Action.AllIn
+    RaiseToAmount raiseSize |> orAllIn 69 s
 
   let raisePetDonk s =
     if s.VillainBet < betPre s then
@@ -103,36 +106,48 @@ module Decision =
     else if s.VillainBet * 2 > stackPre s && s.VillainStack > 0 then Action.AllIn
     else Action.Call
 
+  let raisePreDonk x s =
+    (s.Pot - s.VillainBet) * 11 / 10 |> roundTo5 |> RaiseToAmount |> orAllIn 69 s
+
+  let raiseGay s =
+    (s.VillainBet + s.Pot) / 2 |> roundTo5 |> RaiseToAmount |> orAllIn 69 s
+
   let ensureMinRaise s a =
     match a with
     | RaiseToAmount x when x <= s.BB -> MinRaise
     | x -> x
 
-  let decide snapshot options =
+  let decide snapshot history options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk, street snapshot with
-      | ForValueStackOffX(x), _ -> stackOffDonkX x snapshot |> Some
+      | ForValueStackOffX(x), _ | RaiseX(x), _ -> stackOffDonkX x snapshot |> Some
       | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
+      | RaisePreDonkX(x), _ -> raisePreDonk x snapshot |> Some
+      | RaiseGay, _ -> raiseGay snapshot |> Some
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
       | OnDonk.CallEQ eq, _ -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
+      | OnDonk.AllIn, _ -> Some Action.AllIn
       | OnDonk.Call, _ -> Some Action.Call
       | OnDonk.Fold, _ -> Some Action.Fold
-      | Undefined, _ -> None
+      | OnDonk.Undefined, _ -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
-      match options.CheckRaise with
-      | OnCheckRaise.StackOff -> reraise snapshot |> Some
-      | OnCheckRaise.CallEQ eq -> callEQ snapshot eq |> Some
-      | OnCheckRaise.Call -> callraise snapshot |> Some
-      | OnCheckRaise.AllIn -> Some Action.AllIn
-      | OnCheckRaise.Fold -> Some Action.Fold
-      | OnCheckRaise.Undefined -> 
-        match options.Donk with
-        | ForValueStackOffX(x) -> stackOffDonkX x snapshot |> Some
-        | ForValueStackOff -> stackOffDonk snapshot |> Some
-        | _ -> None
+      let raisedDonk = history |> List.tryLast |> Option.filter (fun a -> a.VsVillainBet > 0) |> Option.isSome
+      if raisedDonk then
+        match options.DonkRaise with
+        | OnDonkRaise.CallEQ x -> callEQ snapshot x |> Some
+        | OnDonkRaise.StackOff -> stackOffDonk snapshot |> Some
+        | OnDonkRaise.Undefined -> None
+      else
+        match options.CheckRaise with
+        | OnCheckRaise.StackOff -> reraise snapshot |> Some
+        | OnCheckRaise.CallEQ eq -> callEQ snapshot eq |> Some
+        | OnCheckRaise.Call -> callraise snapshot |> Some
+        | OnCheckRaise.AllIn -> Some Action.AllIn
+        | OnCheckRaise.Fold -> Some Action.Fold
+        | OnCheckRaise.Undefined -> None
     else 
       match options.CbetFactor with
       | Always f -> cbet snapshot.Pot f |> RaiseToAmount |> Some

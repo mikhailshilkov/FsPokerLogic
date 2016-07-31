@@ -4,6 +4,8 @@ module ImportTests =
 
   open Import
   open Hands
+  open Decision
+  open Cards.Actions
   open Cards.HandValues
   open Options
   open Xunit
@@ -11,8 +13,12 @@ module ImportTests =
   open System.Runtime.InteropServices
   open Excel.Import
 
-  let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; Monoboard = 2 }
+  let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
   let defaultOptions = { First = Check; Then = Fold; Special = [] }
+  let defaultTurn = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
+  let defaultHistory = [
+      { Action = Action.RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
+      { Action = Action.RaiseToAmount 50; Motivation = None; VsVillainBet = 0; Street = Flop }]
 
   [<Theory>]
   [<InlineData("222", 6)>]
@@ -59,8 +65,9 @@ module ImportTests =
   let ``importTurnDonk returns correct option for a sample cell`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let actual = importTurnDonk (fst xl) defaultTexture { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD }
-    Assert.Equal(OnDonk.ForValueStackOffX 250, actual)
+    let actual = importTurnDonk (fst xl) { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
+    Assert.Equal(OnDonk.RaiseX 230, fst actual)
+    Assert.Equal(OnDonkRaise.StackOff, snd actual)
     closeExcel xl
 
   [<Fact>]
@@ -68,17 +75,18 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
     let special = { defaultTexture with Streety = true }
-    let actual = importTurnDonk (fst xl) special { Made = Pair(Third); FD = NoFD; FD2 = NoFD; SD = NoSD }
-    Assert.Equal(OnDonk.Fold, actual)
+    let actual = importTurnDonk (fst xl) { Made = Pair(Third); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    Assert.Equal(OnDonk.CallEQ 10, fst actual)
     closeExcel xl
 
   [<Fact>]
-  let ``importTurnDonk returns correct option when special conditions apply but no special action defined`` () =
+  let ``importTurnDonk returns correct option on monobooard`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
-    let special = { defaultTexture with Streety = true; DoublePaired = true }
-    let actual = importTurnDonk (fst xl) special { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD }
-    Assert.Equal(OnDonk.ForValueStackOffX 250, actual)
+    let special = { defaultTexture with Monoboard = 4 }
+    let actual = importTurnDonk (fst xl) { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    Assert.Equal(OnDonk.RaiseX 260, fst actual)
+    Assert.Equal(OnDonkRaise.CallEQ 15, snd actual)
     closeExcel xl
 
   [<Fact>]
@@ -86,7 +94,7 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
     let xl = openExcel fileName
     let actual = importRiver (fst xl) defaultTexture (FullHouse(Weak))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 25; DonkRaise = OnDonkRaise.Undefined }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -96,7 +104,7 @@ module ImportTests =
     let xl = openExcel fileName
     let special = { defaultTexture with DoublePaired = true }
     let actual = importRiver (fst xl) special (Flush(NotNut Ten))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20 }
+    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20; DonkRaise = OnDonkRaise.Undefined }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -106,7 +114,7 @@ module ImportTests =
     let xl = openExcel fileName
     let special = { defaultTexture with Streety = true; DoublePaired = true }
     let actual = importRiver (fst xl) special (Pair(Under))
-    let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold }
+    let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined }
     Assert.Equal(expected, actual)
     closeExcel xl
 
@@ -143,10 +151,39 @@ module ImportTests =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
     let xl = openExcel fileName
     let texture = { defaultTexture with Monoboard = 3; Streety = true }
-    let actual = importOopTurn (fst xl) "limp and check" { Made = TwoPair; FD = Draw(King); FD2 = NoFD; SD = NoSD } texture
+    let actual = importOopTurn (fst xl) "limp and check" { Made = TwoPair; FD = Draw(NotNut(King)); FD2 = NoFD; SD = NoSD } texture
     let expected = { defaultOptions with Then = CallEQ 28 } |> Some
     Assert.Equal(expected, actual)
     closeExcel xl
+
+  let testParseTurnDonk s d r =
+    let actual = parseTurnDonk s
+    Assert.Equal(d, fst actual)
+    Assert.Equal(r, snd actual)
+
+  [<Fact>]
+  let ``parseTurnDonk call works`` () = testParseTurnDonk "c" OnDonk.Call OnDonkRaise.Undefined
+
+  [<Fact>]
+  let ``parseTurnDonk fold works`` () = testParseTurnDonk "f" OnDonk.Fold OnDonkRaise.Undefined
+
+  [<Fact>]
+  let ``parseTurnDonk AI works`` () = testParseTurnDonk "AI" OnDonk.AllIn OnDonkRaise.Undefined
+
+  [<Fact>]
+  let ``parseTurnDonk rTsdb/18 works`` () = testParseTurnDonk "rTsdb/18" (OnDonk.RaisePreDonkX 110) (OnDonkRaise.CallEQ 18)
+  
+  [<Fact>]
+  let ``parseTurnDonk rTbdb/soT works`` () = testParseTurnDonk "rTbdb/soT" (OnDonk.RaiseX 260) OnDonkRaise.StackOff
+  
+  [<Fact>]
+  let ``parseTurnDonk rTg/20 works`` () = testParseTurnDonk "rTg/20" OnDonk.RaiseGay (OnDonkRaise.CallEQ 20)
+  
+  [<Fact>]
+  let ``parseTurnDonk rTfb/10 works`` () = testParseTurnDonk "rTfb/10" (OnDonk.RaiseX 220) (OnDonkRaise.CallEQ 10)
+  
+  [<Fact>]
+  let ``parseTurnDonk 34 works`` () = testParseTurnDonk "34" (OnDonk.CallEQ 34) OnDonkRaise.Undefined
 
   [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =

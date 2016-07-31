@@ -10,7 +10,7 @@ let raiseSize x villainBet stack =
     let roundedSize = rawSize / 5 * 5
     RaiseToAmount roundedSize
 
-let mapPatternToAction vb stack (pattern : ActionPattern) =
+let mapPatternToAction street vb stack (pattern : ActionPattern) =
   let action =
     match pattern with
     | ActionPattern.AllIn -> AllIn
@@ -20,4 +20,4 @@ let mapPatternToAction vb stack (pattern : ActionPattern) =
     | ActionPattern.Check -> Check
     | ActionPattern.Fold -> Fold
   let motivation = match pattern with | ActionPattern.RaiseBluffX x -> Some Bluff | _ -> None
-  { Action = action; Motivation = motivation }
+  { Action = action; Motivation = motivation; VsVillainBet = vb; Street = street }

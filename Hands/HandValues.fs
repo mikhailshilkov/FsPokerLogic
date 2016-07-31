@@ -29,7 +29,7 @@ module HandValues =
     | FourOfKind
     | StraightFlush
 
-  type FlushDraw = | Draw of Face | NoFD
+  type FlushDraw = | Draw of FlushStrength | NoFD
   type StraightDraw = | OpenEnded | GutShot | NoSD
 
   type HandValue = { Made: MadeHandValue; FD: FlushDraw; FD2: FlushDraw; SD: StraightDraw }
@@ -61,11 +61,13 @@ module HandValues =
     isStreety 5 0 cards
 
   let isOpenEndedStraightDraw hand board =
-    let exceptA c = c.Face <> Ace
-    let combined = concat hand board
-    not (isStraight combined)
-    && not (isStreety 4 0 (board |> Array.filter exceptA))
-    && isStreety 4 0 (combined |> Array.filter exceptA)
+    let combined = concat hand board |> List.ofArray |> List.map (fun x -> faceValue x.Face)
+    let possibleStraits =
+      [2..14]
+      |> List.map (fun x -> x :: combined)
+      |> List.filter (fun x -> streetyFaces 5 0 x |> Option.isSome)
+      |> List.length
+    possibleStraits >= 2 && not (isStreety 4 0 board)
 
   let isGutShot hand board =
     let combined = concat hand board
@@ -107,15 +109,17 @@ module HandValues =
   let isFourOfKind (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.head = 4
 
-  let flushSuit cards = 
-    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.filter (fun (x, count) -> count >= 5) |> Seq.map fst |> Seq.tryHead
+  let flushSuitFlex min max cards = 
+    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.filter (fun (x, count) -> count >= min && count <= max) |> Seq.map fst |> Seq.tryHead
+
+  let flushSuit cards = flushSuitFlex 5 7 cards
 
   let isFlush (cards : SuitedCard[]) =
     cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.exists (fun x -> x >= 5)
 
-  let flushValue hand board =
+  let flushValueFlex min max hand board =
     let combined = concat hand board
-    match flushSuit combined with
+    match flushSuitFlex min max combined with
     | Some s -> 
       let highestCard = 
         [hand.Card1; hand.Card2] 
@@ -130,29 +134,30 @@ module HandValues =
       | Some h when 
         board
         |> Array.filter (fun y -> y.Suit = s && faceValue y.Face > faceValue h) 
-        |> Array.length = 5
+        |> Array.length = min
         -> Board
       | Some x -> NotNut x
       | None -> Board
       |> Some
     | None -> None
 
-  let findFlushDrawWith2 hand board =
+  let flushValue hand board = flushValueFlex 5 7 hand board
+
+  let findFlushDrawWith2 hand board = 
     if hand.Card1.Suit = hand.Card2.Suit 
        && Array.filter (fun x -> x.Suit = hand.Card1.Suit) board |> Array.length = 2
-    then maxFace [hand.Card1; hand.Card2] |> Some
+    then flushValueFlex 4 4 hand board
     else None
 
   let isFlushDrawWith2 hand board = match findFlushDrawWith2 hand board with | Some _ -> true | None -> false
 
   let findFlushDraw hand board =
     if hand.Card1.Suit = hand.Card2.Suit then findFlushDrawWith2 hand board 
-    else 
-      [hand.Card1; hand.Card2]
-      |> List.map (fun c -> (c, Array.filter (fun x -> x.Suit = c.Suit) board |> Array.length))
-      |> List.filter (fun (_, c) -> c = 3)
-      |> List.map (fun (x, _) -> x.Face)
-      |> List.tryHead
+    else
+      let withCard1 = flushValueFlex 5 5 { Card1 = hand.Card1; Card2 = hand.Card1 } board
+      match withCard1 with
+      | Some _ -> withCard1  
+      | None -> flushValueFlex 5 5 { Card1 = hand.Card2; Card2 = hand.Card2 } board
 
   let isFlushDraw hand board = match findFlushDraw hand board with | Some _ -> true | None -> false
 
@@ -167,12 +172,22 @@ module HandValues =
   let isPaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.exists (fun x -> x = 2)
 
-  let pairFace (cards : SuitedCard[]) =
+  let cardGroupFace count (cards : SuitedCard[]) =
     cards 
     |> Seq.countBy (fun x -> x.Face) 
     |> Seq.sortByDescending snd
     |> Seq.tryHead
-    |> Option.filter (fun x -> snd x = 2)
+    |> Option.filter (fun x -> snd x = count)
+    |> Option.map (fun x -> fst x)
+
+  let pairFace (cards : SuitedCard[]) = cardGroupFace 2 cards
+  let tripsFace (cards : SuitedCard[]) = cardGroupFace 3 cards
+
+  let anyPairFace (cards : SuitedCard[]) =
+    cards 
+    |> Seq.countBy (fun x -> x.Face) 
+    |> Seq.filter (fun x -> snd x = 2)
+    |> Seq.tryHead
     |> Option.map (fun x -> fst x)
 
   let topPaired (cards : SuitedCard[]) =
@@ -282,12 +297,14 @@ module HandValues =
     Streety: bool
     DoublePaired: bool
     ThreeOfKind: bool
+    FourOfKind: bool
     Monoboard: int }
 
   let boardTexture board =
     { Streety = isStreety 4 1 board 
       DoublePaired = isDoublePaired board
       ThreeOfKind = cardValueGroups board |> Seq.head = 3
+      FourOfKind = cardValueGroups board |> Seq.head = 4
       Monoboard = monoboardLength board }
 
   open System

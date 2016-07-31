@@ -75,7 +75,7 @@ module Decide =
         let fullHand = parseFullHand screen.HeroHand
         let history = understandHistory screen
         let actionPattern = decidePre effectiveStack potOdds hudStats.LimpFold openRaise history fullHand
-        Option.map (mapPatternToAction vb stack) actionPattern  
+        Option.map (mapPatternToAction PreFlop vb stack) actionPattern  
       | _ -> None
     let decidePost (screen: Screen) =
       match screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
@@ -88,14 +88,14 @@ module Decide =
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         if screen.Button = Hero then 
-          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map notMotivated
+          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map (notMotivated (street s) s.VillainBet)
         else
           decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot)
       | _ -> None
 
     match screen.Sitout, screen.Board with
-    | Villain, _ -> Action.MinRaise |> notMotivated |> Some
-    | Hero, _ -> Action.SitBack |> notMotivated |> Some
+    | Villain, _ -> Action.MinRaise |> (notMotivated PreFlop 0) |> Some
+    | Hero, _ -> Action.SitBack |> (notMotivated PreFlop 0) |> Some
     | _, null -> decidePre screen
     | _, _ -> decidePost screen
 

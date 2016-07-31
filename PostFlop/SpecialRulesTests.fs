@@ -207,7 +207,7 @@ let never = fun _ -> false
 
 let strategicRulesOop' s h bluffyCheckRaiseFlops =
   let value = handValueWithDraws s.Hand s.Board
-  let history = h |> List.map (fun x -> { Action = x; Motivation = None })
+  let history = h |> List.map (notMotivated Flop 0)
   strategicRulesOop s value history bluffyCheckRaiseFlops (never, never) defaultOptions
 
 let strategicRulesOop2' s h bluffyCheckRaiseFlops =
@@ -216,7 +216,7 @@ let strategicRulesOop2' s h bluffyCheckRaiseFlops =
 
 let strategicRulesOop3' s h bluffyCheckRaiseFlops hands =
   let value = handValueWithDraws s.Hand s.Board
-  let history = h |> List.map (fun x -> { Action = x; Motivation = None })
+  let history = h |> List.map (notMotivated Flop 0)
   strategicRulesOop s value history bluffyCheckRaiseFlops hands defaultOptions
 
 [<Fact>]
@@ -256,7 +256,10 @@ let ``strategicRulesOop bluffy check raise flop minraised pf`` () =
 [<Fact>]
 let ``strategicRulesOop all in turn with Nothing & overcard after bluffy check raise flop minraised pf`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "7s2c"; Board = parseBoard "3d3h6s8d"; Pot = 300 }
-  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 110; Motivation = Some Bluff}]
+  let h = [
+    {Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop}]
   let actual = strategicRulesOop2' s h ([], [[Three;Three;Six]], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
   Assert.Equal(expected, fst actual)
@@ -264,7 +267,10 @@ let ``strategicRulesOop all in turn with Nothing & overcard after bluffy check r
 [<Fact>]
 let ``strategicRulesOop all in turn with Gutshot after bluffy check raise flop minraised pf`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "7s4c"; Board = parseBoard "3d3hTs5d"; Pot = 300 }
-  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 110; Motivation = Some Bluff}]
+  let h = [
+    {Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop}]
   let actual = strategicRulesOop2' s h ([], [[Three;Three;Ten]], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
   Assert.Equal(expected, fst actual)
@@ -279,7 +285,10 @@ let ``strategicRulesOop bluffy check raise flop limped pf`` () =
 [<Fact>]
 let ``strategicRulesOop donk any turn after bluffy check raise flop limped pf`` () =
   let s = { defaultTurn with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs2s"; Pot = 280 }
-  let h = [{Action = Action.Check; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 120; Motivation = Some Bluff}]
+  let h = [
+    {Action = Action.Check; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 120; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop}]
   let actual = strategicRulesOop2' s h ([[Five;Eight;Ten]], [], [])
   let expected = { defaultOptions with First = Donk 62.5m }
   Assert.Equal(expected, fst actual)
@@ -287,7 +296,11 @@ let ``strategicRulesOop donk any turn after bluffy check raise flop limped pf`` 
 [<Fact>]
 let ``strategicRulesOop AI overcard river after bluffy check raise flop and donk turn limped pf`` () =
   let s = { defaultRiver with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs2sJd"; Pot = 630 }
-  let h = [{Action = Action.Check; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 120; Motivation = Some Bluff}; {Action = Action.RaiseToAmount 175; Motivation = Some Bluff}]
+  let h = [
+    {Action = Action.Check; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 120; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop};
+    {Action = Action.RaiseToAmount 175; Motivation = Some Bluff; VsVillainBet = 0; Street = Turn}]
   let actual = strategicRulesOop2' s h ([[Five;Eight;Ten]], [], [])
   let expected = { defaultOptions with First = OopDonk.AllIn }
   Assert.Equal(expected, fst actual)
@@ -303,7 +316,11 @@ let ``strategicRulesOop bluff overtake non-A turn after no cbet after pfr`` () =
 [<Fact>]
 let ``strategicRulesOop bet non-A river after bluff overtake after no cbet after pfr`` () =
   let s = { defaultRiver with Hand = parseSuitedHand "5s5c"; Board = parseBoard "Qs2dThKs4c"; Pot = 250 }
-  let h = [{Action = Action.Call; Motivation = None}; {Action = Action.Check; Motivation = None}; {Action = Action.RaiseToAmount 75; Motivation = Some Bluff}; {Action = Action.RaiseToAmount 175; Motivation = Some Bluff}]
+  let h = [
+    {Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 75; Motivation = Some Bluff; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 175; Motivation = Some Bluff; VsVillainBet = 0; Street = Turn}]
   let actual = strategicRulesOop2' s h ([], [], [[Two;Ten;Queen]])
   let expected = { defaultOptions with First = Donk 62.5m }
   Assert.Equal(expected, fst actual)

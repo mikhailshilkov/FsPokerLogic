@@ -10,11 +10,15 @@ module Actions =
   | Fold
   | SitBack
 
+  type Street = PreFlop | Flop | Turn | River
+
   type Motivation = Bluff
 
   type MotivatedAction = {
     Action: Action
     Motivation: Motivation option
+    VsVillainBet: int
+    Street: Street
   }
 
-  let notMotivated action = { Action = action; Motivation = None }
+  let notMotivated street vb action = { Action = action; Motivation = None; VsVillainBet = vb; Street = street }

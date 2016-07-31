@@ -11,12 +11,29 @@ module Options =
   let DefaultCBetOr = { Factor = 0m; IfStackFactorLessThan = None; IfPreStackLessThan = 0; IfRemainingChipsLessThan = 0 }
   type CBet = Always of decimal | OrAllIn of CBetOr | Never | Undefined
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
-  type OnDonk = ForValueStackOff | ForValueStackOffX of int | CallRaisePet | CallEQ of int | Call | Fold | Undefined
+  type OnDonk = 
+    | ForValueStackOff 
+    | ForValueStackOffX of int 
+    | CallRaisePet 
+    | CallEQ of int 
+    | RaisePreDonkX of int
+    | RaiseX of int 
+    | RaiseGay //(2VB + P) / 2
+    | AllIn 
+    | Call 
+    | Fold 
+    | Undefined
+
+  type OnDonkRaise = 
+    | StackOff
+    | CallEQ of int 
+    | Undefined
 
   type Options = {
     CbetFactor: CBet
     CheckRaise: OnCheckRaise
     Donk: OnDonk
+    DonkRaise: OnDonkRaise
   }
 
   type OopDonk = Check | Donk of decimal | AllIn

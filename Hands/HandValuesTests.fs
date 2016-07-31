@@ -27,9 +27,11 @@ let ``isFlushDrawWith2 returns true for flush draw with 2 hole cards`` handS flo
   Assert.Equal(expected, actual)
 
 [<Theory>]
-[<InlineData("AcKc", "QcTs8c", 'A', 'A')>]
-[<InlineData("Jc2c", "Ts8c2sJc", 'J', 'J')>]
+[<InlineData("AcKc", "QcTs8c", 'N', 'N')>]
+[<InlineData("8cKc", "QcTsAc", 'N', 'N')>]
+[<InlineData("Jc2c", "Ts8c2s9c", 'J', 'J')>]
 [<InlineData("AcKs", "Ts8s2sJd", 'K', '-')>]
+[<InlineData("AcKs", "TsAs2sJd", 'N', '-')>]
 [<InlineData("QcKs", "Ts8c2cJc", 'Q', '-')>]
 [<InlineData("Jc9c", "Tc8c2c", '-', '-')>]
 [<InlineData("AcKc", "Tc8s2s", '-', '-')>]
@@ -38,14 +40,17 @@ let ``handValueWithDraws returns FD face value for flush draw`` handS flopS expe
   let hand = parseSuitedHand handS
   let board = parseBoard flopS
   let actual = handValueWithDraws hand board
-  let expected = if expectedS = '-' then NoFD else (parseFace expectedS |> Draw)
+  let parse s = if s = '-' then NoFD elif s = 'N' then Draw(Nut) else (parseFace s |> NotNut |> Draw)
+  let expected = parse expectedS
   Assert.Equal(expected, actual.FD)
-  let expected2 = if expectedS2 = '-' then NoFD else (parseFace expectedS2 |> Draw)
+  let expected2 = parse expectedS2
   Assert.Equal(expected2, actual.FD2)
 
 [<Theory>]
 [<InlineData("QcKs", "Th8s2sJd", true)>]
 [<InlineData("Ac9s", "Ts8c2cJc", true)>]
+[<InlineData("Jc9s", "8s7c5c3d", true)>]
+[<InlineData("6c7s", "Ts9c5c3d", true)>]
 [<InlineData("AcKh", "QcJs8d", false)>]
 [<InlineData("AcKh", "2c3s4d", false)>]
 [<InlineData("2c3s", "Ts9cQcJc", false)>]
@@ -86,6 +91,15 @@ let ``isPaired returns true for boards with a pair`` flopS expected =
 let ``pairFace returns the face value of board pair`` flopS (expectedS: string) =
   let board = parseBoard flopS
   let actual = pairFace board
+  let expected = if expectedS.Length > 0 then parseFace expectedS.[0] |> Some else None
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("TsJdTcTd", "T")>]
+[<InlineData("TsTcJdJcAd", "")>]
+let ``tripsFace returns the face value of board trips`` flopS (expectedS: string) =
+  let board = parseBoard flopS
+  let actual = tripsFace board
   let expected = if expectedS.Length > 0 then parseFace expectedS.[0] |> Some else None
   Assert.Equal(expected, actual)
 

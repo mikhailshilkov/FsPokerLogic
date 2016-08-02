@@ -448,6 +448,34 @@ module DecisionTests =
     Assert.Equal(Action.RaiseToAmount 120 |> Some, actual)
 
   [<Fact>]
+  let ``Stack Off gay: Check/raise gay bet`` () =
+    let snapshot = { defaultFlop with VillainBet = 30; Pot = 100 }
+    let options = { defaultOopOptions with Then = StackOffGay }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.RaiseToAmount 65 |> Some, actual)
+
+  [<Fact>]
+  let ``Stack Off gay: Check/raise big bet`` () =
+    let snapshot = { defaultFlop with VillainBet = 40; Pot = 110 }
+    let options = { defaultOopOptions with Then = StackOffGay }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
+
+  [<Fact>]
+  let ``Stack Off gay: AI on 3bet`` () =
+    let snapshot = { defaultFlop with HeroBet = 65; VillainBet = 130; Pot = 265 }
+    let options = { defaultOopOptions with Then = StackOffGay }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.AllIn |> Some, actual)
+
+  [<Fact>]
+  let ``Raise/call gay: Check/raise gay bet`` () =
+    let snapshot = { defaultFlop with VillainBet = 30; Pot = 100 }
+    let options = { defaultOopOptions with Then = RaiseGayCallEQ 10 }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.RaiseToAmount 65 |> Some, actual)
+
+  [<Fact>]
   let ``Raise/fold: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
@@ -493,6 +521,13 @@ module DecisionTests =
   let ``Raise/call EQ: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseCallEQ 27 }
+    let actual = Decision.decideOop snapshot options
+    Assert.Equal(Action.Call |> Some, actual)
+
+  [<Fact>]
+  let ``Raise gay/call EQ: Call 3bet flop OOP`` () =
+    let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
+    let options = { defaultOopOptions with Then = RaiseGayCallEQ 27 }
     let actual = Decision.decideOop snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 

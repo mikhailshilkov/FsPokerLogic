@@ -170,6 +170,11 @@ module Decision =
     if raiseSize * 100 / 65 > effectiveStackOnCurrentStreet s then Action.AllIn
     else RaiseToAmount raiseSize
 
+  let stackOffGay s =
+    if s.HeroBet > 0 then Action.AllIn
+    elif s.VillainBet < s.Pot / 3 then raiseGay s
+    else s.VillainBet * 11 / 4 |> RaiseToAmount |> orAllIn 69 s
+
   let decideOop s options =
     if s.VillainBet = 0 then
       match options.First with
@@ -181,11 +186,13 @@ module Decision =
       match options.Then with
       | StackOff -> raiseOop 3m 2.75m 5m s
       | StackOffFast -> raiseOop 4m 3.5m 6m s
+      | StackOffGay -> stackOffGay s
       | RaiseFold x when s.HeroBet = 0 -> raiseOop x x 4m s
       | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
+      | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
       | Fold | RaiseFold _ -> Action.Fold
       | Call | RaiseCall -> Action.Call
-      | CallEQ i | RaiseCallEQ i -> callEQ s i
+      | CallEQ i | RaiseCallEQ i | RaiseGayCallEQ i -> callEQ s i
       | AllIn -> Action.AllIn
       |> Some
     else None

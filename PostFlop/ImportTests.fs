@@ -278,10 +278,7 @@ module ImportTests =
     Assert.Equal(e, actual)
 
   [<Fact>]
-  let ``parseOopSpecialRules AI works`` () = testParseOopSpecialRules "AI" (CallEQPlusXvsAI 10)
-
-  [<Fact>]
-  let ``parseOopSpecialRules AI+ works`` () = testParseOopSpecialRules "AI+" (CallEQPlusXvsAI 14)
+  let ``parseOopSpecialRules AI#15 works`` () = testParseOopSpecialRules "AI#15" (CallEQPlusXvsAI 15)
 
   [<Fact>]
   let ``parseOopSpecialRules 6 works`` () = testParseOopSpecialRules "6" (BoardOvercard(Check, Call))
@@ -338,9 +335,27 @@ module ImportTests =
   let ``parseOopSpecialRules 60 works`` () = testParseOopSpecialRules "60" KHighOnPaired
 
   [<Fact>]
+  let ``parseOopSpecialRules Bov#62.5%/30 works`` () = testParseOopSpecialRules "Bov#62.5%/30" (BoardOvercard(Donk 62.5m, CallEQ 30))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Bovso#50% works`` () = testParseOopSpecialRules "Bovso#50%" (BoardOvercard(Donk 50m, StackOff))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Chrov/20 works`` () = testParseOopSpecialRules "Chrov/20" (BoardOvercard(OopDonk.Check, RaiseGayCallEQ 20))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Chrovb/10 works`` () = testParseOopSpecialRules "Chrovb/10" (CheckRaiseOvercardBluff(RaiseCallEQ 10))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Chrovso works`` () = testParseOopSpecialRules "Chrovso" (BoardOvercard(OopDonk.Check, StackOffGay))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Xoxo#50%/18 works`` () = testParseOopSpecialRules "Xoxo#50%/18" (CheckCheck(Donk 50m, CallEQ 18))
+
+  [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
-    let actual = parseOopSpecialRules "AI, A, 61"
-    let expected = [CallEQPlusXvsAI 10; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 100m, CallEQ 25)]
+    let actual = parseOopSpecialRules "AI#15, A, 61"
+    let expected = [CallEQPlusXvsAI 15; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 100m, CallEQ 25)]
     Assert.Equal<System.Collections.Generic.IEnumerable<OopSpecialCondition>>(expected, actual)
 
   [<Fact>]

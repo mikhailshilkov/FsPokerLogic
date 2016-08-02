@@ -188,6 +188,37 @@ let ``specialRulesOop does no change based on KHighOnPaired on higher blind leve
   Assert.Equal(options, actual)
 
 [<Fact>]
+let ``specialRulesOop returns based on CheckRaiseOvercardBluff on overcard and mid-sized bet in deep stack`` () =
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90 }
+  let expected = { options with Then = RaiseCallEQ 10 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when no overcard`` () =
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let s = { defaultTurn with Board = parseBoard "5h7d9s2s"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(options, actual)
+
+[<Theory>]
+[<InlineData(55)>]
+[<InlineData(110)>]
+let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when bet is too small or big`` vb =
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 180 + vb; VillainBet = vb }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when stack is low`` () =
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90; HeroStack = 240 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
 let ``specialRulesOop applies not-first rule from the list too`` () =
   let options = { defaultOptions with Special = [BoardAce(OopDonk.AllIn, AllIn); BoardOvercard(Check,Fold); PairedBoard (Check, CallEQ 22)] }
   let expected = { options with First = Check; Then = CallEQ 22 }

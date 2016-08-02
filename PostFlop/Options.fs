@@ -37,7 +37,18 @@ module Options =
   }
 
   type OopDonk = Check | Donk of decimal | AllIn
-  type OopOnCBet = Fold | StackOff | StackOffFast | CallEQ of int | RaiseFold of decimal | RaiseCall | RaiseCallEQ of int | Call | AllIn
+  type OopOnCBet = 
+    |Fold 
+    | StackOff 
+    | StackOffFast 
+    | StackOffGay 
+    | CallEQ of int 
+    | RaiseFold of decimal 
+    | RaiseCall 
+    | RaiseCallEQ of int 
+    | RaiseGayCallEQ of int 
+    | Call 
+    | AllIn
   type OopSpecialCondition = 
     | CallEQPlusXvsAI of int 
     | PairedBoard of OopDonk * OopOnCBet
@@ -46,6 +57,7 @@ module Options =
     | CheckCheck of OopDonk * OopOnCBet
     | CheckCheckAndBoardOvercard of OopDonk * OopOnCBet
     | KHighOnPaired
+    | CheckRaiseOvercardBluff of OopOnCBet
     | NotUsed
   type OptionsOop = {
     First: OopDonk

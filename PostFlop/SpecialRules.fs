@@ -37,6 +37,12 @@ module SpecialRules =
         if o.Then = Fold && isPaired s.Board && isXHigh King s.Hand && s.BB <= 30 then 
           { o with Then = CallEQ (if s.BB = 20 then 30 else 25) } 
         else imp rem
+      | CheckRaiseOvercardBluff(t)::rem ->
+        let villainBet = s.VillainBet * 100 / (s.Pot - s.VillainBet)
+        if isLastBoardCardOvercard s.Board 
+          && (villainBet = 0 || villainBet >= 35 && villainBet <= 56) 
+          && stackIfCall s >= s.BB * 8
+        then { o with First = Check; Then = t } else imp rem
       | NotUsed::rem -> imp rem
       | [] -> o
     imp o.Special

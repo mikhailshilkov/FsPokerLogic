@@ -399,29 +399,41 @@ module Import =
 
   let parseOopSpecialRules (specialRules: string) = 
     let parseOopSpecialRule (s: string) =
-      match s.Trim().ToLowerInvariant() with
-      | "ai" -> CallEQPlusXvsAI 10
-      | "ai+" -> CallEQPlusXvsAI 14
-      | "bp gs" -> PairedBoard (OopDonk.Check, CallEQ 14)
-      | "bp fd" -> PairedBoard (OopDonk.Check, CallEQ 22)
-      | "22" -> PairedBoard (Donk 50m, CallEQ 20)
-      | "tpp" -> PairedBoard (OopDonk.AllIn, OopOnCBet.AllIn)
-      | "6" -> BoardOvercard(OopDonk.Check, OopOnCBet.Call)
-      | "ov" -> BoardOvercard(OopDonk.AllIn, OopOnCBet.AllIn)
-      | "ov ai" -> BoardOvercard(OopDonk.Check, OopOnCBet.AllIn)
-      | "ovso" -> BoardOvercard(Donk 67m, StackOff)
-      | "61" -> BoardOvercard(Donk 100m, CallEQ 25)
-      | "4" -> BoardOvercard(OopDonk.Check, StackOff)
-      | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
-      | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
-      | "a/f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
-      | "aso" -> BoardAce(Donk 67m, StackOff)
-      | "5" -> CheckCheck (Donk 75m, OopOnCBet.Call)
-      | "7" -> CheckCheck (Donk 75m, StackOff)
-      | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
-      | "60" -> KHighOnPaired
-      | "1" -> NotUsed
-      | _ -> failwith "Failed parsing special rules"
+      let canonic = s.Trim().ToLowerInvariant()
+      let parts = canonic.Split([|'/'|], 2)
+      if parts.Length = 1 then
+        match parts.[0] with
+        | StartsWith "ai#" i -> match i with | Int x -> CallEQPlusXvsAI x | _ -> failwith "Failed parsing special rules (ai)"
+        | "bp gs" -> PairedBoard (OopDonk.Check, CallEQ 14)
+        | "bp fd" -> PairedBoard (OopDonk.Check, CallEQ 22)
+        | "22" -> PairedBoard (Donk 50m, CallEQ 20)
+        | "tpp" -> PairedBoard (OopDonk.AllIn, OopOnCBet.AllIn)
+        | "6" -> BoardOvercard(OopDonk.Check, OopOnCBet.Call)
+        | "ov" -> BoardOvercard(OopDonk.AllIn, OopOnCBet.AllIn)
+        | "ov ai" -> BoardOvercard(OopDonk.Check, OopOnCBet.AllIn)
+        | "ovso" -> BoardOvercard(Donk 67m, StackOff)
+        | "61" -> BoardOvercard(Donk 100m, CallEQ 25)
+        | "4" -> BoardOvercard(OopDonk.Check, StackOff)
+        | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
+        | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith "Failed parsing special rules (bovso)"
+        | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
+        | "aso" -> BoardAce(Donk 67m, StackOff)
+        | "5" -> CheckCheck (Donk 75m, OopOnCBet.Call)
+        | "7" -> CheckCheck (Donk 75m, StackOff)
+        | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
+        | "60" -> KHighOnPaired
+        | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
+        | "1" -> NotUsed
+        | _ -> failwith "Failed parsing special rules (1)"
+      elif parts.Length = 2 then
+        match parts.[0], parts.[1] with
+        | "a", "f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
+        | StartsWith "bov#" d, Int c -> match d with | DecimalPerc x -> BoardOvercard(Donk x, CallEQ c) | _ -> failwith "Failed parsing special rules (bov)"
+        | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
+        | "chrovb", Int c -> CheckRaiseOvercardBluff(RaiseCallEQ c)
+        | StartsWith "xoxo#" d, Int c -> match d with | DecimalPerc x -> CheckCheck(Donk x, CallEQ c) | _ -> failwith "Failed parsing special rules (xoxo)"
+        | _ -> failwith "Failed parsing special rules (2)"
+      else failwith "Failed parsing special rules (3)"
     specialRules.Split(',') 
     |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
     |> List.ofArray 

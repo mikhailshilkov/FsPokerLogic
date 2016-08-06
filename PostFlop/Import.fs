@@ -410,6 +410,23 @@ module Import =
     |> List.map parseOopSpecialRule
 
   let rec parseOopOption (strategy: string) (specialRules: string) =
+    let rec cbetParse = function
+      | StartsWith "r/" p3 -> 
+        match p3 with 
+        | "f" -> OopOnCBet.RaiseFold(2.75m)
+        | "c" -> OopOnCBet.RaiseCall
+        | Int i -> OopOnCBet.RaiseCallEQ i
+        | _ -> failwith "Failed parsing Flop Oop OnCbet raise"
+      | StartsWith "f1rr/" p3 -> cbetParse p3 |> FormulaRaise
+      | "f" -> OopOnCBet.Fold
+      | "so" -> OopOnCBet.StackOff
+      | "so+" -> OopOnCBet.StackOffFast
+      | "c" -> OopOnCBet.Call
+      | "ai" -> OopOnCBet.AllIn
+      | Int i -> CallEQ i
+      | _ -> failwith "Failed parsing Flop Oop OnCbet" 
+
+
     let canonic = strategy.Trim().ToLowerInvariant()
     let scenarioParts = canonic.Split([|'*'|], 2)
     let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
@@ -432,21 +449,7 @@ module Import =
         | "rbs" -> OopDonk.RiverBetSizing
         | DecimalPerc n -> OopDonk.Donk n
         | _ -> failwith "Failed parsing Flop Oop Donk"
-      let cbet =
-        match parts.[1] with 
-        | StartsWith "r/" p3 -> 
-          match p3 with 
-          | "f" -> OopOnCBet.RaiseFold(2.75m)
-          | "c" -> OopOnCBet.RaiseCall
-          | Int i -> OopOnCBet.RaiseCallEQ i
-          | _ -> failwith "Failed parsing Flop Oop OnCbet raise"
-        | "f" -> OopOnCBet.Fold
-        | "so" -> OopOnCBet.StackOff
-        | "so+" -> OopOnCBet.StackOffFast
-        | "c" -> OopOnCBet.Call
-        | "ai" -> OopOnCBet.AllIn
-        | Int i -> CallEQ i
-        | _ -> failwith "Failed parsing Flop Oop OnCbet" 
+      let cbet = cbetParse parts.[1]
       Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
     else failwith "Failed parsing Flop Oop (2)"
 

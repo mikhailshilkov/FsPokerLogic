@@ -47,6 +47,7 @@ module Options =
     | RaiseCall 
     | RaiseCallEQ of int 
     | RaiseGayCallEQ of int 
+    | FormulaRaise of OopOnCBet
     | Call 
     | AllIn
 

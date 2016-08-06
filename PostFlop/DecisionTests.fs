@@ -576,3 +576,24 @@ module DecisionTests =
   [<Fact>]
   let ``River Bet Size Donk OOP bets in stack is deep`` () =
     riverBetSizeTest 190 (Action.RaiseToAmount 120)
+
+  [<Fact>]
+  let ``Formula raise river`` () =
+    let snapshot = { defaultRiver with Pot = 200; VillainStack = 300; HeroStack = 400; VillainBet = 100 }
+    let options = { defaultOopOptions with Then = FormulaRaise(StackOff) }
+    let actual = Decision.decideOop [] snapshot options
+    Assert.Equal(Action.RaiseToAmount 275 |> Some, actual)
+
+  [<Fact>]
+  let ``Formula raise river AI`` () =
+    let snapshot = { defaultRiver with Pot = 200; VillainStack = 280; HeroStack = 400; VillainBet = 120 }
+    let options = { defaultOopOptions with Then = FormulaRaise(StackOff) }
+    let actual = Decision.decideOop [] snapshot options
+    Assert.Equal(Action.AllIn |> Some, actual)
+
+  [<Fact>]
+  let ``Formula raise river call 3bet`` () =
+    let snapshot = { defaultRiver with Pot = 600; VillainStack = 150; HeroStack = 250; VillainBet = 300; HeroBet = 150 }
+    let options = { defaultOopOptions with Then = FormulaRaise(CallEQ 20) }
+    let actual = Decision.decideOop [] snapshot options
+    Assert.Equal(Action.Call |> Some, actual)

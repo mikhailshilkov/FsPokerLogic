@@ -309,15 +309,21 @@ module ImportTests =
   let ``parseFlopOop RBS/18 works`` () = testParseFlopOop "RBS/18" RiverBetSizing (CallEQ 18)
 
   [<Fact>]
-  let ``parseFlopOop ch/25/ovso works`` () = 
+  let ``parseOopOption ch/25/ovso works`` () = 
     let actual = parseOopOption "ch/25@ovso" ""
     let expected = { defaultOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff)] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
-  let ``parseFlopOop 62,5%/so*r9 and Ovso*r8 works`` () = 
+  let ``parseOopOption 62,5%/so*r9 and Ovso*r8 works`` () = 
     let actual = parseOopOption "62,5%/so*r9" "Ovso*r8"
     let expected = { First = Donk 62.5m; Then = StackOff; Scenario = "r9"; Special = [BoardOvercard(Donk 67m, StackOff)]; SpecialScenario = "r8" } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``parseOopOption ch/F1RR/20 works`` () = 
+    let actual = parseOopOption "ch/F1RR/20" ""
+    let expected = { defaultOptions with First = Check; Then = FormulaRaise (CallEQ 20) } |> Some
     Assert.Equal(expected, actual)
 
   let testParseOopSpecialRules s e =

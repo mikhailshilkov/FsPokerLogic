@@ -184,7 +184,26 @@ module Decision =
       let betSize = rule.BetSize * s.Pot / 100 |> roundTo5
       betSize |> RaiseToAmount |> orAllIn rule.MinChipsLeft s
 
+  let formulaRiverRaise s =
+    let betSize = (7 * s.VillainBet / 2 + s.Pot) / 2 |> roundTo5
+    let stack = effectiveStackOnCurrentStreet s
+    if betSize > 3 * stack / 4 then Action.AllIn 
+    else betSize |> RaiseToAmount
+
   let decideOop riverBetSizes s options =
+    let rec onVillainBet = function
+      | StackOff -> raiseOop 3m 2.75m 5m s
+      | StackOffFast -> raiseOop 4m 3.5m 6m s
+      | StackOffGay -> stackOffGay s
+      | RaiseFold x when s.HeroBet = 0 -> raiseOop x x 4m s
+      | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
+      | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
+      | FormulaRaise x -> if s.HeroBet > 0 then onVillainBet x else formulaRiverRaise s
+      | Fold | RaiseFold _ -> Action.Fold
+      | Call | RaiseCall -> Action.Call
+      | CallEQ i | RaiseCallEQ i | RaiseGayCallEQ i -> callEQ s i
+      | AllIn -> Action.AllIn      
+
     if s.VillainBet = 0 then
       match options.First with
       | Check -> Action.Check
@@ -192,17 +211,6 @@ module Decision =
       | OopDonk.AllIn -> Action.AllIn
       | RiverBetSizing -> riverBetBluff riverBetSizes s
       |> Some
-    else if s.VillainBet > 0 then
-      match options.Then with
-      | StackOff -> raiseOop 3m 2.75m 5m s
-      | StackOffFast -> raiseOop 4m 3.5m 6m s
-      | StackOffGay -> stackOffGay s
-      | RaiseFold x when s.HeroBet = 0 -> raiseOop x x 4m s
-      | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
-      | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
-      | Fold | RaiseFold _ -> Action.Fold
-      | Call | RaiseCall -> Action.Call
-      | CallEQ i | RaiseCallEQ i | RaiseGayCallEQ i -> callEQ s i
-      | AllIn -> Action.AllIn
-      |> Some
+    elif s.VillainBet > 0 then
+      onVillainBet options.Then |> Some
     else None

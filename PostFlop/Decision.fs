@@ -175,12 +175,22 @@ module Decision =
     elif s.VillainBet < s.Pot / 3 then raiseGay s
     else s.VillainBet * 11 / 4 |> RaiseToAmount |> orAllIn 69 s
 
-  let decideOop s options =
+  let riverBetBluff riverBetSizes s =
+    let rule = riverBetSizes |> List.filter (fun x -> x.MinPotSize <= s.Pot && s.Pot <= x.MaxPotSize) |> List.head
+    let stack = effectiveStackOnCurrentStreet s * 100 / s.Pot
+    if stack < rule.MinAllInPercentage then Action.Check
+    elif stack < rule.MaxAllInPercentage then Action.AllIn
+    else
+      let betSize = rule.BetSize * s.Pot / 100 |> roundTo5
+      betSize |> RaiseToAmount |> orAllIn rule.MinChipsLeft s
+
+  let decideOop riverBetSizes s options =
     if s.VillainBet = 0 then
       match options.First with
       | Check -> Action.Check
       | Donk x -> betXPot x s |> ensureMinRaise s
       | OopDonk.AllIn -> Action.AllIn
+      | RiverBetSizing -> riverBetBluff riverBetSizes s
       |> Some
     else if s.VillainBet > 0 then
       match options.Then with

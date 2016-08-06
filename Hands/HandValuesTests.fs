@@ -114,6 +114,16 @@ let ``topPaired returns true for boards with paired top card`` flopS expected =
   Assert.Equal(expected, actual)
 
 [<Theory>]
+[<InlineData("TsJdTcAc", true)>]
+[<InlineData("TsJdJs2c", false)>]
+[<InlineData("Ts3d3s2c", false)>]
+[<InlineData("Ts8cQcJc", false)>]
+let ``bottomPaired returns true for boards with paired lowest card`` flopS expected =
+  let board = parseBoard flopS
+  let actual = bottomPaired board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
 [<InlineData("KsJd", true)>]
 [<InlineData("2sKs", true)>]
 [<InlineData("QcJc", false)>]
@@ -147,6 +157,30 @@ let ``isLastBoardCardSecondCard returns true for boards with last card being bet
   Assert.Equal(expected, actual)
 
 [<Theory>]
+[<InlineData("9c6c6sJc5c", true)>]
+[<InlineData("Ts5d3hQs2d", true)>]
+[<InlineData("Ts8cQc9c", false)>]
+[<InlineData("Ts8cQc8c", false)>]
+[<InlineData("", false)>]
+[<InlineData("Ks", false)>]
+let ``isLastBoardCardUndercard returns true for boards with last card being undercard for previous cards`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isLastBoardCardUndercard board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("9c6c6sJc7c", true)>]
+[<InlineData("9c6c6sJd7c", true)>]
+[<InlineData("Ts5d2hQs2s", true)>]
+[<InlineData("Ts8cQc9c4s", false)>]
+[<InlineData("KsAc5d4s", false)>]
+[<InlineData("", false)>]
+let ``isLastBoardCardFlushy returns true when last board card adds to flush draw`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isLastBoardCardFlushy board
+  Assert.Equal(expected, actual)
+
+[<Theory>]
 [<InlineData("TsJdTcAcJc", true)>]
 [<InlineData("TsJdTcJhJc", true)>]
 [<InlineData("Ts8cQcJc", false)>]
@@ -157,6 +191,18 @@ let ``isDoublePaired returns true for boards with two pairs`` flopS expected =
   let board = parseBoard flopS
   let actual = isDoublePaired board
   Assert.Equal(expected, actual)
+
+[<Theory>]
+[<InlineData("AdKh", "KsJdTcAc2c", 1, 2)>]
+[<InlineData("5dKh", "KsJdTcAc2c", 2, 0)>]
+[<InlineData("Jd2h", "KsJdTcAc2c", 3, 5)>]
+[<InlineData("3d4h", "KsJdTcAc2c", 0, 0)>]
+let ``pairIndeces returns indeces of pairs between hand and board`` handS flopS expected1 expected2 =
+  let hand = parseSuitedHand handS
+  let board = parseBoard flopS
+  let actual = pairIndeces hand board |> List.ofSeq
+  let expected = [for e in [expected1; expected2] do if e > 0 then yield e]
+  Assert.Equal<int list>(expected, actual)  
 
 [<Theory>]
 [<InlineData("As5c", "6s7d8c9c", true)>]

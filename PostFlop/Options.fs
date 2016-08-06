@@ -36,7 +36,7 @@ module Options =
     DonkRaise: OnDonkRaise
   }
 
-  type OopDonk = Check | Donk of decimal | AllIn
+  type OopDonk = Check | Donk of decimal | AllIn | RiverBetSizing
   type OopOnCBet = 
     |Fold 
     | StackOff 
@@ -49,6 +49,7 @@ module Options =
     | RaiseGayCallEQ of int 
     | Call 
     | AllIn
+
   type OopSpecialCondition = 
     | CallEQPlusXvsAI of int 
     | PairedBoard of OopDonk * OopOnCBet
@@ -59,8 +60,20 @@ module Options =
     | KHighOnPaired
     | CheckRaiseOvercardBluff of OopOnCBet
     | NotUsed
+
   type OptionsOop = {
     First: OopDonk
     Then: OopOnCBet
     Special: OopSpecialCondition list
+    Scenario: string
+    SpecialScenario: string
+  }
+
+  type RiverBetSizeEntry = {
+    MinPotSize: int
+    MaxPotSize: int
+    MinAllInPercentage: int
+    MaxAllInPercentage: int
+    MinChipsLeft:int
+    BetSize: int
   }

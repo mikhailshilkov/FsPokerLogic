@@ -12,7 +12,9 @@ module Actions =
 
   type Street = PreFlop | Flop | Turn | River
 
-  type Motivation = Bluff
+  type Motivation = 
+    | Bluff
+    | Scenario of string
 
   type MotivatedAction = {
     Action: Action

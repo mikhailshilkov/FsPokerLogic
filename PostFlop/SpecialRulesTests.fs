@@ -8,7 +8,7 @@ open PostFlop.Decision
 open PostFlop.Options
 open PostFlop.SpecialRules
 
-let defaultOptions = { First = Check; Then = Fold; Special = [] }
+let defaultOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
 let defaultFlop = { Hand = parseSuitedHand "Ah5h"; Board = parseBoard "QsTc6s"; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 let defaultTurn = { Hand = parseSuitedHand "Ah5h"; Board = parseBoard "QsTc6s7d"; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 let defaultRiver = { Hand = parseSuitedHand "Kh5h"; Board = parseBoard "QsTc6s7dAd"; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
@@ -355,3 +355,29 @@ let ``strategicRulesOop bet non-A river after bluff overtake after no cbet after
   let actual = strategicRulesOop2' s h ([], [], [[Two;Ten;Queen]])
   let expected = { defaultOptions with First = Donk 62.5m }
   Assert.Equal(expected, fst actual)
+
+[<Fact>]
+let ``scenarioRulesOop applies scenario if last bet was same scenario`` () =
+  let h = [
+    {Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop}; 
+    {Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 75; Motivation = Some Bluff; VsVillainBet = 0; Street = Flop}; 
+    {Action = Action.RaiseToAmount 175; Motivation = Some(Scenario("r8")); VsVillainBet = 0; Street = Turn}]
+  let options = { defaultOptions with Scenario = "r8/20" }
+  let actual = scenarioRulesOop h options
+  let expected = { options with First = RiverBetSizing; Then = CallEQ 20 }
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``scenarioRulesOop does not apply if last bet was not same scenario`` () =
+  let h = [{Action = Action.RaiseToAmount 175; Motivation = Some(Scenario("r9")); VsVillainBet = 0; Street = Turn}]
+  let options = { defaultOptions with Scenario = "r8/20" }
+  let actual = scenarioRulesOop h options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``scenarioRulesOop does not apply if current scenario has no call eq`` () =
+  let h = [{Action = Action.RaiseToAmount 175; Motivation = Some(Scenario("r8")); VsVillainBet = 0; Street = Turn}]
+  let options = { defaultOptions with Scenario = "r8" }
+  let actual = scenarioRulesOop h options
+  Assert.Equal(options, actual)

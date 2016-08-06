@@ -9,10 +9,9 @@ open Cards.Actions
 open Cards.HandValues
 open Excel.Import
 open Decision
+open PostFlop.Parsing
 
 module Import =
-  open System.Globalization
-
   type ExcelOptions = {
     CbetFactor: CBet
     CheckRaise: OnCheckRaise
@@ -37,35 +36,6 @@ module Import =
       |> Seq.map (fun x -> x |> string)
       |> Seq.map (fun x -> if x = null then "" else x)
       |> Array.ofSeq
-
-  let (|Int|_|) str =
-   match System.Int32.TryParse(str) with
-   | (true,int) -> Some(int)
-   | _ -> None
-
-  let (|StartsWith|_|) (p:string) (s:string) =
-    if s.StartsWith(p) then
-        s.Substring(p.Length) |> Some
-    else
-        None
-
-  let parseInt (s: string) = 
-    match s with
-    | Int i -> Some i
-    | _ -> None
-
-  let (|Decimal|_|) (str: string) =
-   match System.Decimal.TryParse(str.Replace(",", "."), NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture) with
-   | (true,f) -> Some(f)
-   | _ -> None
-
-  let (|DecimalPerc|_|) (str: string) =
-   if str.EndsWith("%") then match str.Replace("%", "") with | Decimal d -> Some d | _ -> None else None
-
-  let parseDecimal (s: string) = 
-    match s with
-    | Decimal f -> Some f
-    | _ -> None
 
   let parseCBet (s: string) =
     match parseDecimal s with
@@ -441,20 +411,25 @@ module Import =
 
   let rec parseOopOption (strategy: string) (specialRules: string) =
     let canonic = strategy.Trim().ToLowerInvariant()
-    let specialParts = canonic.Split([|'@'|], 2)
+    let scenarioParts = canonic.Split([|'*'|], 2)
+    let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
+    let specialScenarioParts = specialRules.Split([|'*'|], 2)
+    let specialScenario = if specialScenarioParts.Length > 1 then specialScenarioParts.[1] else null
+    let specialParts = scenarioParts.[0].Split([|'@'|], 2)
     if specialParts.Length = 2 then parseOopOption specialParts.[0] specialParts.[1]
     else
-    let parts = canonic.Split([|'/'|], 2)
+    let parts = specialParts.[0].Split([|'/'|], 2)
     if System.String.IsNullOrEmpty(strategy) then None
     else if parts.Length = 1 then
       match parts.[0] with 
-      | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialRules  }
+      | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = null; SpecialScenario = specialScenario }
       | "x" -> None
       | _ -> failwith "Failed parsing Flop Oop (1)"
     else if parts.Length = 2 then
       let donk = 
         match parts.[0] with 
         | "ch" -> OopDonk.Check
+        | "rbs" -> OopDonk.RiverBetSizing
         | DecimalPerc n -> OopDonk.Donk n
         | _ -> failwith "Failed parsing Flop Oop Donk"
       let cbet =
@@ -472,7 +447,7 @@ module Import =
         | "ai" -> OopOnCBet.AllIn
         | Int i -> CallEQ i
         | _ -> failwith "Failed parsing Flop Oop OnCbet" 
-      Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialRules  }
+      Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
     else failwith "Failed parsing Flop Oop (2)"
 
   let parseOopOptionWithSpecialBoard (strategy: string) isSpecialBoard (specialBoardStrategy:string) (specialRules: string) =
@@ -606,26 +581,45 @@ module Import =
     let specialRules = if texture.Monoboard < 3 then cellValues.[1] else "" // monoboard rules are in the cell itself after @ sign
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
 
-  let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture =
+  let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture s =
     let defaultMapping () =
-      let index = 
+
+      let turnCard = s.Board.[3]
+      let isRiverOvercard = isLastBoardCardOvercard s.Board
+      let isRiverUndercard = isLastBoardCardUndercard s.Board
+      let isRiverMiddlecard = not(isRiverOvercard) && s.Board |> Array.except [turnCard] |> isLastBoardCardOvercard
+
+      let turn = s.Board |> Array.take 4
+      let isTurnOvercard = isLastBoardCardOvercard turn
+
+      let isPairedBoard = isPaired s.Board
+
+      let row = 
         (match handValue with
         | StraightFlush | FourOfKind ->
           match texture.Monoboard with
-          | 4 -> 30
-          | 5 -> 36
+          | 4 -> 49
+          | 5 -> 55
           | _ -> 23
         | FullHouse(Normal) -> 21
         | FullHouse(Weak) -> 22
         | Flush(_) -> 
           match texture.Monoboard with
-          | 4 -> 29
-          | 5 -> 35
+          | 4 -> 48
+          | 5 -> 54
           | _ -> 20
         | Straight(Normal) -> 18
         | Straight(Weak) -> 19
         | ThreeOfKind -> 17
-        | TwoPair -> 16
+        | TwoPair -> 
+          let pairIndeces = pairIndeces s.Hand s.Board
+          let topPair = pairIndeces |> Seq.head = 1
+          let topTwoPairs = pairIndeces |> Seq.take 2 = seq [1; 2]
+
+          if topTwoPairs && not isPairedBoard then 40
+          elif topPair && not isPairedBoard then 41
+          elif topPair && bottomPaired s.Board then 42
+          else 16
         | Pair(x) -> 
           let highKicker k = k = Ace || k = King || k = Queen || k = Jack
           match x with
@@ -634,27 +628,54 @@ module Import =
           | Top(_) -> 10
           | Second(k) when highKicker k -> 11
           | Second(_) -> 12
-          | Third(_) -> 13
-          | Fourth | Fifth -> 14
+          | Third(_) -> 
+            if isTurnOvercard && isRiverOvercard then 28
+            elif isTurnOvercard && isRiverMiddlecard then 29
+            elif isRiverOvercard then 30
+            elif isTurnOvercard && isRiverUndercard then 31
+            else 13
+          | Fourth ->
+            if isTurnOvercard && isRiverOvercard then 32
+            elif isTurnOvercard && isRiverMiddlecard then 33
+            elif isRiverOvercard then 34
+            elif isTurnOvercard && isRiverUndercard then 35
+            else 14
+          | Fifth ->
+            if isTurnOvercard && isRiverOvercard then 36
+            elif isTurnOvercard && isRiverMiddlecard then 37
+            elif isRiverOvercard then 38
+            elif isTurnOvercard && isRiverUndercard then 39
+            else 14
           | Under -> 15
-        | TwoOvercards | Nothing -> 6
+        | TwoOvercards | Nothing -> 
+          let riverDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = s.Board.[4].Face) |> Array.length = 1
+          let isTurnOrRiverAce = s.Board |> Array.skip 3 |> Array.exists (fun x -> x.Face = Ace)
+          let turnDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = turnCard.Face) |> Array.length = 1
+
+          if isTurnOvercard && isRiverOvercard && not(isTurnOrRiverAce) then 24
+          elif isTurnOvercard && isRiverMiddlecard && not(isTurnOrRiverAce) then 25
+          elif isRiverOvercard && turnDoesNotPair && not(isTurnOrRiverAce) then 26
+          elif isTurnOvercard && isRiverUndercard && riverDoesNotPair && not(isTurnOrRiverAce) then 27
+          else 6
         )
       let column = 
         match texture.Monoboard, handValue with
         | 4, Flush(Nut) -> 4
         | 4, Flush(NotNut King) | 4, Flush(NotNut Queen) | 4, Flush(NotNut Jack) -> 2
         | 4, Flush(_) -> 0
-        | 4, _ -> 4
+        | 4, _ -> 5
+        | 3, Flush(_) -> 0
+        | 3, _ when isLastBoardCardFlushy s.Board -> 1
         | _ -> 0
-      (index, column)
+      (row, column)
 
     let monoMapping () =
       match handValue with
-      | StraightFlush | FourOfKind -> (36, 0)
-      | Flush(Board) -> (35, 0)
-      | Flush(Nut) -> (35, 2)
-      | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> (35, 5)
-      | Flush(_) -> (35, 3)
+      | StraightFlush | FourOfKind -> (55, 0)
+      | Flush(Board) -> (54, 0)
+      | Flush(Nut) -> (54, 2)
+      | Flush(NotNut King) | Flush(NotNut Queen) | Flush(NotNut Jack) -> (54, 5)
+      | Flush(_) -> (54, 3)
       | _ -> (6, 0)
 
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -664,16 +685,17 @@ module Import =
       else defaultMapping ()
 
     let indexString = index |> string
-    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AK" + indexString)
+    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AL" + indexString)
 
-    let (specialConditionsColumn, specialColumn) = 
+    let (specialConditionsColumn, specialColumn, specialRulesColumn) = 
       match texture.Monoboard with
-      | 5 -> (None, 0)
-      | 4 -> (Some 6, 5)
-      | _ -> (Some 2, 3)
+      | 5 -> (None, 0, None)
+      | 4 -> (Some 7, 6, None)
+      | _ -> (Some 3, 4, Some 2)
     let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
+    let sr = defaultArg (Option.map (fun src -> cellValues.[src]) specialRulesColumn) ""
 
-    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] cellValues.[1]
+    parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr
 
   let importFlopList sheetName (xlWorkBook : Workbook) =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -686,3 +708,23 @@ module Import =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
     let rowString = row |> string
     (getCellValues xlWorkSheet ("A" + rowString) ("B" + rowString) ).[0]
+
+  let importRiverBetSizes (xlWorkBook : Workbook) = 
+    let parsePercentage s =
+      match s with
+      | Decimal d -> d * 100m |> int
+      | _ -> failwith ("Failed parsing river bet size " + s)
+    let xlWorkSheet = xlWorkBook.Worksheets.["r8 & r9  riv bet sizings"] :?> Worksheet
+    [3..10]
+    |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("E" + row.ToString()))
+    |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
+    |> Seq.map (fun vs ->  
+       let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
+       { MinPotSize = Int32.Parse(potParts.[0])
+         MaxPotSize = if potParts.Length > 1 then Int32.Parse(potParts.[1]) else 1000
+         MinAllInPercentage = parsePercentage vs.[1]
+         MaxAllInPercentage = parsePercentage vs.[2]
+         BetSize = parsePercentage vs.[3]
+         MinChipsLeft = Int32.Parse(vs.[4])
+       })
+    |> List.ofSeq

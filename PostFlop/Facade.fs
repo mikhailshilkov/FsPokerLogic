@@ -51,16 +51,17 @@ module Facade =
     | [] -> Some "hero call raise pre"
     | _ -> None
 
-  let decidePostFlopOop history s value texture xl bluffyFlops bluffyHand =
+  let decidePostFlopOop history s value texture xl bluffyFlops bluffyHand riverBetSizes =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
     let preFlopPattern = pickOopSheet historyTuples s
     match street s, preFlopPattern with
     | Flop, Some p -> importOopFlop (fst xl) p value texture
     | Turn, Some p -> importOopTurn (fst xl) p value texture
-    | River, Some p -> importOopRiver (fst xl) p (value.Made) texture
+    | River, Some p -> importOopRiver (fst xl) p (value.Made) texture s
     | _ -> None
     |> Option.map (specialRulesOop s historySimple)
+    |> Option.map (scenarioRulesOop history)
     |> Option.map (strategicRulesOop s value history bluffyFlops bluffyHand)
-    |> Option.map (fun (o, m) -> (decideOop s o, m))
+    |> Option.map (fun (o, m) -> (decideOop riverBetSizes s o, m))
     |> Option.bind (fun (ao, m) -> ao |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s }))

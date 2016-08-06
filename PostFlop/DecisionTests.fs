@@ -9,7 +9,7 @@ module DecisionTests =
   open Xunit
 
   let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
-  let defaultOopOptions = { First = Check; Then = Fold; Special = [] }
+  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
   let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}|]; Pot = 180; VillainStack = 440; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}; {Face = King; Suit = Clubs}|]; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
@@ -381,172 +381,198 @@ module DecisionTests =
   let ``Check flop OOP`` () =
     let snapshot = defaultFlop
     let options = defaultOopOptions
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Check |> Some, actual)
 
   [<Fact>]
   let ``Donk flop OOP`` () =
     let snapshot = defaultFlop
     let options = { defaultOopOptions with First = Donk(62.5m) }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 50 |> Some, actual)
 
   [<Fact>]
   let ``Fold flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 50 }
     let options = defaultOopOptions
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Stack Off: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = StackOff }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off: Check/raise 1BB flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 20; Pot = 100 }
     let options = { defaultOopOptions with Then = StackOff }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 100 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off: Check/raise limped flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 30; Pot = 70 }
     let options = { defaultOopOptions with Then = StackOff }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 90 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off: Check/raise flop OOP to AllIn`` () =
     let snapshot = { defaultFlop with VillainBet = 70; Pot = 150; HeroStack = 290 }
     let options = { defaultOopOptions with Then = StackOff }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.AllIn |> Some, actual)
 
   [<Fact>]
   let ``Stack Off+: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = StackOffFast }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 140 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off+: Check/raise 1BB flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 20; Pot = 100 }
     let options = { defaultOopOptions with Then = StackOffFast }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 120 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off+: Check/raise limped flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 30; Pot = 70 }
     let options = { defaultOopOptions with Then = StackOffFast }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 120 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off gay: Check/raise gay bet`` () =
     let snapshot = { defaultFlop with VillainBet = 30; Pot = 100 }
     let options = { defaultOopOptions with Then = StackOffGay }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 65 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off gay: Check/raise big bet`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 110 }
     let options = { defaultOopOptions with Then = StackOffGay }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Stack Off gay: AI on 3bet`` () =
     let snapshot = { defaultFlop with HeroBet = 65; VillainBet = 130; Pot = 265 }
     let options = { defaultOopOptions with Then = StackOffGay }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.AllIn |> Some, actual)
 
   [<Fact>]
   let ``Raise/call gay: Check/raise gay bet`` () =
     let snapshot = { defaultFlop with VillainBet = 30; Pot = 100 }
     let options = { defaultOopOptions with Then = RaiseGayCallEQ 10 }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 65 |> Some, actual)
 
   [<Fact>]
   let ``Raise/fold: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Raise/call: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
     let options = { defaultOopOptions with Then = RaiseCall }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Check/raise 1BB flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 20; Pot = 100 }
     let options = { defaultOopOptions with Then = RaiseCallEQ 20 }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 80 |> Some, actual)
 
   [<Fact>]
   let ``Raise/fold: Fold 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Raise/call: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseCall }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Fold 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseCallEQ 26 }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseCallEQ 27 }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 
   [<Fact>]
   let ``Raise gay/call EQ: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
     let options = { defaultOopOptions with Then = RaiseGayCallEQ 27 }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 
   [<Fact>]
   let ``Check/AllIn: AllIn flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40 }
     let options = { defaultOopOptions with Then = AllIn }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.AllIn |> Some, actual)
 
   [<Fact>]
   let ``Donk: Donk flop OOP`` () =
     let options = { defaultOopOptions with First = Donk 50m }
-    let actual = Decision.decideOop defaultFlop options
+    let actual = Decision.decideOop [] defaultFlop options
     Assert.Equal(Action.RaiseToAmount 40 |> Some, actual)
 
   [<Fact>]
   let ``Donk: Donk flop OOP AI if bet is > 80% stack`` () =
     let snapshot = { defaultFlop with Pot = 200; HeroStack = 149 }
     let options = { defaultOopOptions with First = Donk 60m }
-    let actual = Decision.decideOop snapshot options
+    let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.AllIn |> Some, actual)
+
+  let riverRules = [
+    { MinPotSize = 0;   MaxPotSize = 199; MinAllInPercentage = 40; MaxAllInPercentage = 100; MinChipsLeft = 50; BetSize = 55 };
+    { MinPotSize = 200; MaxPotSize = 500; MinAllInPercentage = 50; MaxAllInPercentage = 70;  MinChipsLeft = 60; BetSize = 60}]
+
+  let riverBetSizeTest stack expected =
+    let snapshot = { defaultRiver with Pot = 200; HeroStack = stack }
+    let options = { defaultOopOptions with First = RiverBetSizing }
+    let actual = Decision.decideOop riverRules snapshot options
+    Assert.Equal(expected |> Some, actual)
+
+  [<Fact>]
+  let ``River Bet Size Donk OOP check if stack is too low`` () =
+    riverBetSizeTest 95 Action.Check
+
+  [<Fact>]
+  let ``River Bet Size Donk OOP AI if stack is in range`` () =
+    riverBetSizeTest 105 Action.AllIn
+
+  [<Fact>]
+  let ``River Bet Size Donk OOP AI if stack is high but not enough chips will be behind`` () =
+    riverBetSizeTest 150 Action.AllIn
+
+  [<Fact>]
+  let ``River Bet Size Donk OOP bets in stack is deep`` () =
+    riverBetSizeTest 190 (Action.RaiseToAmount 120)

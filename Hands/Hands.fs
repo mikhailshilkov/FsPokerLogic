@@ -154,6 +154,7 @@ let toHand suited =
   { Face1 = ordered.[0]; Face2 = ordered.[1]; SameSuit = suited.Card1.Suit = suited.Card2.Suit }
 
 let maxFace cards = cards |> Seq.map (fun x -> x.Face) |> Seq.maxBy faceValue
+let minFace cards = cards |> Seq.map (fun x -> x.Face) |> Seq.minBy faceValue
 
 type Board = SuitedCard[]
 

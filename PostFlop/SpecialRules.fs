@@ -5,44 +5,44 @@ open Cards.HandValues
 open Hands
 open Options
 open Decision
-
+open PostFlop.Parsing
 
 module SpecialRules = 
   let specialRulesOop s history o = 
     let checkCheckMatch f t other = 
       match history with
       | [_; Action.Check] -> { o with First = f } 
-      | [_; Action.Check; Action.RaiseToAmount _]  -> { o with Then = t } 
+      | [_; Action.Check; Action.RaiseToAmount _]  -> { o with Then = t; Scenario = o.SpecialScenario } 
       | _ -> other
 
     let rec imp remaining =
       match remaining with
       | CallEQPlusXvsAI dx::rem ->
         match o.Then, s.VillainStack with
-        | CallEQ x, 0 -> { o with Then = CallEQ (x + dx) }
+        | CallEQ x, 0 -> { o with Then = CallEQ (x + dx); Scenario = o.SpecialScenario }
         |_ -> imp rem
       | PairedBoard(f, t)::rem ->
-        if isPaired s.Board then { o with First = f; Then = t } else imp rem
+        if isPaired s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem
       | BoardOvercard(f, t)::rem -> 
-        if isLastBoardCardOvercard s.Board then { o with First = f; Then = t } else imp rem
+        if isLastBoardCardOvercard s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem
       | BoardAce(f,t)::rem ->
         if (Array.last s.Board).Face = Ace 
           && s.Board |> Array.filter (fun x -> x.Face = Ace) |> Array.length = 1 then 
-          { o with First = f; Then = t } 
+          { o with First = f; Then = t; Scenario = o.SpecialScenario } 
         else imp rem
       | CheckCheck(f, t)::rem -> checkCheckMatch f t (imp rem)
       | CheckCheckAndBoardOvercard(f, t)::rem -> 
         if isLastBoardCardOvercard s.Board then checkCheckMatch f t (imp rem) else imp rem
       | KHighOnPaired::rem ->
         if o.Then = Fold && isPaired s.Board && isXHigh King s.Hand && s.BB <= 30 then 
-          { o with Then = CallEQ (if s.BB = 20 then 30 else 25) } 
+          { o with Then = CallEQ (if s.BB = 20 then 30 else 25); Scenario = o.SpecialScenario } 
         else imp rem
       | CheckRaiseOvercardBluff(t)::rem ->
         let villainBet = s.VillainBet * 100 / (s.Pot - s.VillainBet)
         if isLastBoardCardOvercard s.Board 
           && (villainBet = 0 || villainBet >= 35 && villainBet <= 56) 
           && stackIfCall s >= s.BB * 8
-        then { o with First = Check; Then = t } else imp rem
+        then { o with First = Check; Then = t; Scenario = o.SpecialScenario } else imp rem
       | NotUsed::rem -> imp rem
       | [] -> o
     imp o.Special
@@ -141,7 +141,8 @@ module SpecialRules =
     | _ -> o
 
   let strategicRulesOop s value history (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (bluffyHand, overtakyHand) o =
-    let historySimple = List.map (fun x -> x.Action) history    
+    let historySimple = List.map (fun x -> x.Action) history
+    let motivationSeed = if o.Scenario <> null then Some(Scenario(o.Scenario)) else None
     let rules = [
       (overtakeLimpedPot overtakyHand s value historySimple, None);
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
@@ -154,4 +155,13 @@ module SpecialRules =
     ]
     rules |> List.fold (fun (options, motivation) (rule, ruleMotiv) -> 
                           let newO = rule options
-                          if newO <> options then (newO, ruleMotiv) else (options, motivation)) (o, None)
+                          if newO <> options then (newO, ruleMotiv) else (options, motivation)) (o, motivationSeed)
+
+  let scenarioRulesOop history o =
+    if o.Scenario = null then o
+    else
+      let parts = o.Scenario.Split([|'/'|], 2)
+      let motivationOfLastAction = history |> List.map (fun x -> x.Motivation) |> List.tryLast
+      match motivationOfLastAction, parts with
+      | Some(Some(Motivation.Scenario(x))), [|p1; Int i|] when x = p1 -> { o with First = RiverBetSizing; Then = CallEQ i }
+      | _ -> o

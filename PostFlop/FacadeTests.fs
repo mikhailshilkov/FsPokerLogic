@@ -75,15 +75,20 @@ let bluffy =
     importFlopList "bluffy overtaking, vill ch b fl" (fst adxl))
 closeExcel adxl
 
-let testPostFlopMotivated h s mono expected =
+let testPostFlopMotivatedExt h s mono test =
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = mono }
+  let riverBetSizing = [
+    { MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
 
   let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   let xl = openExcel fileName
-  let actual = decidePostFlopOop h s v t xl bluffy ((fun _ -> false), (fun _ -> false))
-  Assert.Equal(expected, actual.Value.Action)
+  let actual = decidePostFlopOop h s v t xl bluffy ((fun _ -> false), (fun _ -> false)) riverBetSizing
+  test actual
   closeExcel xl
+
+let testPostFlopMotivated h s mono expected =
+  testPostFlopMotivatedExt h s mono (fun x -> Assert.Equal(expected, x.Value.Action))
 
 let testPostFlop h s mono expected =
   let mh = h |> List.map (notMotivated Flop s.VillainBet)
@@ -220,6 +225,21 @@ let ``14`` () =
     { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
     { Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 Action.AllIn
+
+[<Fact>]
+let ``Turn OOP bet returns appropriate scenario name`` () =
+  let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKs"; Pot = 80; VillainStack = 320; HeroStack = 580; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlopMotivatedExt [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }] s 0 (fun actual -> Assert.Equal(Some(Scenario "r8"), actual.Value.Motivation))
+
+[<Fact>]
+let ``River OOP bet is made based on turn scenario`` () =
+  let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKsTh"; Pot = 160; VillainStack = 280; HeroStack = 440; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlopMotivated [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
+    { Action = Action.RaiseToAmount 40; Motivation = Some(Scenario "r8"); VsVillainBet = 00; Street = Turn }] s 0 (Action.RaiseToAmount 95)
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"

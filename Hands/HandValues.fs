@@ -166,8 +166,9 @@ module HandValues =
     | Some s -> cards |> Array.filter (fun x -> x.Suit = s) |> isStraight
     | None -> false
 
-  let monoboardLength (cards : SuitedCard[]) =
-    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.sortByDescending id |> Seq.head
+  let monoboardLength = function
+    | [||] -> 0
+    | c -> c |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.sortByDescending id |> Seq.head
 
   let isPaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.exists (fun x -> x = 2)
@@ -192,6 +193,9 @@ module HandValues =
 
   let topPaired (cards : SuitedCard[]) =
     pairFace cards |> Option.filter (fun x -> x = maxFace cards) |> Option.isSome
+
+  let bottomPaired (cards : SuitedCard[]) =
+    pairFace cards |> Option.filter (fun x -> x = minFace cards) |> Option.isSome
 
   let isDoublePaired (cards : SuitedCard[]) =
     cards |> cardValueGroups |> Seq.filter (fun x -> x >= 2) |> Seq.length >= 2
@@ -218,6 +222,17 @@ module HandValues =
       let values = remaining |> List.map (fun x -> faceValue x.Face) |> List.distinct |> List.sortDescending
       List.length values >= 2 && values.[0] > latestCardValue && values.[1] < latestCardValue
 
+  let isLastBoardCardUndercard (board: SuitedCard[]) =
+    match Array.rev board |> List.ofArray with
+    | [] | [_] -> false
+    | last::remaining ->
+      let latestCardValue = last.Face |> faceValue
+      List.forall (fun x -> faceValue x.Face > latestCardValue) remaining
+
+  let isLastBoardCardFlushy board = 
+    let monoNow = monoboardLength board
+    monoNow >= 3 && monoNow > (board |> Array.take (board.Length - 1) |> monoboardLength)
+
   let maxBoard b = b |> Array.map (fun x -> faceValue x.Face) |> Array.max
 
   let overcards hand b = 
@@ -225,13 +240,22 @@ module HandValues =
     |> Seq.filter (fun x -> faceValue x.Face > maxBoard b) 
     |> Seq.length
 
+  let pairIndeces hand board = 
+    board 
+    |> Seq.map (fun x -> x.Face)
+    |> Seq.sortByDescending faceValue
+    |> Seq.distinct
+    |> Seq.mapi (fun i x -> (x, i + 1))
+    |> Seq.filter (fun (x, _) -> x = hand.Card1.Face || x = hand.Card2.Face)
+    |> Seq.map snd
+
   let handValue hand board =
     let combined = concat hand board
 
     let boardFaces =
       board 
-      |> Seq.sortByDescending (fun x -> faceValue x.Face)
       |> Seq.map (fun x -> x.Face)
+      |> Seq.sortByDescending faceValue
     let boardHighestPair = boardFaces |> Seq.groupBy id |> Seq.filter (fun (_, c) -> Seq.length c >= 2) |> Seq.map (faceValue << fst) |> Seq.tryHead
 
     let pairs = 

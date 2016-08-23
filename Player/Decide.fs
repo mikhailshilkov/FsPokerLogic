@@ -14,17 +14,18 @@ open Recognition.ScreenRecognition
 open PostFlop.HandValue
 open PostFlop.Decision
 open PostFlop.Facade
+open Excel.Import
 
 module Decide =
   open Interaction
 
   let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP
+  let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP
   let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
+  let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP
   let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
   let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking, bluffyHandsForFlopCheckRaise, notOvertakyHandsInLimpedPot, riverBetSizes) = 
-    importRuleFromExcel (fun x -> (importOopAdvanced x, 
+    importExcel (fun x -> (importOopAdvanced x, 
                                    importHudData x, 
                                    importFlopList "bluffy hero ch-r flop vs limp" x,
                                    importFlopList "bluffy hero ch-r flop vs minr" x,
@@ -63,7 +64,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise (hb * 2 / 5) bb; raise 5 2; raise vb hb]
     | _ -> failwith "History is not clear"
 
-  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop (screen: Screen) history: MotivatedAction option =
+  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky (screen: Screen) history: MotivatedAction option =
     let decidePre (screen: Screen) =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
@@ -91,7 +92,7 @@ module Decide =
         if screen.Button = Hero then 
           decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map (notMotivated (street s) s.VillainBet)
         else
-          decidePostFlopOop history s value special xlPostFlopOop (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot) riverBetSizes
+          decidePostFlopOop history s value special xlPostFlopOop xlTricky (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot) riverBetSizes
       | _ -> None
 
     match screen.Sitout, screen.Board with
@@ -134,7 +135,7 @@ module Decide =
     | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
-  let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop msg (state:DecisionState option) =
+  let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky msg (state:DecisionState option) =
     let log (s: string) =
       System.IO.File.AppendAllLines(sprintf "%s.log" msg.TableName, [s])
       System.Console.WriteLine(s)
@@ -155,7 +156,7 @@ module Decide =
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
       history |> List.iter (sprintf "History: %A" >> log)
 
-      let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop screen history
+      let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
       let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
       match decision with
       | Some d ->

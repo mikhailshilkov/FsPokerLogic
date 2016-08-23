@@ -12,9 +12,12 @@ module Actions =
 
   type Street = PreFlop | Flop | Turn | River
 
+  type FloatType = ValueFloat | BluffFloat | WithContinuation of string
+
   type Motivation = 
     | Bluff
     | Scenario of string
+    | Float of FloatType
 
   type MotivatedAction = {
     Action: Action

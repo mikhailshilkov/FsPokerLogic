@@ -9,11 +9,11 @@ open Excel
 open Import
 
 let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP
+let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP
+let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let rulesAdvancedOOP = importRuleFromExcel importOopAdvanced fileNameAdvancedOOP
+let rulesAdvancedOOP = importExcel importOopAdvanced fileNameAdvancedOOP
 let rules = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
 
 let test s vb hb hand history openRange expected =

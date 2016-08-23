@@ -58,6 +58,8 @@
     <Compile Include="Actions.fs" />
     <Compile Include="HandValues.fs" />
     <Compile Include="HandValuesTests.fs" />
+    <Compile Include="Ranges.fs" />
+    <Compile Include="RangesTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">

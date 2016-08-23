@@ -655,18 +655,6 @@ let importOopAdvanced (xlWorkBook : Workbook) =
               ]
   }
 
-let importRuleFromExcel importAllRules fileName =
-  let xlApp = new ApplicationClass()
-  let xlWorkBook = xlApp.Workbooks.Open(fileName)
-  let res = importAllRules xlWorkBook
-
-  let misValue = System.Reflection.Missing.Value
-  xlWorkBook.Close(false, misValue, misValue)
-  Marshal.ReleaseComObject(xlWorkBook) |> ignore
-  xlApp.Quit()
-  Marshal.ReleaseComObject(xlApp) |> ignore
-  res
-
 let importHudData (xlWorkBook : Workbook) =
   let xlWorkSheet = xlWorkBook.Worksheets.["Hud"] :?> Worksheet
   [3..10000]

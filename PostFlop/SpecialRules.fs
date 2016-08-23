@@ -38,7 +38,7 @@ module SpecialRules =
           { o with Then = CallEQ (if s.BB = 20 then 30 else 25); Scenario = o.SpecialScenario } 
         else imp rem
       | CheckRaiseOvercardBluff(t)::rem ->
-        let villainBet = s.VillainBet * 100 / (s.Pot - s.VillainBet)
+        let villainBet = relativeBet s
         if isLastBoardCardOvercard s.Board 
           && (villainBet = 0 || villainBet >= 35 && villainBet <= 56) 
           && stackIfCall s >= s.BB * 8

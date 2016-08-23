@@ -49,6 +49,7 @@ module Decision =
   let potOdds s = (callSize s |> decimal) * 100m / (pot s + (callSize s) |> decimal) |> ceil |> int
   let times i d = ((i |> decimal) * d) |> int
   let wasRaisedPre s = betPre s > s.BB
+  let relativeBet s = s.VillainBet * 100 / (s.Pot - s.VillainBet)
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
 
@@ -190,8 +191,17 @@ module Decision =
     if betSize > 3 * stack / 4 then Action.AllIn 
     else betSize |> RaiseToAmount
 
-  let decideOop riverBetSizes s options =
-    let rec onVillainBet = function
+
+  let rec decideOop riverBetSizes s options =
+    let rec onVillainBet a =
+      let conditionalRaise x s = 
+        let betSize = x.Size * (s.VillainBet |> decimal) |> int  |> roundTo5 
+        let stackOnStreet = effectiveStackOnCurrentStreet s
+        let potRateAfterCall = (stackOnStreet - betSize |> decimal) / (potPre s + 2 * betSize  |> decimal)
+        if x.MinStackRemaining < stackOnStreet - betSize && x.MinStackPotRatio < potRateAfterCall
+        then RaiseToAmount betSize
+        else onVillainBet x.On3Bet
+      match a with
       | StackOff -> raiseOop 3m 2.75m 5m s
       | StackOffFast -> raiseOop 4m 3.5m 6m s
       | StackOffGay -> stackOffGay s
@@ -199,6 +209,7 @@ module Decision =
       | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
       | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
       | FormulaRaise x -> if s.HeroBet > 0 then onVillainBet x else formulaRiverRaise s
+      | Raise x -> if s.HeroBet > 0 then onVillainBet x.On3Bet else conditionalRaise x s
       | Fold | RaiseFold _ -> Action.Fold
       | Call | RaiseCall -> Action.Call
       | CallEQ i | RaiseCallEQ i | RaiseGayCallEQ i -> callEQ s i

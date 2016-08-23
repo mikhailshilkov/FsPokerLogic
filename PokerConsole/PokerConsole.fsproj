@@ -59,8 +59,6 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Ranges.fs" />
-    <Compile Include="RangesTests.fs" />
     <Compile Include="Preflop.fs" />
     <Compile Include="PreflopTests.fs" />
     <Compile Include="Import.fs" />

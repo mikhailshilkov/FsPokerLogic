@@ -6,9 +6,10 @@ open Import
 open Xunit
 open FsCheck
 open FsCheck.Xunit
+open Excel.Import
 
 let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importRuleFromExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
+let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
 let decideIP = decideOnRules rulesIP
 
 type BigBets25 =
@@ -90,7 +91,7 @@ let ``decide on imported / raise allin`` handString stack expected =
   decideOnImported decideIP handString stack [WasRaise(2m); WasRaiseAllIn] expected
 
 let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importRuleFromExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
 let decideOOP = decideOnRules rulesOOP
 
 [<Theory>]
@@ -148,7 +149,7 @@ let ``decide on imported / call 4bet allin`` () =
   decideOnImported decideOOP "99" 6.66m [WasRaise(2m); WasRaise(4m); WasRaiseAllIn] "Call"
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let (rulesAdvancedOOPStruct, hudData) = importRuleFromExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
+let (rulesAdvancedOOPStruct, hudData) = importExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
 let rulesAdvancedOOPLow = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
 let rulesAdvancedOOPBig = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldBig]
 let decideAdvancedOOP x = decideOnRules rulesAdvancedOOPLow x

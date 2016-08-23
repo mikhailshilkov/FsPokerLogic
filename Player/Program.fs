@@ -16,11 +16,13 @@ let main argv =
   printfn "Loading rules..."
   let rc = Seq.head Decide.rulesLow
   let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-  let xlFlopTurn = openExcel fileNameFlopTurn
+  use xlFlopTurn = useExcel fileNameFlopTurn
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-  let xlTurnDonk = openExcel fileNameTurnDonk
+  use xlTurnDonk = useExcel fileNameTurnDonk
   let fileNamePostFlopOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
-  let xlPostFlopOop = openExcel fileNamePostFlopOop
+  use xlPostFlopOop = useExcel fileNamePostFlopOop
+  let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
+  use xlTricky = useExcel fileNameTricky
 
   let system = Configuration.defaultConfig() |> System.create "my-system"
   let spawnChild childActor (debug: string) name (mailbox : Actor<'a>) = 
@@ -29,7 +31,7 @@ let main argv =
   
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
 
-  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop) None clickerRef
+  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlTurnDonk.Workbook xlPostFlopOop.Workbook xlTricky.Workbook) None clickerRef
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 
@@ -43,5 +45,4 @@ let main argv =
 
   printfn "%s" "\nActor system started... Press any key to exit."
   Console.ReadKey() |> ignore
-  closeExcel xlFlopTurn
   0

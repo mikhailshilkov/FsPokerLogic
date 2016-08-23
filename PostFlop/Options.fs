@@ -37,7 +37,8 @@ module Options =
   }
 
   type OopDonk = Check | Donk of decimal | AllIn | RiverBetSizing
-  type OopOnCBet = 
+  type OopConditionalRaise = { Size: decimal; MinStackRemaining: int; MinStackPotRatio: decimal; On3Bet: OopOnCBet }
+  and OopOnCBet = 
     |Fold 
     | StackOff 
     | StackOffFast 
@@ -48,6 +49,7 @@ module Options =
     | RaiseCallEQ of int 
     | RaiseGayCallEQ of int 
     | FormulaRaise of OopOnCBet
+    | Raise of OopConditionalRaise
     | Call 
     | AllIn
 

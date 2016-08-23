@@ -205,15 +205,19 @@ let ``pairIndeces returns indeces of pairs between hand and board`` handS flopS 
   Assert.Equal<int list>(expected, actual)  
 
 [<Theory>]
-[<InlineData("As5c", "6s7d8c9c", true)>]
-[<InlineData("4s5c", "6s7d8cTc", true)>]
-[<InlineData("As2c", "Js3d4c5c7d", true)>]
-[<InlineData("AsTc", "6s7d8c9c", false)>]
-[<InlineData("2sTc", "AsKdQcJc3c", false)>]
-let ``isWeakStraight returns true for weak straights`` handS flopS expected =
+[<InlineData("As5c", "6s7d8c9c", "Weak")>]
+[<InlineData("4s5c", "6s7d8cTc", "Weak")>]
+[<InlineData("As2c", "Js3d4c5c7d", "Weak")>]
+[<InlineData("AsTc", "6s7d8c9c", "Normal")>]
+[<InlineData("2sTc", "AsKdQcJc3c", "Normal")>]
+[<InlineData("2s9c", "4s5d6c7c8c", "Normal")>]
+[<InlineData("2sQc", "4s5d6c7c8c", "Board")>]
+[<InlineData("2s9c", "AsKdQcJcTc", "Board")>]
+let ``straightStrength returns correct straight strength`` handS flopS expectedS =
   let hand = parseSuitedHand handS
   let board = parseBoard flopS
-  let actual = isWeakStraight hand board
+  let actual = straightStrength hand board
+  let expected = match expectedS with | "Board" -> OnBoard | "Weak" -> Weak | _ -> Normal
   Assert.Equal(expected, actual)
 
 [<Theory>]
@@ -312,6 +316,12 @@ let ``Straight weak`` handS flopS =
   Straight(Weak) |> test handS flopS
 
 [<Theory>]
+[<InlineData("3d4c", "5h6c7d9d8h")>]
+[<InlineData("Td6c", "2h3c4d5d6h")>]
+let ``Straight board`` handS flopS =
+  Straight(OnBoard) |> test handS flopS
+
+[<Theory>]
 [<InlineData("Ad3d", "2c4dJdKd6c")>]
 [<InlineData("Kd3d", "2c4dJdAd6c")>]
 [<InlineData("Jd3c", "2cKdQdAd6d")>]
@@ -352,6 +362,12 @@ let ``Full house normal`` handS flopS =
 [<InlineData("Ad9h", "4h4c4dJs9d")>]
 let ``Full house weak`` handS flopS =
   FullHouse(Weak) |> test handS flopS
+
+[<Theory>]
+[<InlineData("JdTd", "AdAhAs2s2c")>]
+[<InlineData("TdTh", "Jd3h3s3cJc")>]
+let ``Full house board`` handS flopS =
+  FullHouse(OnBoard) |> test handS flopS
 
 [<Theory>]
 [<InlineData("TdTh", "AdJhTs2sTc")>]

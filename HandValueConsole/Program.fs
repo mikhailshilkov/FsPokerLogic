@@ -14,7 +14,7 @@ let main argv =
 
   Console.Write "Opening excel files..."
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-  let xlTurnDonk = openExcel fileNameTurnDonk
+  let xl = useExcel fileNameTurnDonk
   Console.Write "\n"
 
   let mutable k = 'a'
@@ -38,9 +38,7 @@ let main argv =
       { Action = Action.RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.RaiseToAmount 50; Motivation = None; VsVillainBet = 0; Street = Flop }]
 
-    let turnDonkOption = importTurnDonk (fst xlTurnDonk) value texture snapshot history
+    let turnDonkOption = importTurnDonk xl.Workbook value texture snapshot history
     printf "Turn donk action is: %A.\nPress any key to continue or 'q' to exit:" turnDonkOption
     k <- Console.ReadKey().KeyChar
-
-  closeExcel xlTurnDonk
   0 // return an integer exit code

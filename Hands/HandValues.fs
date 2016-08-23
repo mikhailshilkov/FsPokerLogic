@@ -13,7 +13,7 @@ module HandValues =
     | Top of Face
     | Over
 
-  type TypeStrength = | Normal | Weak
+  type TypeStrength = | Normal | Weak | OnBoard
 
   type FlushStrength = Nut | NotNut of Face | Board
 
@@ -76,16 +76,20 @@ module HandValues =
     && not (isStreety 4 1 board)
     && isStreety 4 1 combined
 
-  let isWeakStraight hand board =
+  let straightStrength hand board =
     let combined = concat hand board
     let our = streety 5 0 combined
+    let boardStraight = streety 5 0 board
     match our with
+    | x when x = boardStraight -> OnBoard
     | Some s -> 
       let boardFaces = board |> Array.map (fun x -> faceValue x.Face) |> List.ofArray
-      [s-4..14]
-      |> List.map (fun x -> List.concat [boardFaces; [x]])
-      |> List.exists (fun x -> streetyFaces 5 0 x |> Option.filter (fun y -> y > s) |> Option.isSome)
-    | _ -> false
+      let isWeak =
+        [s-4..14]
+        |> List.map (fun x -> List.concat [boardFaces; [x]])
+        |> List.exists (fun x -> streetyFaces 5 0 x |> Option.filter (fun y -> y > s) |> Option.isSome)
+      if isWeak then Weak else Normal
+    | _ -> Normal
 
   let cardValueGroups cards = cards |> Seq.countBy (fun x -> x.Face) |> Seq.map snd |> Seq.sortDescending 
   let sameSequence a b = Seq.compareWith Operators.compare a b = 0
@@ -276,11 +280,11 @@ module HandValues =
 
     if isStraightFlush combined then StraightFlush
     else if isFourOfKind combined then FourOfKind
-    else if isWeakFullHouse hand board then FullHouse(Weak)
-    else if isFullHouse combined then FullHouse(Normal)
+    else if isFullHouse combined then 
+      FullHouse(if isFullHouse board then OnBoard elif isWeakFullHouse hand board then Weak else Normal)
     else if flush.IsSome then Flush(flush.Value)
     else if isStraight combined then 
-      if isWeakStraight hand board then Straight(Weak) else Straight(Normal)
+      Straight(straightStrength hand board)
     else if Seq.length pairs = 2 && pairs.[0] = pairs.[1] then ThreeOfKind
     else if pairs |> Seq.length = 2 && boardHighestPair.IsNone then TwoPair
     else if pairs |> Seq.filter (fun x -> faceValue x > defaultArg boardHighestPair 0) |> Seq.length = 2 then 

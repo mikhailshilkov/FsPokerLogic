@@ -68,12 +68,11 @@ let ``pickOopSheet falls back to call for empty history and bigger pot`` () =
   Assert.Equal(Some "hero call raise pre", actual)
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let adxl = openExcel fileNameAdvancedOOP
+let adxl = useExcel fileNameAdvancedOOP
 let bluffy = 
-  (importFlopList "bluffy hero ch-r flop vs limp" (fst adxl),
-    importFlopList "bluffy hero ch-r flop vs minr" (fst adxl),
-    importFlopList "bluffy overtaking, vill ch b fl" (fst adxl))
-closeExcel adxl
+  (importFlopList "bluffy hero ch-r flop vs limp" adxl.Workbook,
+    importFlopList "bluffy hero ch-r flop vs minr" adxl.Workbook,
+    importFlopList "bluffy overtaking, vill ch b fl" adxl.Workbook)
 
 let testPostFlopMotivatedExt h s mono test =
   let v = handValueWithDraws s.Hand s.Board
@@ -81,14 +80,19 @@ let testPostFlopMotivatedExt h s mono test =
   let riverBetSizing = [
     { MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
 
-  let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
-  let xl = openExcel fileName
-  let actual = decidePostFlopOop h s v t xl bluffy ((fun _ -> false), (fun _ -> false)) riverBetSizing
+  let fileNameOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
+  use xlOop = useExcel fileNameOop
+  let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
+  use xlTricky = useExcel fileNameTricky
+  let actual = decidePostFlopOop h s v t xlOop.Workbook xlTricky.Workbook bluffy ((fun _ -> false), (fun _ -> false)) riverBetSizing
   test actual
-  closeExcel xl
 
 let testPostFlopMotivated h s mono expected =
   testPostFlopMotivatedExt h s mono (fun x -> Assert.Equal(expected, x.Value.Action))
+
+let testPostFlopExt h s mono test =
+  let mh = h |> List.map (notMotivated Flop s.VillainBet)
+  testPostFlopMotivatedExt mh s mono test
 
 let testPostFlop h s mono expected =
   let mh = h |> List.map (notMotivated Flop s.VillainBet)
@@ -241,19 +245,47 @@ let ``River OOP bet is made based on turn scenario`` () =
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
     { Action = Action.RaiseToAmount 40; Motivation = Some(Scenario "r8"); VsVillainBet = 00; Street = Turn }] s 0 (Action.RaiseToAmount 95)
 
+[<Fact>]
+let ``Flop OOP: float call`` () =
+  let s = { Hand = parseSuitedHand "QdTh"; Board = parseBoard "2s7c2h"; Pot = 120; VillainStack = 330; HeroStack = 590; VillainBet = 40; HeroBet = 0; BB = 20 }
+  testPostFlopExt [Action.Call; Action.Check] s 0 
+    (fun actual -> Assert.Equal(Action.Call, actual.Value.Action); Assert.Equal(Some(Float BluffFloat), actual.Value.Motivation))
+
+[<Fact>]
+let ``Turn OOP: float call for bluffy`` () =
+  let s = { Hand = parseSuitedHand "AdTh"; Board = parseBoard "2s7c2hJh"; Pot = 205; VillainStack = 285; HeroStack = 540; VillainBet = 45; HeroBet = 0; BB = 20 }
+  testPostFlopMotivatedExt [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
+    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn }] s 0 
+    (fun actual -> Assert.Equal(Action.Call, actual.Value.Action); Assert.Equal(Some(Float BluffFloat), actual.Value.Motivation))
+
+[<Fact>]
+let ``River OOP: bet after floats`` () =
+  let s = { Hand = parseSuitedHand "AdTh"; Board = parseBoard "2s7c2hJhTc"; Pot = 250; VillainStack = 285; HeroStack = 495; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlopMotivated [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
+    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn };
+    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 45; Street = Turn }] s 0 (Action.RaiseToAmount 155)
+
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-let xlFlopTurn = openExcel fileNameFlopTurn
 let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-let xlTurnDonk = openExcel fileNameTurnDonk
 
 let testIP s h expected =
+  use xlFlopTurn = useExcel fileNameFlopTurn
+  use xlTurnDonk = useExcel fileNameTurnDonk
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
-  let actual = decidePostFlop h s v t xlFlopTurn xlTurnDonk
+  let actual = decidePostFlop h s v t xlFlopTurn.Workbook xlTurnDonk.Workbook
   Assert.Equal(expected |> Some, actual)
 
 [<Fact>]
 let ``decidePostFlopIP cbet flush draw on turn`` () =
   let s = { Hand = parseSuitedHand "Jd8d"; Board = parseBoard "Th6d4dQc"; Pot = 120; VillainStack = 390; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
   testIP s [] (Action.RaiseToAmount 90)
+
+adxl.Dispose()

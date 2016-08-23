@@ -25,9 +25,9 @@ let main argv =
 
   Console.Write "Opening excel files..."
   let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-  let xlFlopTurn = openExcel fileNameFlopTurn
+  use xlFlopTurn = useExcel fileNameFlopTurn
   let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-  let xlTurnDonkRiver = openExcel fileNameTurnDonk
+  use xlTurnDonkRiver = useExcel fileNameTurnDonk
   Console.Write "\n"
 
   //while true do
@@ -56,7 +56,7 @@ let main argv =
   let heroBet = if villainBet > 0 then enterNumber "Please enter the (previous) hero bet (can be zero)" 0 (heroStack - 40) else 0
 
   let s = { Hand = suitedHand; Board = board; Pot = bb * 4 + heroBet + villainBet; VillainStack = villainStack - bb*2 - villainBet; HeroStack = heroStack - bb*2 - heroBet; VillainBet = villainBet; HeroBet = heroBet; BB = bb }
-  let decision = decidePostFlop [] s value special xlFlopTurn xlTurnDonkRiver
+  let decision = decidePostFlop [] s value special xlFlopTurn.Workbook xlTurnDonkRiver.Workbook
 
   try    
     match decision with
@@ -67,7 +67,5 @@ let main argv =
       Console.WriteLine "Could not make decision"    
       Console.WriteLine a
 
-  closeExcel xlFlopTurn
-  closeExcel xlTurnDonkRiver
   Console.ReadKey() |> ignore
   0 // return an integer exit code

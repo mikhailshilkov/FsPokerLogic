@@ -35,14 +35,14 @@ let ``toFlopOptions when no FD but board has FD and Cbet is 75m => Cbet becomes 
 let ``toFlopOptions when FD`` () =
   let eo = { defaultOptions with CbetFactor = Always 50m; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
   let actual = toFlopOptions true true eo
-  let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff; DonkRaise = OnDonkRaise.Undefined }
+  let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff; DonkRaise = OnDonkRaise.StackOff }
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``toFlopOptions when FD Cbets 50m instead of None and Stacks Off`` () =
   let eo = { defaultOptions with CbetFactor = Never; CheckRaise = OnCheckRaise.CallEQ 1; Donk = OnDonk.CallEQ 17; DonkFlashDraw = Some OnDonk.ForValueStackOff }
   let actual = toFlopOptions true true eo
-  let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff; DonkRaise = OnDonkRaise.Undefined }
+  let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.ForValueStackOff; DonkRaise = OnDonkRaise.StackOff }
   Assert.Equal(expected, actual)
 
 [<Fact>]

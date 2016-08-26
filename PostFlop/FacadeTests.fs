@@ -18,54 +18,64 @@ let nml l = l |> List.map (fun nm -> (nm, None))
 [<Fact>]
 let ``pickOopSheet returns limp coorectly for single item`` () =
   let actual = pickOopSheet (nml [Action.Check]) defaultFlop
-  Assert.Equal(Some "limp and check", actual)
+  Assert.Equal(Some "limp and check", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns limp coorectly for multiple items`` () =
   let actual = pickOopSheet (nml [Action.Check; Action.Call; Action.RaiseToAmount 100]) defaultFlop
-  Assert.Equal(Some "limp and check", actual)
+  Assert.Equal(Some "limp and check", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns call coorectly for single items`` () =
   let actual = pickOopSheet (nml [Action.Call]) defaultFlop
-  Assert.Equal(Some "hero call raise pre", actual)
+  Assert.Equal(Some "hero call raise pre", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns skips SitBack`` () =
   let actual = pickOopSheet (nml [Action.SitBack; Action.Call]) defaultFlop
-  Assert.Equal(Some "hero call raise pre", actual)
+  Assert.Equal(Some "hero call raise pre", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns call coorectly for multiple items`` () =
   let actual = pickOopSheet (nml [Action.Call; Action.Call]) defaultFlop
-  Assert.Equal(Some "hero call raise pre", actual)
+  Assert.Equal(Some "hero call raise pre", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns raise FV coorectly for single item`` () =
   let actual = pickOopSheet (nml [Action.RaiseToAmount 60]) defaultFlop
-  Assert.Equal(Some "hero raise FV vs limp", actual)
+  Assert.Equal(Some "hero raise FV vs limp", fst actual)
+  Assert.Equal(false, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns raise FV coorectly for multiple items`` () =
   let actual = pickOopSheet (nml [Action.RaiseToAmount 60; Action.RaiseToAmount 100]) defaultFlop
-  Assert.Equal(Some "hero raise FV vs limp", actual)
+  Assert.Equal(Some "hero raise FV vs limp", fst actual)
+  Assert.Equal(false, snd actual)
 
 [<Fact>]
 let ``pickOopSheet returns raise FB coorectly for single item`` () =
   let actual = pickOopSheet [(Action.RaiseToAmount 60, Some Bluff)] defaultFlop
-  Assert.Equal(Some "hero raise FB vs limp", actual)
+  Assert.Equal(Some "hero raise FB vs limp", fst actual)
+  Assert.Equal(false, snd actual)
 
 [<Fact>]
 let ``pickOopSheet falls back to limp for empty history and small pot`` () =
   let s = {defaultFlop with VillainBet = 30; Pot = 70}
   let actual = pickOopSheet [] s
-  Assert.Equal(Some "limp and check", actual)
+  Assert.Equal(Some "limp and check", fst actual)
+  Assert.Equal(true, snd actual)
 
 [<Fact>]
 let ``pickOopSheet falls back to call for empty history and bigger pot`` () =
   let s = {defaultFlop with VillainBet = 30; Pot = 110}
   let actual = pickOopSheet [] s
-  Assert.Equal(Some "hero call raise pre", actual)
+  Assert.Equal(Some "hero call raise pre", fst actual)
+  Assert.Equal(true, snd actual)
 
 let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
 let adxl = useExcel fileNameAdvancedOOP
@@ -131,12 +141,12 @@ let ``decidePostFlop A/f special rule on turn`` () =
 [<Fact>]
 let ``decidePostFlop 61 special rule on turn`` () =
   let s = { Hand = parseSuitedHand "Td7s"; Board = parseBoard "5hTh9sAs"; Pot = 220; VillainStack = 380; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 30 }
-  testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 80] s 0 (Action.RaiseToAmount 220)
+  testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 80] s 0 (Action.RaiseToAmount 130)
 
 [<Fact>]
 let ``decidePostFlop 61 special rule on turn 2`` () =
   let s = { Hand = parseSuitedHand "7d5s"; Board = parseBoard "3d7h2cAh"; Pot = 80; VillainStack = 480; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.Check; Action.Check; Action.Call] s 0 (Action.RaiseToAmount 80)
+  testPostFlop [Action.Check; Action.Check; Action.Call] s 0 (Action.RaiseToAmount 50)
 
 [<Fact>]
 let ``decidePostFlop 7 special rule on turn`` () =
@@ -287,5 +297,14 @@ let testIP s h expected =
 let ``decidePostFlopIP cbet flush draw on turn`` () =
   let s = { Hand = parseSuitedHand "Jd8d"; Board = parseBoard "Th6d4dQc"; Pot = 120; VillainStack = 390; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
   testIP s [] (Action.RaiseToAmount 90)
+
+[<Fact>]
+let ``decidePostFlopIP call 4bet on flop with stackoff`` () =
+  let s = { Hand = parseSuitedHand "7sJh"; Board = parseBoard "3h7h6c"; Pot = 765; VillainStack = 0; HeroStack = 120; VillainBet = 460; HeroBet = 225; BB = 20 }
+  let history = [
+    {Action = MinRaise; Motivation = None; VsVillainBet = 20; Street = PreFlop};
+    {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 0; Street = Flop;}
+    {Action = RaiseToAmount 225; Motivation = None; VsVillainBet = 100; Street = Flop;}]
+  testIP s history Action.AllIn
 
 adxl.Dispose()

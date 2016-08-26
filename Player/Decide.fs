@@ -150,24 +150,39 @@ module Decide =
     let screen = msg.Screen
     match state with
     | Some s when s.LastScreen = screen -> (None, state)
+    | Some s when 
+      not (System.String.IsNullOrEmpty screen.Board) &&
+      match s.PreviousActions |> List.tryLast |> Option.map (fun a -> a.VsVillainBet), screen.VillainBet with
+      | Some pvb, Some vb when pvb = vb && screen.Board = s.LastScreen.Board -> true
+      | _ -> false
+      -> 
+      print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
+      log "Looks like we already made action for this decision, dumping the screenshot..."
+      Dumper.SaveBitmap(msg.Bitmap, "Dup_" + msg.TableName)
+      (None, state)
     | _ ->
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
       history |> List.iter (sprintf "History: %A" >> log)
 
-      let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
-      let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
-      match decision with
-      | Some d ->
-        sprintf "Decision is: %A" d |> log
-        let action = mapAction d.Action screen.Actions
-        sprintf "Action is: %A" action |> log
-        if (d.Action = SitBack) then
-          Dumper.SaveBitmap(msg.Bitmap, "SitBack_" + msg.TableName)
-        let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
-        (Some outMsg, newState)
-      | None ->
-        log "Could not make a decision, dumping the screenshot..."
-        Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
-        (None, newState)
+      try
+        let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
+        let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
+        match decision with
+        | Some d ->
+          sprintf "Decision is: %A" d |> log
+          let action = mapAction d.Action screen.Actions
+          sprintf "Action is: %A" action |> log
+          if (d.Action = SitBack) then
+            Dumper.SaveBitmap(msg.Bitmap, "SitBack_" + msg.TableName)
+          let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
+          (Some outMsg, newState)
+        | None ->
+          log "Could not make a decision, dumping the screenshot..."
+          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+          (None, newState)
+      with ex ->
+        sprintf "Error occured: %s %s" ex.Message ex.StackTrace |> log
+        Dumper.SaveBitmap(msg.Bitmap, "Error_" + msg.TableName)
+        (None, state)

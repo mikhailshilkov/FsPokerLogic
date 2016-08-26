@@ -135,7 +135,7 @@ module Decision =
       | OnDonk.Fold, _ -> Some Action.Fold
       | OnDonk.Undefined, _ -> None
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
-      let raisedDonk = history |> List.tryLast |> Option.filter (fun a -> a.VsVillainBet > 0) |> Option.isSome
+      let raisedDonk = history |> List.filter (fun a -> a.Street = street snapshot) |> List.tryHead |> Option.filter (fun a -> a.VsVillainBet > 0) |> Option.isSome
       if raisedDonk then
         match options.DonkRaise with
         | OnDonkRaise.CallEQ x -> callEQ snapshot x |> Some

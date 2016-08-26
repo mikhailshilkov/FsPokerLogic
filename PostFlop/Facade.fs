@@ -44,28 +44,30 @@ module Facade =
 
   let rec pickOopSheet history s =
     match history with
-    | (Action.Check, _)::_ -> Some "limp and check"
-    | (Action.Call, _)::_ -> Some "hero call raise pre"
-    | (Action.RaiseToAmount a, Some Bluff) :: _ when a < s.BB * 4 -> Some "hero raise FB vs limp"
-    | (Action.RaiseToAmount a, None) :: _ when a < s.BB * 4 -> Some "hero raise FV vs limp"
-    | (Action.RaiseToAmount a, Some Bluff) :: _ -> Some "hero 3b chips FB vs minr"
-    | (Action.RaiseToAmount _, _) :: _ -> Some "hero 3b chips FV vs minr"
+    | (Action.Check, _)::_ -> (Some "limp and check", true)
+    | (Action.Call, _)::_ -> (Some "hero call raise pre", true)
+    | (Action.RaiseToAmount a, Some Bluff) :: _ when a < s.BB * 4 -> (Some "hero raise FB vs limp", false)
+    | (Action.RaiseToAmount a, None) :: _ when a < s.BB * 4 -> (Some "hero raise FV vs limp", false)
+    | (Action.RaiseToAmount a, Some Bluff) :: _ -> (Some "hero 3b chips FB vs minr", false)
+    | (Action.RaiseToAmount _, _) :: _ -> (Some "hero 3b chips FV vs minr", false)
     | (Action.SitBack, _)::rem -> pickOopSheet rem s
-    | [] when s.Pot = s.VillainBet + s.HeroBet + 2 * s.BB -> Some "limp and check"
-    | [] -> Some "hero call raise pre"
-    | _ -> None
+    | [] when s.Pot = s.VillainBet + s.HeroBet + 2 * s.BB -> (Some "limp and check", true)
+    | [] -> (Some "hero call raise pre", true)
+    | _ -> (None, false)
 
   let decidePostFlopOop history s value texture xlOop xlTricky bluffyFlops bluffyHand riverBetSizes =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
-    let preFlopPattern = pickOopSheet historyTuples s
+    let (preFlopPattern, canFloat) = pickOopSheet historyTuples s
 
-    let float =
-      match street s with
-      | Flop -> importFloatFlopOptions xlTricky s
-      | Turn -> importFloatTurnOptions xlTricky value texture s history
-      | River -> importFloatRiverOptions xlTricky value.Made texture s history |> Option.map (fun v -> (v, None))
-      | _ -> failwith "Unkown street at decidePostFlopOop"
+    let float = 
+      if canFloat && effectiveStackPre s >= 10 then
+        match street s with
+        | Flop -> importFloatFlopOopOptions xlTricky s
+        | Turn -> importFloatTurnOopOptions xlTricky value texture s history
+        | River -> importFloatRiverOptions xlTricky value.Made texture s history |> Option.map (fun v -> (v, None))
+        | _ -> failwith "Unkown street at decidePostFlopOop"
+      else None
 
     let normalPlay() =
       match street s, preFlopPattern with

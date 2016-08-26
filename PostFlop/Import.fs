@@ -24,6 +24,7 @@ module Import =
     TurnFBCbetFactor: CBet
   }
 
+  let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
   let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }
 
   let orElse b a = match a with | Some _ -> a | None -> b()
@@ -309,7 +310,11 @@ module Import =
       | _ -> failwith "Could not pick turn donkbet sheet"
 
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    let betSize = 100 * s.VillainBet / (s.Pot - s.VillainBet)
+    let villainDonkBetSize = 
+      match (h |> List.filter (fun i -> i.Street = street s) |> List.tryHead) with
+      | Some hi -> hi.VsVillainBet
+      | None -> s.VillainBet
+    let betSize = 100 * villainDonkBetSize / (s.Pot - s.VillainBet - s.HeroBet)
     let hasFlush = match handValue.Made with | Flush(_) | StraightFlush -> true | _ -> false
     let row = turnDonkOrFloatOopRow 6 handValue s texture
     let column = 
@@ -391,7 +396,7 @@ module Import =
         | "ov" -> BoardOvercard(OopDonk.AllIn, OopOnCBet.AllIn)
         | "ov ai" -> BoardOvercard(OopDonk.Check, OopOnCBet.AllIn)
         | "ovso" -> BoardOvercard(Donk 67m, StackOff)
-        | "61" -> BoardOvercard(Donk 100m, CallEQ 25)
+        | "61" -> BoardOvercard(Donk 60m, CallEQ 25)
         | "4" -> BoardOvercard(OopDonk.Check, StackOff)
         | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
         | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith "Failed parsing special rules (bovso)"
@@ -756,25 +761,37 @@ module Import =
     |> List.ofSeq
 
 
-  let importFloatFlopOptions (xlWorkBook : Workbook) s =
-    let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
+  let importFloatFlopOptions (xlWorkBook : Workbook) sheet rangesToCompare s =
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheet] :?> Worksheet
     let index = s.Board |> rowIndex |> (+) 5 |> string
-    let cellValues = getCellValues xlWorkSheet ("F" + index) ("G" + index)
-    
-    let villainBetSize = relativeBet s
-    let rangesToCompare = seq {
-      if villainBetSize = 0 || (villainBetSize >= 26 && villainBetSize <= 57) then yield (0, BluffFloat)
-      if villainBetSize = 0 || villainBetSize >= 26 then yield (1, ValueFloat)
-    }
+    let cellValues = getCellValues xlWorkSheet ("F" + index) ("H" + index)
     
     rangesToCompare
     |> Seq.map (fun (i, m) -> (Ranges.parseRanges cellValues.[i], m))
     |> Seq.filter (fun (r, _) -> toHand s.Hand |> Ranges.isHandInRanges r)
     |> Seq.map snd
     |> Seq.tryHead
+
+  let importFloatFlopOopOptions (xlWorkBook : Workbook) s =    
+    let villainBetSize = relativeBet s
+    let rangesToCompare = seq {
+      if villainBetSize = 0 || (villainBetSize >= 26 && villainBetSize <= 57) then yield (0, BluffFloat)
+      if villainBetSize = 0 || villainBetSize >= 26 then yield (1, ValueFloat)
+    }    
+    importFloatFlopOptions xlWorkBook "float OOP" rangesToCompare s
     |> Option.map (fun m -> ({ defaultOopOptions with Then = OopOnCBet.Call }, Some(Float m)))
 
-  let importFloatTurnOptions (xlWorkBook : Workbook) value texture s h =
+  let importFloatFlopIpOptions (xlWorkBook : Workbook) s =
+    let villainBetSize = relativeBet s
+    let rangesToCompare = seq {
+      if villainBetSize = 0 || (villainBetSize >= 26 && villainBetSize <= 57) then yield (0, BluffFloat)
+      if villainBetSize = 0 || (villainBetSize > 57 && villainBetSize <= 100) then yield (1, BluffFloat)
+      if villainBetSize = 0 || villainBetSize >= 26 then yield (2, ValueFloat)
+    }
+    importFloatFlopOptions xlWorkBook "float IP" rangesToCompare s
+    |> Option.map (fun m -> ({ defaultIpOptions with Donk = OnDonk.Call }, Some(Float m)))
+
+  let importFloatTurnOopOptions (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
     let villainBet = relativeBet s
     let villainBetHigh = villainBet >= 60

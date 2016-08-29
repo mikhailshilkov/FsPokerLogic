@@ -410,6 +410,9 @@ module ImportTests =
   let ``parseOopSpecialRules Xoxo#50%/18 works`` () = testParseOopSpecialRules "Xoxo#50%/18" (CheckCheck(Donk 50m, CallEQ 18))
 
   [<Fact>]
+  let ``parseOopSpecialRules Xoxo#RBS/25 works`` () = testParseOopSpecialRules "Xoxo#RBS/25" (CheckCheck(RiverBetSizing, CallEQ 25))
+
+  [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
     let actual = parseOopSpecialRules "AI#15, A, 61"
     let expected = [CallEQPlusXvsAI 15; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 60m, CallEQ 25)]

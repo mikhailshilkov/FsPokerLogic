@@ -124,11 +124,11 @@ module Import =
     if System.String.IsNullOrEmpty(strategy) then (OnDonk.Undefined, OnDonkRaise.Undefined)
     else if parts.Length = 1 then
       (match parts.[0] with 
-      | "c" -> OnDonk.Call
+      | "c" | "call" -> OnDonk.Call
       | "f" -> OnDonk.Fold
       | "ai" -> OnDonk.AllIn
       | Int n -> OnDonk.CallEQ n
-      | _ -> failwith "Failed parsing Turn Donk (1)"
+      | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)
       , OnDonkRaise.Undefined)
     elif parts.Length = 2 then
       let donk = 
@@ -415,7 +415,7 @@ module Import =
         | StartsWith "bov#" d, Int c -> match d with | DecimalPerc x -> BoardOvercard(Donk x, CallEQ c) | _ -> failwith "Failed parsing special rules (bov)"
         | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
         | "chrovb", Int c -> CheckRaiseOvercardBluff(RaiseCallEQ c)
-        | StartsWith "xoxo#" d, Int c -> match d with | DecimalPerc x -> CheckCheck(Donk x, CallEQ c) | _ -> failwith "Failed parsing special rules (xoxo)"
+        | StartsWith "xoxo#" d, Int c -> match d with | "rbs" -> CheckCheck(RiverBetSizing, CallEQ c) | DecimalPerc x -> CheckCheck(Donk x, CallEQ c) | _ -> failwith ("Failed parsing special rules (xoxo)" + s)
         | _ -> failwith "Failed parsing special rules (2)"
       else failwith "Failed parsing special rules (3)"
     specialRules.Split ','
@@ -868,6 +868,7 @@ module Import =
     let topPairedBoard = topPaired s.Board
     let isPairedBoard = isPaired s.Board
     let topPairedBoardOnRiver = topPairedBoard && not isPairedBoard
+    let hadPairOnFlop = s.Board |> Array.take 3 |> Array.exists (fun x -> x.Face = s.Hand.Card1.Face || x.Face = s.Hand.Card2.Face)
     let row = 
       match value with
       | Nothing | TwoOvercards -> 
@@ -889,7 +890,7 @@ module Import =
       | Pair(Second k) when topPairedBoard -> 18
       | Pair(Second k) when isRiverOvercard -> 21
       | Pair(Second k) when isTurnOvercard -> 22
-      | Pair(Second k) when k > turnCard.Face && k > s.Board.[4].Face -> 23
+      | Pair(Second k) when hadPairOnFlop -> 23
       | Pair(Second k) when highKicker k -> 15
       | Pair(Second _) -> 16
       | Pair(Third _) when areTurnAndRiverOverFlop -> 27
@@ -945,9 +946,8 @@ module Import =
         elif texture.DoublePaired then "BA"
         elif texture.ThreeOfKind then "BB"
         else "AX"
-    let floatedBefore = h |> List.exists (fun hi -> match hi.Motivation with | Some(Float _) -> true | _ -> false)
     let column = 
-      if (villainBet > 0 && villainBet < 26) || not floatedBefore then None
+      if villainBet > 0 && villainBet < 26 then None
       else Some column
     let continuation =  h |> List.tryLast |> Option.bind (fun hi -> match hi.Motivation with | Some(Float(WithContinuation x)) -> Some (x, "") | _ -> None)
     

@@ -58,19 +58,20 @@ module Facade =
   let decidePostFlopOop history s value texture xlOop xlTricky bluffyFlops bluffyHand riverBetSizes =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
-    let (preFlopPattern, canFloat) = pickOopSheet historyTuples s
+    let (preflopPattern, preflopAllowsFloat) = pickOopSheet historyTuples s
+    let floatedBefore = history |> List.exists (fun hi -> match hi.Motivation with | Some(Float _) -> true | _ -> false)
 
     let float = 
-      if canFloat && effectiveStackPre s >= 10 then
+      if preflopAllowsFloat && effectiveStackPre s >= 10 then
         match street s with
-        | Flop -> importFloatFlopOopOptions xlTricky s
-        | Turn -> importFloatTurnOopOptions xlTricky value texture s history
-        | River -> importFloatRiverOptions xlTricky value.Made texture s history |> Option.map (fun v -> (v, None))
-        | _ -> failwith "Unkown street at decidePostFlopOop"
+        | Flop when s.VillainBet > 0 && s.HeroBet = 0 -> importFloatFlopOopOptions xlTricky s
+        | Turn when floatedBefore -> importFloatTurnOopOptions xlTricky value texture s history
+        | River when floatedBefore -> importFloatRiverOptions xlTricky value.Made texture s history |> Option.map (fun v -> (v, None))
+        | _ -> None
       else None
 
     let normalPlay() =
-      match street s, preFlopPattern with
+      match street s, preflopPattern with
       | Flop, Some p -> importOopFlop xlOop p value texture
       | Turn, Some p -> importOopTurn xlOop p value texture
       | River, Some p -> importOopRiver xlOop p value.Made texture s

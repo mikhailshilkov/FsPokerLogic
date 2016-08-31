@@ -64,7 +64,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise (hb * 2 / 5) bb; raise 5 2; raise vb hb]
     | _ -> failwith "History is not clear"
 
-  let decide' xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky (screen: Screen) history: MotivatedAction option =
+  let decide' log xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky (screen: Screen) history: MotivatedAction option =
     let decidePre (screen: Screen) =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
@@ -85,6 +85,7 @@ module Decide =
         let suitedHand = screen.HeroHand |> parseSuitedHand
         let board = screen.Board |> parseBoard
         let value = handValueWithDraws suitedHand board
+        log (sprintf "Hand value: %A" value)
         let special = boardTexture board
         let vb = defaultArg screen.VillainBet 0
         let hb = defaultArg screen.HeroBet 0
@@ -135,6 +136,10 @@ module Decide =
     | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
+  let dump title msg =
+    let filename = sprintf "%s_%s_%s_%s" title msg.TableName msg.Screen.HeroHand msg.Screen.Board
+    Dumper.SaveBitmap(msg.Bitmap, filename)
+
   let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky msg (state:DecisionState option) =
     let log (s: string) =
       System.IO.File.AppendAllLines(sprintf "%s.log" msg.TableName, [s])
@@ -158,7 +163,7 @@ module Decide =
       -> 
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       log "Looks like we already made action for this decision, dumping the screenshot..."
-      Dumper.SaveBitmap(msg.Bitmap, "Dup_" + msg.TableName)
+      dump "Dup" msg
       (None, state)
     | _ ->
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
@@ -167,7 +172,7 @@ module Decide =
       history |> List.iter (sprintf "History: %A" >> log)
 
       try
-        let decision = decide' xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
+        let decision = decide' log xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
         let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
         match decision with
         | Some d ->
@@ -175,14 +180,14 @@ module Decide =
           let action = mapAction d.Action screen.Actions
           sprintf "Action is: %A" action |> log
           if (d.Action = SitBack) then
-            Dumper.SaveBitmap(msg.Bitmap, "SitBack_" + msg.TableName)
+            dump "SitBack" msg
           let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
           (Some outMsg, newState)
         | None ->
           log "Could not make a decision, dumping the screenshot..."
-          Dumper.SaveBitmap(msg.Bitmap, msg.TableName)
+          dump "Dec" msg
           (None, newState)
       with ex ->
         sprintf "Error occured: %s %s" ex.Message ex.StackTrace |> log
-        Dumper.SaveBitmap(msg.Bitmap, "Error_" + msg.TableName)
+        dump "Error" msg
         (None, state)

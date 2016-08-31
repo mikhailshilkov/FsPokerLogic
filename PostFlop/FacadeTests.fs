@@ -257,13 +257,13 @@ let ``River OOP bet is made based on turn scenario`` () =
 
 [<Fact>]
 let ``Flop OOP: float call`` () =
-  let s = { Hand = parseSuitedHand "QdTh"; Board = parseBoard "2s7c2h"; Pot = 120; VillainStack = 330; HeroStack = 590; VillainBet = 40; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "QdJh"; Board = parseBoard "2s7c2h"; Pot = 120; VillainStack = 330; HeroStack = 590; VillainBet = 40; HeroBet = 0; BB = 20 }
   testPostFlopExt [Action.Call; Action.Check] s 0 
     (fun actual -> Assert.Equal(Action.Call, actual.Value.Action); Assert.Equal(Some(Float BluffFloat), actual.Value.Motivation))
 
 [<Fact>]
 let ``Turn OOP: float call for bluffy`` () =
-  let s = { Hand = parseSuitedHand "AdTh"; Board = parseBoard "2s7c2hJh"; Pot = 205; VillainStack = 285; HeroStack = 540; VillainBet = 45; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "Ad6h"; Board = parseBoard "2s7c2h6h"; Pot = 205; VillainStack = 285; HeroStack = 540; VillainBet = 45; HeroBet = 0; BB = 20 }
   testPostFlopMotivatedExt [
     { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
@@ -273,13 +273,13 @@ let ``Turn OOP: float call for bluffy`` () =
 
 [<Fact>]
 let ``River OOP: bet after floats`` () =
-  let s = { Hand = parseSuitedHand "AdTh"; Board = parseBoard "2s7c2hJhTc"; Pot = 250; VillainStack = 285; HeroStack = 495; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "QdQh"; Board = parseBoard "2s7c2hJhTc"; Pot = 250; VillainStack = 285; HeroStack = 495; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivated [
     { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
     { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn };
-    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 45; Street = Turn }] s 0 (Action.RaiseToAmount 155)
+    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 45; Street = Turn }] s 0 (Action.RaiseToAmount 150)
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"

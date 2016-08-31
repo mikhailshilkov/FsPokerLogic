@@ -93,7 +93,7 @@ module SpecialRules =
         | 40 -> 3m
         | x when x >= 31 && x <= 39 -> 3.5m
         | _ -> 4m
-      { o with Then = RaiseFold(raiseSize) }
+      { o with Then = Raise(raiseSize, OopOnCBet.Fold) }
     | _ -> o
 
   let bluffyCheckRaiseFlopInLimpedPotTurnRiver flops s value history o =
@@ -111,7 +111,7 @@ module SpecialRules =
     match street s, s.BB, s.Pot, s.VillainBet with
     | Flop, 20, 120, 40
       when effectiveStackPre s >= 18 && flopMatches s flops && (bluffyHand s.Hand || value.Made = TwoOvercards || value.SD = GutShot)
-      -> { o with Then = RaiseFold(2.75m) }
+      -> { o with Then = Raise(2.75m, OopOnCBet.Fold) }
     | Turn, 20, 300, 0
       when stack s >= 210 && flopMatches s flops
            && (value.Made <> Nothing || value.FD <> NoFD || value.SD <> NoSD || isLastBoardCardOvercard s.Board) 

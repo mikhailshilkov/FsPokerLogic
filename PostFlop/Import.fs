@@ -108,7 +108,7 @@ module Import =
     | "stack off" -> (OnDonk.ForValueStackOffX 250, OnDonkRaise.StackOff)
     | "call" -> (OnDonk.Call, OnDonkRaise.Undefined)
     | "fold" -> (OnDonk.Fold, OnDonkRaise.Undefined)
-    | "call/raise" -> (OnDonk.CallRaisePet, OnDonkRaise.Undefined)
+    | "call/raise" -> (OnDonk.CallRaisePet, OnDonkRaise.StackOff)
     | Int i -> (OnDonk.CallEQ i, OnDonkRaise.Undefined)
     | _ -> (OnDonk.Undefined, OnDonkRaise.Undefined)
 
@@ -137,15 +137,15 @@ module Import =
         | "rtbdb" -> OnDonk.RaiseX 260
         | "rtg" -> OnDonk.RaiseGay
         | "rtfb" -> OnDonk.RaiseX 220
-        | StartsWith "rmodx" s -> match s with | Decimal x -> OnDonk.RaiseX (x * 100m |> int) | _ -> failwith "Failed parsing Turn Donk (5)"
-        | _ -> failwith "Failed parsing Turn Donk (2)"
+        | StartsWith "rmodx" s -> match s with | Decimal x -> OnDonk.RaiseX (x * 100m |> int) | _ -> failwith ("Failed parsing Turn Donk (5)" + strategy)
+        | _ -> failwith ("Failed parsing Turn Donk (2)" + strategy)
       let raise =
         match parts.[1] with 
         | "sot" -> OnDonkRaise.StackOff
         | Int n -> OnDonkRaise.CallEQ n
-        | _ -> failwith "Failed parsing TurnDonk (3)" 
+        | _ -> failwith ("Failed parsing TurnDonk (3)"  + strategy)
       (donk, raise)
-    else failwith "Failed parsing TurnDonk (4)" 
+    else failwith ("Failed parsing TurnDonk (4)" + strategy)
 
   let turnDonkOrFloatOopRow offset handValue s texture =
     let isTurnOvercard = isLastBoardCardOvercard s.Board
@@ -305,6 +305,7 @@ module Import =
       match historyFlop with
       | [{ Action = Action.Check }] -> "xx flop + vill bet turn"
       | [{ Action = Action.RaiseToAmount(_); VsVillainBet = 0 }] 
+      | [{ Action = Action.MinRaise; VsVillainBet = 0 }] 
       | [{ Action = Action.Call }] -> "vill xc F + dbT or dbF + dbT"
       | _ when historyFlop |> List.exists (fun x -> x.VsVillainBet > 0) -> "vill xr F + dbT or dbF-c + dbT"
       | _ -> failwith "Could not pick turn donkbet sheet"
@@ -345,7 +346,7 @@ module Import =
     | "stack off" -> (OrAllIn { DefaultCBetOr with Factor = 62.5m; IfStackFactorLessThan = Some(4m/3m) }, OnCheckRaise.StackOff)
     | "check" -> (Never, OnCheckRaise.Undefined)
     | Decimal d -> (Always(d), OnCheckRaise.CallEQ 11)
-    | _ -> failwith "Failed parsing River on check"
+    | _ -> failwith ("Failed parsing River on check" + i)
 
   let importRiver (xlWorkBook : Workbook) specialConditions handValue =
     let xlWorkSheet = xlWorkBook.Worksheets.["river"] :?> Worksheet
@@ -381,13 +382,56 @@ module Import =
       Donk = fst donk
       DonkRaise = snd donk }
 
+  let parseOopDonk = function
+    | "ch" -> OopDonk.Check
+    | "rbs" -> OopDonk.RiverBetSizing
+    | DecimalPerc n -> OopDonk.Donk n
+    | v -> failwith ("Failed parsing Flop Oop Donk " + v)
+
+  let rec parseOopCbet s =
+    let parseConditionalRaise x (s: string) =
+      let parts = s.Split '/'
+      let minStackRemaining =
+        match parts.[0] with
+        | StartsWith "$" v -> match v with | Int i -> i | _ -> 0
+        | _ -> 0
+      let minStackPotRatio =
+        match parts.[0] with
+        | StartsWith "&" v -> match v with | Decimal d -> d | _ -> 0m
+        | _ -> 0m
+      OopOnCBet.RaiseConditional { Size = x; MinStackRemaining = minStackRemaining; MinStackPotRatio = minStackPotRatio; On3Bet = parseOopCbet parts.[1] }
+    match s with
+    | StartsWith "r/" p3 -> 
+      match p3 with 
+      | "f" -> OopOnCBet.Raise(2.75m, OopOnCBet.Fold)
+      | "c" -> OopOnCBet.Raise(2.75m, OopOnCBet.Call)
+      | Int i -> OopOnCBet.Raise(2.75m, OopOnCBet.CallEQ i)
+      | _ -> failwith ("Failed parsing Flop Oop OnCbet raise" + s)
+    | StartsWith "f1rr/" p3 -> parseOopCbet p3 |> FormulaRaise
+    | StartsWith "rtfbft" p3 -> parseConditionalRaise 2.9m p3
+    | StartsWith "rcombo" p3 -> parseConditionalRaise 2.2m p3
+    | StartsWith "rtbdb/" p3 -> OopOnCBet.Raise(2.6m, parseOopCbet p3)
+    | StartsWith "rtfb/" p3 -> OopOnCBet.Raise(2.2m, parseOopCbet p3)
+    | StartsWith "rmodx" s -> 
+      let parts = s.Split('/')
+      match parts.[0], parts.[1] with 
+      | Decimal x, p3 -> OopOnCBet.Raise(x, parseOopCbet p3)
+      | _ -> failwith ("Failed parsing Flop Oop OnCbet rmodx" + s)
+    | "f" -> OopOnCBet.Fold
+    | "so" -> OopOnCBet.StackOff
+    | "so+" -> OopOnCBet.StackOffFast
+    | "c" -> OopOnCBet.Call
+    | "ai" -> OopOnCBet.AllIn
+    | Int i -> CallEQ i
+    | _ -> failwith ("Failed parsing Flop Oop OnCbet" + s)
+
   let parseOopSpecialRules (specialRules: string) = 
     let parseOopSpecialRule (s: string) =
       let canonic = s.Trim().ToLowerInvariant()
       let parts = canonic.Split([|'/'|], 2)
       if parts.Length = 1 then
         match parts.[0] with
-        | StartsWith "ai#" i -> match i with | Int x -> CallEQPlusXvsAI x | _ -> failwith "Failed parsing special rules (ai)"
+        | StartsWith "ai#" i -> match i with | Int x -> CallEQPlusXvsAI x | _ -> failwith ("Failed parsing special rules (ai)" + s)
         | "bp gs" -> PairedBoard (OopDonk.Check, CallEQ 14)
         | "bp fd" -> PairedBoard (OopDonk.Check, CallEQ 22)
         | "22" -> PairedBoard (Donk 50m, CallEQ 20)
@@ -399,7 +443,7 @@ module Import =
         | "61" -> BoardOvercard(Donk 60m, CallEQ 25)
         | "4" -> BoardOvercard(OopDonk.Check, StackOff)
         | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
-        | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith "Failed parsing special rules (bovso)"
+        | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith ("Failed parsing special rules (bovso)" + s)
         | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
         | "aso" -> BoardAce(Donk 67m, StackOff)
         | "5" -> CheckCheck (Donk 75m, OopOnCBet.Call)
@@ -408,53 +452,22 @@ module Import =
         | "60" -> KHighOnPaired
         | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
         | "1" -> NotUsed
-        | _ -> failwith "Failed parsing special rules (1)"
+        | _ -> failwith ("Failed parsing special rules (1)" + s)
       elif parts.Length = 2 then
         match parts.[0], parts.[1] with
         | "a", "f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
-        | StartsWith "bov#" d, Int c -> match d with | DecimalPerc x -> BoardOvercard(Donk x, CallEQ c) | _ -> failwith "Failed parsing special rules (bov)"
+        | StartsWith "bov#" fs, ts -> BoardOvercard(parseOopDonk fs, parseOopCbet ts) 
         | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
-        | "chrovb", Int c -> CheckRaiseOvercardBluff(RaiseCallEQ c)
-        | StartsWith "xoxo#" d, Int c -> match d with | "rbs" -> CheckCheck(RiverBetSizing, CallEQ c) | DecimalPerc x -> CheckCheck(Donk x, CallEQ c) | _ -> failwith ("Failed parsing special rules (xoxo)" + s)
-        | _ -> failwith "Failed parsing special rules (2)"
-      else failwith "Failed parsing special rules (3)"
+        | "chrovb", Int c -> CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ c))
+        | StartsWith "xoxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+        | _ -> failwith ("Failed parsing special rules (2)" + s)
+      else failwith ("Failed parsing special rules (3)" + s)
     specialRules.Split ','
     |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
     |> List.ofArray 
     |> List.map parseOopSpecialRule
 
   let rec parseOopOption (strategy: string) (specialRules: string) =
-    let rec cbetParse s =
-      let parseConditionalRaise x (s: string) =
-        let parts = s.Split '/'
-        let minStackRemaining =
-          match parts.[0] with
-          | StartsWith "$" v -> match v with | Int i -> i | _ -> 0
-          | _ -> 0
-        let minStackPotRatio =
-          match parts.[0] with
-          | StartsWith "&" v -> match v with | Decimal d -> d | _ -> 0m
-          | _ -> 0m
-        OopOnCBet.Raise { Size = x; MinStackRemaining = minStackRemaining; MinStackPotRatio = minStackPotRatio; On3Bet = cbetParse parts.[1] }
-      match s with
-      | StartsWith "r/" p3 -> 
-        match p3 with 
-        | "f" -> OopOnCBet.RaiseFold(2.75m)
-        | "c" -> OopOnCBet.RaiseCall
-        | Int i -> OopOnCBet.RaiseCallEQ i
-        | _ -> failwith "Failed parsing Flop Oop OnCbet raise"
-      | StartsWith "f1rr/" p3 -> cbetParse p3 |> FormulaRaise
-      | StartsWith "rtfbft" p3 -> parseConditionalRaise 2.9m p3
-      | StartsWith "rcombo" p3 -> parseConditionalRaise 2.2m p3
-      | "f" -> OopOnCBet.Fold
-      | "so" -> OopOnCBet.StackOff
-      | "so+" -> OopOnCBet.StackOffFast
-      | "c" -> OopOnCBet.Call
-      | "ai" -> OopOnCBet.AllIn
-      | Int i -> CallEQ i
-      | _ -> failwith "Failed parsing Flop Oop OnCbet" 
-
-
     let canonic = strategy.Trim().ToLowerInvariant().Replace("!air", "")
     let scenarioParts = canonic.Split([|'*'|], 2)
     let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
@@ -469,15 +482,10 @@ module Import =
       match parts.[0] with 
       | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = null; SpecialScenario = specialScenario }
       | "x" -> None
-      | _ -> failwith "Failed parsing Flop Oop (1)"
+      | _ -> failwith ("Failed parsing Flop Oop (1)" + strategy)
     else if parts.Length = 2 then
-      let donk = 
-        match parts.[0] with 
-        | "ch" -> OopDonk.Check
-        | "rbs" -> OopDonk.RiverBetSizing
-        | DecimalPerc n -> OopDonk.Donk n
-        | _ -> failwith "Failed parsing Flop Oop Donk"
-      let cbet = cbetParse parts.[1]
+      let donk = parseOopDonk parts.[0]
+      let cbet = parseOopCbet parts.[1]
       Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
     else failwith "Failed parsing Flop Oop (2)"
 
@@ -791,11 +799,8 @@ module Import =
     importFloatFlopOptions xlWorkBook "float IP" rangesToCompare s
     |> Option.map (fun m -> ({ defaultIpOptions with Donk = OnDonk.Call }, Some(Float m)))
 
-  let importFloatTurnOopOptions (xlWorkBook : Workbook) value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
-    let villainBet = relativeBet s
-    let villainBetHigh = villainBet >= 60
-    let row = turnDonkOrFloatOopRow 5 value s texture
+  let floatTurnOopColumns value texture s =
+    let villainBetHigh = relativeBet s >= 60
     let yellowColumn = 
       match texture.Monoboard, value.FD with
       | 3, NoFD -> if texture.Streety then "U" else "T"
@@ -821,6 +826,72 @@ module Import =
       | 3, Draw(NotNut x) -> if villainBetHigh then "AU" else "AT"
       | 3, Draw(Board) -> failwith "Board draw impossible on 3 monoboard"
       | _ -> "AH"
+    yellowColumn, greenColumn
+
+  let floatTurnIpColumns value texture s =
+    let villainFlopBetHigh = relativeBet s >= 57 // TODO
+    let trinityCheck a b c = if texture.Streety then c elif villainFlopBetHigh then b else a
+    let yellowColumnCheck = 
+      match texture.Monoboard, value.FD with
+      | 3, NoFD -> trinityCheck "T" "U" "V"
+      | 3, Draw(Nut) -> trinityCheck "X" "Y" "Z"
+      | 3, Draw(NotNut k) when k = King || k = Queen -> trinityCheck "AA" "AB" "AC"
+      | 3, Draw(NotNut k) when k = Jack || k = Ten -> trinityCheck "AD" "AE" "AF"
+      | 3, Draw(NotNut x) when x = Nine || x = Eight || x = Seven -> trinityCheck "AG" "AH" "AI"
+      | 3, Draw(NotNut x) -> trinityCheck "AJ" "AK" "AL"
+      | 3, Draw(Board) -> failwith "Board draw impossible on 3 monoboard"
+      | _ ->
+        if texture.Streety then "P" 
+        elif texture.DoublePaired then "Q"
+        elif texture.ThreeOfKind then "R"
+        elif villainFlopBetHigh then "O"
+        else "N"
+
+    let villainTurnBetHigh = relativeBet s >= 58
+    let trinityDonk a b c = if texture.Streety then c elif villainTurnBetHigh then b else a
+    let yellowColumnDonk = 
+      match texture.Monoboard, value.FD with
+      | 3, NoFD -> if texture.Streety then "BG" else "BF"
+      | 3, Draw(Nut) -> trinityDonk "BI" "BJ" "BK"
+      | 3, Draw(NotNut k) when k = King || k = Queen -> trinityDonk "BL" "BM" "BN"
+      | 3, Draw(NotNut k) when k = Jack || k = Ten -> trinityDonk "BO" "BP" "BQ"
+      | 3, Draw(NotNut x) when x = Nine || x = Eight || x = Seven -> trinityDonk "BR" "BS" "BT"
+      | 3, Draw(NotNut x) -> trinityDonk "BU" "BV" "BW"
+      | 3, Draw(Board) -> failwith "Board draw impossible on 3 monoboard"
+      | _ ->
+        if texture.Streety then "BB" 
+        elif texture.DoublePaired then "BC"
+        elif texture.ThreeOfKind then "BD"
+        else "AZ"
+
+    let greenColumnCheck = 
+      match texture.Monoboard, value.FD with
+      | 3, NoFD -> "AP"
+      | 3, Draw(Nut) -> "AR"
+      | 3, Draw(NotNut k) when k = King || k = Queen -> "AS"
+      | 3, Draw(NotNut k) when k = Jack || k = Ten -> "AT"
+      | 3, Draw(NotNut x) when x = Nine || x = Eight || x = Seven -> "AU"
+      | 3, Draw(NotNut x) -> "AV"
+      | 3, Draw(Board) -> failwith "Board draw impossible on 3 monoboard"
+      | _ -> "AN"
+
+    let greenColumnDonk = 
+      match texture.Monoboard, value.FD with
+      | 3, NoFD -> "CA"
+      | 3, Draw(Nut) -> if villainTurnBetHigh then "CD" else "CC"
+      | 3, Draw(NotNut k) when k = King || k = Queen -> if villainTurnBetHigh then "CF" else "CE"
+      | 3, Draw(NotNut k) when k = Jack || k = Ten -> if villainTurnBetHigh then "CH" else "CG"
+      | 3, Draw(NotNut x) when x = Nine || x = Eight || x = Seven -> if villainTurnBetHigh then "CJ" else "CI"
+      | 3, Draw(NotNut x) -> if villainTurnBetHigh then "CL" else "CK"
+      | 3, Draw(Board) -> failwith "Board draw impossible on 3 monoboard"
+      | _ -> "BY"
+
+    if s.VillainBet > 0 then yellowColumnDonk, greenColumnDonk
+    else yellowColumnCheck, greenColumnCheck
+
+  let importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn) =
+    let villainBet = relativeBet s
+    let row = turnDonkOrFloatOopRow 5 value s texture
 
     let flopFloatMotivation =
       h 
@@ -846,6 +917,16 @@ module Import =
       match parseOopOption cell "" with
       | Some o -> Some (o, motivation cell)
       | None -> None)
+
+  let importFloatTurnOopOptions (xlWorkBook : Workbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
+    let yellowColumn, greenColumn = floatTurnOopColumns value texture s
+    importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
+
+  let importFloatTurnIpOptions (xlWorkBook : Workbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.Worksheets.["float IP"] :?> Worksheet
+    let yellowColumn, greenColumn = floatTurnIpColumns value texture s
+    importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
 
   let importFloatRiverOptions (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet

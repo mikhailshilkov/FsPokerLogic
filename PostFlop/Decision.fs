@@ -56,7 +56,7 @@ module Decision =
   let cbetOr s f defaultAction =
     let size = cbet s.Pot f.Factor
     if times size (defaultArg f.IfStackFactorLessThan 0m) < stack s
-      && effectiveStackPre s > f.IfPreStackLessThan 
+      && effectiveStackPre s >= f.IfPreStackLessThan 
     then size |> RaiseToAmount
     else defaultAction
 
@@ -205,14 +205,13 @@ module Decision =
       | StackOff -> raiseOop 3m 2.75m 5m s
       | StackOffFast -> raiseOop 4m 3.5m 6m s
       | StackOffGay -> stackOffGay s
-      | RaiseFold x when s.HeroBet = 0 -> raiseOop x x 4m s
-      | RaiseCall | RaiseCallEQ _ when s.HeroBet = 0 -> raiseOop 2.75m 2.75m 4m s
+      | Raise (x, t) -> if s.HeroBet > 0 then onVillainBet t else raiseOop x x 4m s
       | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
       | FormulaRaise x -> if s.HeroBet > 0 then onVillainBet x else formulaRiverRaise s
-      | Raise x -> if s.HeroBet > 0 then onVillainBet x.On3Bet else conditionalRaise x s
-      | Fold | RaiseFold _ -> Action.Fold
-      | Call | RaiseCall -> Action.Call
-      | CallEQ i | RaiseCallEQ i | RaiseGayCallEQ i -> callEQ s i
+      | RaiseConditional x -> if s.HeroBet > 0 then onVillainBet x.On3Bet else conditionalRaise x s
+      | Fold -> Action.Fold
+      | Call -> Action.Call
+      | CallEQ i | RaiseGayCallEQ i -> callEQ s i
       | AllIn -> Action.AllIn      
 
     if s.VillainBet = 0 then

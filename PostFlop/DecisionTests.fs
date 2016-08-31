@@ -218,7 +218,7 @@ module DecisionTests =
   [<Fact>]
   let ``Turn: Cbet all-in for value with effective stack 14bb or less`` () =
     let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 50m; IfPreStackLessThan = 14 } }
-    let snapshot = { defaultTurn with HeroStack = 200; VillainStack = 620 }
+    let snapshot = { defaultTurn with HeroStack = 177; VillainStack = 620 }
     let actual = Decision.decide snapshot [] options
     Assert.Equal(Some Action.AllIn, actual)
 
@@ -237,9 +237,9 @@ module DecisionTests =
     Assert.Equal(Action.RaiseToAmount 90 |> Some, actual)
 
   [<Fact>]
-  let ``Turn: Cbet allin for bluff with effective stack 18bb or less`` () =
+  let ``Turn: Cbet allin for bluff with effective stack less than 18bb`` () =
     let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 62.5m; IfPreStackLessThan = 18 } }
-    let snapshot = { defaultTurn with HeroStack = 273; VillainStack = 547 }
+    let snapshot = { defaultTurn with HeroStack = 257; VillainStack = 547 }
     let actual = Decision.decide snapshot [] options
     Assert.Equal(Some Action.AllIn, actual)
 
@@ -478,49 +478,49 @@ module DecisionTests =
   [<Fact>]
   let ``Raise/fold: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
-    let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.Fold) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Raise/call: Check/raise flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 40; Pot = 120 }
-    let options = { defaultOopOptions with Then = RaiseCall }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.Call) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 110 |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Check/raise 1BB flop OOP`` () =
     let snapshot = { defaultFlop with VillainBet = 20; Pot = 100 }
-    let options = { defaultOopOptions with Then = RaiseCallEQ 20 }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 20) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 80 |> Some, actual)
 
   [<Fact>]
   let ``Raise/fold: Fold 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
-    let options = { defaultOopOptions with Then = RaiseFold(2.75m) }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.Fold) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Raise/call: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
-    let options = { defaultOopOptions with Then = RaiseCall }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.Call) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Fold 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
-    let options = { defaultOopOptions with Then = RaiseCallEQ 26 }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 26) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Raise/call EQ: Call 3bet flop OOP`` () =
     let snapshot = { defaultFlop with HeroBet = 110; VillainBet = 240; Pot = 360 }
-    let options = { defaultOopOptions with Then = RaiseCallEQ 27 }
+    let options = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 27) }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Call |> Some, actual)
 
@@ -601,27 +601,27 @@ module DecisionTests =
   [<Fact>]
   let ``Check/Raise turn with min stack pot ratio limits`` () =
     let snapshot = { defaultTurn with Pot = 160; VillainStack = 340; HeroStack = 400; VillainBet = 60 }
-    let options = { defaultOopOptions with Then = Raise { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } }
+    let options = { defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 130 |> Some, actual)
 
   [<Fact>]
   let ``No Check/Raise turn with min stack pot ratio limits`` () =
     let snapshot = { defaultTurn with Pot = 220; VillainStack = 340; HeroStack = 440; VillainBet = 100 }
-    let options = { defaultOopOptions with Then = Raise { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } }
+    let options = { defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)
 
   [<Fact>]
   let ``Check/Raise turn with min stack remaining limits`` () =
     let snapshot = { defaultTurn with Pot = 160; VillainStack = 340; HeroStack = 400; VillainBet = 60 }
-    let options = { defaultOopOptions with Then = Raise { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0m; On3Bet = CallEQ 15 } }
+    let options = { defaultOopOptions with Then = RaiseConditional { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0m; On3Bet = CallEQ 15 } }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.RaiseToAmount 175 |> Some, actual)
 
   [<Fact>]
   let ``No Check/Raise turn with min stack remaining limits`` () =
     let snapshot = { defaultTurn with Pot = 220; VillainStack = 280; HeroStack = 500; VillainBet = 100 }
-    let options = { defaultOopOptions with Then = Raise { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0m; On3Bet = CallEQ 15 } }
+    let options = { defaultOopOptions with Then = RaiseConditional { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0m; On3Bet = CallEQ 15 } }
     let actual = Decision.decideOop [] snapshot options
     Assert.Equal(Action.Fold |> Some, actual)

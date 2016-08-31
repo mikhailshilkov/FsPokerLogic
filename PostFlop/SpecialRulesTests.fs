@@ -189,15 +189,15 @@ let ``specialRulesOop does no change based on KHighOnPaired on higher blind leve
 
 [<Fact>]
 let ``specialRulesOop returns based on CheckRaiseOvercardBluff on overcard and mid-sized bet in deep stack`` () =
-  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ 10))] }
   let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90 }
-  let expected = { options with Then = RaiseCallEQ 10 }
+  let expected = { options with Then = Raise(2.75m, OopOnCBet.CallEQ 10) }
   let actual = specialRulesOop s [] options
   Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when no overcard`` () =
-  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ 10))] }
   let s = { defaultTurn with Board = parseBoard "5h7d9s2s"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90 }
   let actual = specialRulesOop s [] options
   Assert.Equal(options, actual)
@@ -206,14 +206,14 @@ let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when no ov
 [<InlineData(55)>]
 [<InlineData(110)>]
 let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when bet is too small or big`` vb =
-  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ 10))] }
   let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 180 + vb; VillainBet = vb }
   let actual = specialRulesOop s [] options
   Assert.Equal(options, actual)
 
 [<Fact>]
 let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when stack is low`` () =
-  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(RaiseCallEQ 10)] }
+  let options = { defaultOptions with Special = [CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ 10))] }
   let s = { defaultTurn with Board = parseBoard "5h7d9sQs"; Hand = parseSuitedHand "KsJd"; Pot = 270; VillainBet = 90; HeroStack = 240 }
   let actual = specialRulesOop s [] options
   Assert.Equal(options, actual)
@@ -281,7 +281,7 @@ let ``strategicRulesOop check/call paired turn after calling flop with second pa
 let ``strategicRulesOop bluffy check raise flop minraised pf`` () =
   let s = { defaultFlop with Hand = parseSuitedHand "7s4c"; Board = parseBoard "3d3h6s"; VillainBet = 40; Pot = 120 }
   let actual = strategicRulesOop' s [Action.Call; Action.Check] ([], [[Three;Three;Six]], [])
-  let expected = { defaultOptions with Then = RaiseFold(2.75m) }
+  let expected = { defaultOptions with Then = Raise(2.75m, OopOnCBet.Fold) }
   Assert.Equal(expected, fst actual)
 
 [<Fact>]
@@ -310,7 +310,7 @@ let ``strategicRulesOop all in turn with Gutshot after bluffy check raise flop m
 let ``strategicRulesOop bluffy check raise flop limped pf`` () =
   let s = { defaultFlop with Hand = parseSuitedHand "Qs5c"; Board = parseBoard "5d8hTs"; VillainBet = 30; Pot = 70 }
   let actual = strategicRulesOop' s [Action.Check; Action.Check] ([[Five;Eight;Ten]], [], [])
-  let expected = { defaultOptions with Then = RaiseFold(4m) }
+  let expected = { defaultOptions with Then = Raise(4m, OopOnCBet.Fold) }
   Assert.Equal(expected, fst actual)
 
 [<Fact>]

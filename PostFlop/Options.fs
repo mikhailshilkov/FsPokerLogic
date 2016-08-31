@@ -44,12 +44,10 @@ module Options =
     | StackOffFast 
     | StackOffGay 
     | CallEQ of int 
-    | RaiseFold of decimal 
-    | RaiseCall 
-    | RaiseCallEQ of int 
+    | Raise of decimal * OopOnCBet
     | RaiseGayCallEQ of int 
     | FormulaRaise of OopOnCBet
-    | Raise of OopConditionalRaise
+    | RaiseConditional of OopConditionalRaise
     | Call 
     | AllIn
 

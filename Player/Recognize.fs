@@ -12,14 +12,15 @@ module Recognize =
   let recognize' b = ScreenRecognition.recognizeScreen b
 
   let recognizeMock _ =
-    { TotalPot = Some 480; HeroStack = Some 330; VillainStack = Some 190; HeroBet = None; VillainBet = None; HeroHand = "7h5h"; Board = "Jd7c2c3s3d"; Button = Villain; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Blinds = Some { SB = 15; BB = 30 }; Sitout = Unknown; VillainName = "Ctid80" }
+    { TotalPot = Some 160; HeroStack = Some 470; VillainStack = Some 470; HeroBet = None; VillainBet = None; HeroHand = "KdQs"; Board = "6c5hKc7d"; Blinds = Some { SB = 10; BB = 20 }; Button = Villain; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "Ctid80" }
 
   let recognizeActor (window : WindowInfo) =
     let result = recognize' window.Bitmap
     let heroBet = defaultArg result.HeroBet 0
     let villainBet = defaultArg result.VillainBet 0
     let bb = defaultArg (result.Blinds |> Option.map (fun b -> b.BB)) 0
-    if not(String.IsNullOrEmpty result.HeroHand)
+    let hasHand = String.IsNullOrEmpty result.HeroHand |> not
+    if (hasHand || result.Sitout = Hero)
        && not(Array.isEmpty result.Actions) 
        && (heroBet < villainBet || (heroBet = villainBet && heroBet <= bb)) then
       Some { WindowTitle = window.Title; TableName = window.TableName; Screen = result; Bitmap = window.Bitmap }

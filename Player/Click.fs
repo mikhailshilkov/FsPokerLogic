@@ -27,7 +27,6 @@ module Click =
     if not (check b) then 
       let currentScreen = ScreenRecognition.recognizeScreen(w.Bitmap)
       if currentScreen = screen then
-        //Dumper.SaveBitmap(w.Bitmap, window)
         repeat()
 
   let executeClickAction window s b =

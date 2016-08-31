@@ -133,7 +133,7 @@ module ImportTests =
   let ``importOopFlop returns correct options for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopFlop xl.Workbook "limp and check" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = { defaultOptions with Then = RaiseCallEQ 20 } |> Some
+    let expected = { defaultOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 20) } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -286,19 +286,28 @@ module ImportTests =
   let ``parseFlopOop 62.5%/30 works`` () = testParseFlopOop "62.5%/30" (Donk 62.5m) (CallEQ 30)
 
   [<Fact>]
-  let ``parseFlopOop ch/r/f works`` () = testParseFlopOop "ch/r/f" Check (RaiseFold(2.75m))
+  let ``parseFlopOop ch/r/f works`` () = testParseFlopOop "ch/r/f" Check (Raise(2.75m, OopOnCBet.Fold))
 
   [<Fact>]
-  let ``parseFlopOop ch/r/c works`` () = testParseFlopOop "ch/r/c" Check RaiseCall
+  let ``parseFlopOop ch/r/c works`` () = testParseFlopOop "ch/r/c" Check (Raise(2.75m, OopOnCBet.Call))
 
   [<Fact>]
   let ``parseFlopOop 75%/c works`` () = testParseFlopOop "75%/c" (Donk 75m) Call
 
   [<Fact>]
-  let ``parseFlopOop ch/r/20 works`` () = testParseFlopOop "ch/r/20" Check (RaiseCallEQ 20)
+  let ``parseFlopOop ch/r/20 works`` () = testParseFlopOop "ch/r/20" Check (Raise(2.75m, OopOnCBet.CallEQ 20))
 
   [<Fact>]
   let ``parseFlopOop RBS/18 works`` () = testParseFlopOop "RBS/18" RiverBetSizing (CallEQ 18)
+
+  [<Fact>]
+  let ``parseFlopOop ch/rTbdb/so works`` () = testParseFlopOop "ch/rTbdb/so" Check (Raise(2.6m, OopOnCBet.StackOff))
+
+  [<Fact>]
+  let ``parseFlopOop ch/rTfb/34 works`` () = testParseFlopOop "ch/rTfb/34" Check (Raise(2.2m, OopOnCBet.CallEQ 34))
+
+  [<Fact>]
+  let ``parseFlopOop ch/rModx2,3/so works`` () = testParseFlopOop "ch/rModx2,3/so" Check (Raise(2.3m, OopOnCBet.StackOff))
 
   [<Fact>]
   let ``parseOopOption ch/25/ovso works`` () = 
@@ -321,13 +330,13 @@ module ImportTests =
   [<Fact>]
   let ``parseOopOption Ch/rTfbFT$100/10  works`` () = 
     let actual = parseOopOption "Ch/rTfbFT$100/10" ""
-    let expected = { defaultOptions with Then = Raise { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0.0m; On3Bet = CallEQ 10 } } |> Some
+    let expected = { defaultOptions with Then = RaiseConditional { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0.0m; On3Bet = CallEQ 10 } } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``parseOopOption Ch/rcombo&0,55/15 works`` () = 
     let actual = parseOopOption "Ch/rcombo&0,55/15" ""
-    let expected = { defaultOptions with Then = Raise { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } } |> Some
+    let expected = { defaultOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } } |> Some
     Assert.Equal(expected, actual)
 
   let testParseOopSpecialRules s e =
@@ -395,13 +404,19 @@ module ImportTests =
   let ``parseOopSpecialRules Bov#62.5%/30 works`` () = testParseOopSpecialRules "Bov#62.5%/30" (BoardOvercard(Donk 62.5m, CallEQ 30))
 
   [<Fact>]
+  let ``parseOopSpecialRules Bov#55%/c works`` () = testParseOopSpecialRules "Bov#55%/c" (BoardOvercard(Donk 55m, OopOnCBet.Call))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Bov#55%/f works`` () = testParseOopSpecialRules "Bov#55%/f" (BoardOvercard(Donk 55m, OopOnCBet.Fold))
+
+  [<Fact>]
   let ``parseOopSpecialRules Bovso#50% works`` () = testParseOopSpecialRules "Bovso#50%" (BoardOvercard(Donk 50m, StackOff))
 
   [<Fact>]
   let ``parseOopSpecialRules Chrov/20 works`` () = testParseOopSpecialRules "Chrov/20" (BoardOvercard(OopDonk.Check, RaiseGayCallEQ 20))
 
   [<Fact>]
-  let ``parseOopSpecialRules Chrovb/10 works`` () = testParseOopSpecialRules "Chrovb/10" (CheckRaiseOvercardBluff(RaiseCallEQ 10))
+  let ``parseOopSpecialRules Chrovb/10 works`` () = testParseOopSpecialRules "Chrovb/10" (CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ 10)))
 
   [<Fact>]
   let ``parseOopSpecialRules Chrovso works`` () = testParseOopSpecialRules "Chrovso" (BoardOvercard(OopDonk.Check, StackOffGay))
@@ -410,7 +425,10 @@ module ImportTests =
   let ``parseOopSpecialRules Xoxo#50%/18 works`` () = testParseOopSpecialRules "Xoxo#50%/18" (CheckCheck(Donk 50m, CallEQ 18))
 
   [<Fact>]
-  let ``parseOopSpecialRules Xoxo#RBS/25 works`` () = testParseOopSpecialRules "Xoxo#RBS/25" (CheckCheck(RiverBetSizing, CallEQ 25))
+  let ``parseOopSpecialRules Xoxo#RBS/so works`` () = testParseOopSpecialRules "Xoxo#RBS/so" (CheckCheck(RiverBetSizing, StackOff))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Xoxo#ch/25 works`` () = testParseOopSpecialRules "Xoxo#ch/25" (CheckCheck(OopDonk.Check, CallEQ 25))
 
   [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
@@ -454,18 +472,18 @@ module ImportTests =
       { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) texture s history
-    let expected = ({ defaultOptions with Then = CallEQ 10 }, Some(Float BluffFloat)) |> Some
+    let expected = ({ defaultOptions with First = Donk 50m; Then = StackOff }, Some(Float BluffFloat)) |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importFloatTurnOptions imports float options with continuation`` () =
     use xl = useExcel trickyFileName
-    let s = { defaultTurn with Board = parseBoard "2s2cJsQh"; Hand = parseSuitedHand "5s2d" }
+    let s = { defaultTurn with Board = parseBoard "2s3c9sJh"; Hand = parseSuitedHand "KsQd" }
     let history = [
       { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOptions with Then = Raise { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0m; On3Bet = StackOff } }, Some(Float (WithContinuation "75%/so"))) |> Some
+    let expected = ({ defaultOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.4m; On3Bet = AllIn } }, Some(Float (WithContinuation "62.5%/f"))) |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -477,7 +495,7 @@ module ImportTests =
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop };
       { Action = Action.Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = Turn }]
     let actual = importFloatRiverOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = { defaultOptions with Special = [CheckCheck(Donk 50m, CallEQ 12)] } |> Some
+    let expected = { defaultOptions with Scenario = "r8/5"; Special = [CheckCheck(RiverBetSizing, CallEQ 8)] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]

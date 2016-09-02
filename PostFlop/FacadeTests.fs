@@ -151,7 +151,9 @@ let ``decidePostFlop 61 special rule on turn 2`` () =
 [<Fact>]
 let ``decidePostFlop 7 special rule on turn`` () =
   let s = { Hand = parseSuitedHand "8d9h"; Board = parseBoard "9cQd8s6h"; Pot = 100; VillainStack = 450; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 75)
+  let h = [ { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
+            { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }]
+  testPostFlopMotivated h s 0 (Action.RaiseToAmount 75)
 
 [<Fact>]
 let ``decidePostFlop 5 special rule on turn`` () =
@@ -280,6 +282,15 @@ let ``River OOP: bet after floats`` () =
     { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
     { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn };
     { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 45; Street = Turn }] s 0 (Action.RaiseToAmount 150)
+
+[<Fact>]
+let ``River OOP: bet float after check-check on turn`` () =
+  let s = { Hand = parseSuitedHand "QhKc"; Board = parseBoard "Ts5c3hQs7d"; Pot = 144; VillainStack = 418; HeroStack = 438; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testPostFlopMotivated [
+    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop; }
+    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop; }
+    { Action = Action.Call; Motivation = Some (Float BluffFloat); VsVillainBet = 32; Street = Flop; }
+    { Action = Action.Check; Motivation = Some (Float BluffFloat); VsVillainBet = 0; Street = Turn; }] s 0 (Action.RaiseToAmount 85)
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"

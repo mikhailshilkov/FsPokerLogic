@@ -123,13 +123,16 @@ module Import =
     let parts = canonic.Split([|'/'|], 2)
     if System.String.IsNullOrEmpty(strategy) then (OnDonk.Undefined, OnDonkRaise.Undefined)
     else if parts.Length = 1 then
-      (match parts.[0] with 
-      | "c" | "call" -> OnDonk.Call
-      | "f" -> OnDonk.Fold
-      | "ai" -> OnDonk.AllIn
-      | Int n -> OnDonk.CallEQ n
-      | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)
-      , OnDonkRaise.Undefined)
+      match parts.[0] with 
+      | "c" | "call" -> (OnDonk.Call, OnDonkRaise.Undefined)
+      | StartsWith "call^" s -> 
+        match s with 
+        | Decimal x -> (OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = x }, OnDonkRaise.StackOff)
+        | _ -> failwith ("Failed parsing Turn Donk (c^)" + s)
+      | "f" -> (OnDonk.Fold, OnDonkRaise.Undefined)
+      | "ai" -> (OnDonk.AllIn, OnDonkRaise.Undefined)
+      | Int n -> (OnDonk.CallEQ n, OnDonkRaise.Undefined)
+      | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)      
     elif parts.Length = 2 then
       let donk = 
         match parts.[0] with 
@@ -188,7 +191,7 @@ module Import =
         | Fifth -> failwith "Fifth pair impossible on turn"
         | Under -> 35
       | TwoPair when isPairedBoard -> 37
-      | TwoPair -> 37
+      | TwoPair -> 36
       | ThreeOfKind -> 38
       | Straight(Normal) -> 39
       | Straight(Weak) | Straight(OnBoard) -> 40

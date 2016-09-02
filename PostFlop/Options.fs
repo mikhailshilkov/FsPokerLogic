@@ -11,11 +11,13 @@ module Options =
   let DefaultCBetOr = { Factor = 0m; IfStackFactorLessThan = None; IfPreStackLessThan = 0; IfRemainingChipsLessThan = 0 }
   type CBet = Always of decimal | OrAllIn of CBetOr | Never | Undefined
   type OnCheckRaise = StackOff | Call | AllIn | CallEQ of int | Fold | Undefined
+  type DonkConditionalRaise = { Size: decimal; MinStackPotRatio: decimal }
   type OnDonk = 
     | ForValueStackOff 
     | ForValueStackOffX of int 
     | CallRaisePet 
     | CallEQ of int 
+    | RaiseConditional of DonkConditionalRaise
     | RaisePreDonkX of int
     | RaiseX of int 
     | RaiseGay //(2VB + P) / 2

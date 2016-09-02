@@ -203,6 +203,9 @@ module ImportTests =
   let ``parseTurnDonk 34 works`` () = testParseTurnDonk "34" (OnDonk.CallEQ 34) OnDonkRaise.Undefined
 
   [<Fact>]
+  let ``parseTurnDonk call^0,6 works`` () = testParseTurnDonk "call^0,6" (OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = 0.6m }) OnDonkRaise.StackOff
+
+  [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopRiver xl.Workbook "limp and check" (FullHouse(Normal)) defaultTexture defaultRiver

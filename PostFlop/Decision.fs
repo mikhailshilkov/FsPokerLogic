@@ -25,6 +25,13 @@ module Decision =
     | 0 -> PreFlop
     | _ -> failwith "Weird board length"
 
+  let previousStreet s = 
+    match s.Board.Length with
+    | 5 -> Turn
+    | 4 -> Flop 
+    | 3 -> PreFlop
+    | _ -> failwith "Weird board for previous street"
+
   let streetIndex s = 
     match s with
     | River -> 5
@@ -113,6 +120,13 @@ module Decision =
   let raiseGay s =
     (s.VillainBet + s.Pot) / 2 |> roundTo5 |> RaiseToAmount |> orAllIn 69 s
 
+  let conditionalDonkRaise (x: DonkConditionalRaise) s = 
+    let stackAfterCall = min (s.HeroStack - s.VillainBet) s.VillainStack
+    let potRateAfterCall = (stackAfterCall |> decimal) / (s.Pot + s.VillainBet  |> decimal)
+    if x.MinStackPotRatio < potRateAfterCall
+    then s.VillainBet * 11 / 5 |> roundTo5 |> RaiseToAmount
+    else Action.Call
+
   let ensureMinRaise s a =
     match a with
     | RaiseToAmount x when x <= s.BB -> MinRaise
@@ -127,6 +141,7 @@ module Decision =
       | RaiseGay, _ -> raiseGay snapshot |> Some
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
+      | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
       | OnDonk.CallEQ eq, _ -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some

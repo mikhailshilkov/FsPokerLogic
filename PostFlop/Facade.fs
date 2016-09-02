@@ -66,8 +66,11 @@ module Facade =
         match street s with
         | Flop when s.VillainBet > 0 && s.HeroBet = 0 -> importFloatFlopOopOptions xlTricky s
         | Turn when floatedBefore -> importFloatTurnOopOptions xlTricky value texture s history
-        | River when floatedBefore -> importFloatRiverOptions xlTricky value.Made texture s history |> Option.map (fun v -> (v, None))
+        | River when floatedBefore -> 
+          importFloatRiverOptions xlTricky value.Made texture s history 
+          |> Option.map (fun o -> specialRulesOop s history o, None)
         | _ -> None
+        |> Option.map (fun (o, m) -> scenarioRulesOop history o, m)
       else None
 
     let normalPlay() =
@@ -76,7 +79,7 @@ module Facade =
       | Turn, Some p -> importOopTurn xlOop p value texture
       | River, Some p -> importOopRiver xlOop p value.Made texture s
       | _ -> failwith "Unkown street at decidePostFlopOop"
-      |> Option.map (specialRulesOop s historySimple)
+      |> Option.map (specialRulesOop s history)
       |> Option.map (scenarioRulesOop history)
       |> Option.map (strategicRulesOop s value history bluffyFlops bluffyHand)
 

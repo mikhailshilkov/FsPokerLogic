@@ -251,6 +251,20 @@ module DecisionTests =
     Assert.Equal(actual, Action.RaiseToAmount 240 |> Some)
 
   [<Fact>]
+  let ``Call on RaiseConditional when stack is low`` () =
+    let options = { defaultOptions with Donk = OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = 0.6m } }
+    let snapshot = { defaultTurn with HeroStack = 330; Pot = 340; VillainStack = 330; VillainBet = 140 }
+    let actual = Decision.decide snapshot [] options
+    Assert.Equal(actual, Action.Call |> Some)
+
+  [<Fact>]
+  let ``Raise on RaiseConditional when stack is deep`` () =
+    let options = { defaultOptions with Donk = OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = 0.6m } }
+    let snapshot = { defaultTurn with HeroStack = 380; Pot = 240; VillainStack = 380; VillainBet = 100 }
+    let actual = Decision.decide snapshot [] options
+    Assert.Equal(actual, Action.RaiseToAmount 220 |> Some)
+
+  [<Fact>]
   let ``Makes no decision on undefined donk`` () =
     let snapshot = { defaultTurn with VillainBet = 100 }
     let options = { defaultOptions with Donk = OnDonk.Undefined }

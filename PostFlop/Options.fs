@@ -21,6 +21,7 @@ module Options =
     | RaisePreDonkX of int
     | RaiseX of int 
     | RaiseGay //(2VB + P) / 2
+    | FormulaRaise
     | AllIn 
     | Call 
     | Fold 
@@ -28,6 +29,7 @@ module Options =
 
   type OnDonkRaise = 
     | StackOff
+    | AllIn
     | CallEQ of int 
     | Undefined
 

@@ -343,6 +343,13 @@ module DecisionTests =
     Assert.Equal(Some Action.Call, actual)
 
   [<Fact>]
+  let ``Allin on 3bet after donk`` () =
+    let options = { defaultOptions with DonkRaise = OnDonkRaise.AllIn }
+    let snapshot = { defaultTurn with HeroStack = 380; VillainStack = 300; VillainBet = 160; HeroBet = 90; Pot = 330 }
+    let actual = Decision.decide snapshot [donkAction] options
+    Assert.Equal(Some Action.AllIn, actual)
+
+  [<Fact>]
   let ``Stack off all-in on river`` () =
     let snapshot = { defaultRiver with Pot = 260; VillainBet = 100; HeroStack = 320; VillainStack = 420 }
     let options = { defaultOptions with Donk = OnDonk.ForValueStackOffX 250 }
@@ -390,6 +397,13 @@ module DecisionTests =
     let options = { defaultOptions with CheckRaise = OnCheckRaise.CallEQ 20 }
     let actual = Decision.decide snapshot [] options
     Assert.Equal(Action.Fold |> Some, actual)
+
+  [<Fact>]
+  let ``Formula raise on river`` () =
+    let snapshot = { defaultRiver with Pot = 250; VillainBet = 100; VillainStack = 425; HeroStack = 425 }
+    let options = { defaultOptions with Donk = OnDonk.FormulaRaise }
+    let actual = Decision.decide snapshot [] options
+    Assert.Equal(Action.RaiseToAmount 300 |> Some, actual)
 
   [<Fact>]
   let ``Check flop OOP`` () =

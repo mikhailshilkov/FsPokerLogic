@@ -14,7 +14,8 @@ module ImportTests =
   open Excel.Import
 
   let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
-  let defaultOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
+  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
+  let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }  
   let defaultFlop = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c"; Pot = 80; VillainStack = 440; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
   let defaultRiver = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d9d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
@@ -133,14 +134,14 @@ module ImportTests =
   let ``importOopFlop returns correct options for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopFlop xl.Workbook "limp and check" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = { defaultOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 20) } |> Some
+    let expected = { defaultOopOptions with Then = Raise(2.75m, OopOnCBet.CallEQ 20) } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopFlop returns AI special option`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopFlop xl.Workbook "hero call raise pre" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = { defaultOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 10] } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 10] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -148,7 +149,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopTurn xl.Workbook "limp and check" { Made = Flush(NotNut Queen); FD = NoFD; FD2 = NoFD; SD = NoSD } texture
-    let expected = { defaultOptions with First = Donk(75m); Then = Call } |> Some
+    let expected = { defaultOopOptions with First = Donk(75m); Then = Call } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -156,21 +157,21 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 3; Streety = true }
     let actual = importOopTurn xl.Workbook "limp and check" { Made = TwoPair; FD = Draw(NotNut(King)); FD2 = NoFD; SD = NoSD } texture
-    let expected = { defaultOptions with Then = CallEQ 28 } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 28 } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with Made = Pair(Top(King)) } defaultTexture
-    let expected = { defaultOptions with First = Donk(75m); Then = StackOff; Scenario = "r9" } |> Some
+    let expected = { defaultOopOptions with First = Donk(75m); Then = StackOff; Scenario = "r9" } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct special scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with Made = Pair(Second(King)) } defaultTexture
-    let expected = { defaultOptions with Then = CallEQ 28; Special = [CheckCheck (Donk 75m, StackOff); BoardOvercard(Donk 67m, StackOff)]; SpecialScenario = "r9" } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 28; Special = [CheckCheck (Donk 75m, StackOff); BoardOvercard(Donk 67m, StackOff)]; SpecialScenario = "r9" } |> Some
     Assert.Equal(expected, actual)
 
   let testParseTurnDonk s d r =
@@ -206,10 +207,13 @@ module ImportTests =
   let ``parseTurnDonk call^0,6 works`` () = testParseTurnDonk "call^0,6" (OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = 0.6m }) OnDonkRaise.StackOff
 
   [<Fact>]
+  let ``parseTurnDonk F1RR/so works`` () = testParseTurnDonk "F1RR/so" OnDonk.FormulaRaise OnDonkRaise.StackOff
+
+  [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopRiver xl.Workbook "limp and check" (FullHouse(Normal)) defaultTexture defaultRiver
-    let expected = { defaultOptions with First = Donk(62.5m); Then = StackOff } |> Some
+    let expected = { defaultOopOptions with First = Donk(62.5m); Then = StackOff } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -217,7 +221,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let s = { defaultRiver with Hand = parseSuitedHand "Qd4c"; Board = parseBoard "8s9d3hQh3c" }
     let actual = importOopRiver xl.Workbook "hero call raise pre" TwoPair defaultTexture s
-    let expected = { defaultOptions with Then = CallEQ 30 } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 30 } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -225,7 +229,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with DoublePaired = true }
     let actual = importOopRiver xl.Workbook "limp and check" (Flush(NotNut Eight)) texture defaultRiver
-    let expected = { defaultOptions with First = Donk(50m); Then = Fold } |> Some
+    let expected = { defaultOopOptions with First = Donk(50m); Then = Fold } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -233,7 +237,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let s = { defaultRiver with Board = parseBoard "8s9d3hQhTc" }
     let actual = importOopRiver xl.Workbook "hero call raise pre" Nothing defaultTexture s
-    let expected = { defaultOptions with Then = CallEQ 15; Scenario = "r8/5" } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 15; Scenario = "r8/5" } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -242,7 +246,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "8s9dThQh3h" }
     let texture = { defaultTexture with Monoboard = 3 }
     let actual = importOopRiver xl.Workbook "hero call raise pre" (Pair(Third)) texture s
-    let expected = { defaultOptions with Then = CallEQ 23; Scenario = "r8/15" } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 23; Scenario = "r8/15" } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -250,7 +254,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver xl.Workbook "limp and check" (FullHouse(Weak)) texture defaultRiver
-    let expected = { defaultOptions with First = Donk(50m); Then = Fold } |> Some
+    let expected = { defaultOopOptions with First = Donk(50m); Then = Fold } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -258,7 +262,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4; Streety = true }
     let actual = importOopRiver xl.Workbook "hero raise FV vs limp" ThreeOfKind texture defaultRiver
-    let expected = { defaultOptions with First = Check; Then = CallEQ 14 } |> Some
+    let expected = { defaultOopOptions with First = Check; Then = CallEQ 14 } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -266,7 +270,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopRiver xl.Workbook "limp and check" (Flush(NotNut King)) texture defaultRiver
-    let expected = { defaultOptions with First = Donk(62.5m); Then = Call } |> Some
+    let expected = { defaultOopOptions with First = Donk(62.5m); Then = Call } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -274,12 +278,12 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 5 }
     let actual = importOopRiver xl.Workbook "limp and check" (Flush(Board)) texture defaultRiver
-    let expected = { defaultOptions with Then = CallEQ 25 } |> Some
+    let expected = { defaultOopOptions with Then = CallEQ 25 } |> Some
     Assert.Equal(expected, actual)
 
   let testParseFlopOop s f t =
     let actual = parseOopOption s ""
-    let expected = { defaultOptions with First = f; Then = t } |> Some
+    let expected = { defaultOopOptions with First = f; Then = t } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -313,9 +317,15 @@ module ImportTests =
   let ``parseFlopOop ch/rModx2,3/so works`` () = testParseFlopOop "ch/rModx2,3/so" Check (Raise(2.3m, OopOnCBet.StackOff))
 
   [<Fact>]
+  let ``parseOopOption ch works (mostly used for IP vs check)`` () = 
+    let actual = parseOopOption "ch" ""
+    let expected = { defaultOopOptions with First = Check } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
   let ``parseOopOption ch/25/ovso works`` () = 
     let actual = parseOopOption "ch/25@ovso" ""
-    let expected = { defaultOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff)] } |> Some
+    let expected = { defaultOopOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff)] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -327,19 +337,19 @@ module ImportTests =
   [<Fact>]
   let ``parseOopOption ch/F1RR/20 works`` () = 
     let actual = parseOopOption "ch/F1RR/20" ""
-    let expected = { defaultOptions with First = Check; Then = FormulaRaise (CallEQ 20) } |> Some
+    let expected = { defaultOopOptions with First = Check; Then = FormulaRaise (CallEQ 20) } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``parseOopOption Ch/rTfbFT$100/10  works`` () = 
     let actual = parseOopOption "Ch/rTfbFT$100/10" ""
-    let expected = { defaultOptions with Then = RaiseConditional { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0.0m; On3Bet = CallEQ 10 } } |> Some
+    let expected = { defaultOopOptions with Then = RaiseConditional { Size = 2.9m; MinStackRemaining = 100; MinStackPotRatio = 0.0m; On3Bet = CallEQ 10 } } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``parseOopOption Ch/rcombo&0,55/15 works`` () = 
     let actual = parseOopOption "Ch/rcombo&0,55/15" ""
-    let expected = { defaultOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } } |> Some
+    let expected = { defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.55m; On3Bet = CallEQ 15 } } |> Some
     Assert.Equal(expected, actual)
 
   let testParseOopSpecialRules s e =
@@ -459,15 +469,15 @@ module ImportTests =
   let trickyFileName = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
 
   [<Fact>]
-  let ``importFloatFlopOptions imports float options for a sample cell`` () =
+  let ``importFloatFlopOopOptions imports float options for a sample cell`` () =
     use xl = useExcel trickyFileName
     let s = { defaultFlop with Board = parseBoard "2s2cJd"; Hand = parseSuitedHand "Qh2s" }
     let actual = importFloatFlopOopOptions xl.Workbook s
-    let expected = ({ defaultOptions with Then = Call }, Some(Float ValueFloat)) |> Some
+    let expected = ({ defaultOopOptions with Then = Call }, Some(Float ValueFloat)) |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
-  let ``importFloatTurnOptions imports float options for a sample cell`` () =
+  let ``importFloatTurnOopOptions imports float options for a sample cell`` () =
     use xl = useExcel trickyFileName
     let s = { defaultTurn with Board = parseBoard "2s2cJsQs"; Hand = parseSuitedHand "5s3s" }
     let texture = { defaultTexture with Monoboard = 3 }
@@ -475,34 +485,34 @@ module ImportTests =
       { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) texture s history
-    let expected = ({ defaultOptions with First = Donk 50m; Then = StackOff }, Some(Float BluffFloat)) |> Some
+    let expected = ({ defaultOopOptions with First = Check; Then = CallEQ 10 }, Some(Float BluffFloat)) |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
-  let ``importFloatTurnOptions imports float options with continuation`` () =
+  let ``importFloatTurnOopOptions imports float options with continuation`` () =
     use xl = useExcel trickyFileName
-    let s = { defaultTurn with Board = parseBoard "2s3c9sJh"; Hand = parseSuitedHand "KsQd" }
+    let s = { defaultTurn with Board = parseBoard "2s3cTsAh"; Hand = parseSuitedHand "KsQd" }
     let history = [
       { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.4m; On3Bet = AllIn } }, Some(Float (WithContinuation "62.5%/f"))) |> Some
+    let expected = ({ defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.51m; On3Bet = CallEQ 15 } }, Some(Float (WithContinuation "62.5%/f"))) |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
-  let ``importFloatRiverOptions imports float options for a sample cell`` () =
+  let ``importFloatRiverOopOptions imports float options for a sample cell`` () =
     use xl = useExcel trickyFileName
     let s = { defaultRiver with Board = parseBoard "2s2cJsQdKc"; Hand = parseSuitedHand "5s3s" }
     let history = [
       { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop };
       { Action = Action.Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = Turn }]
-    let actual = importFloatRiverOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = { defaultOptions with Scenario = "r8/5"; Special = [CheckCheck(RiverBetSizing, CallEQ 8)] } |> Some
+    let actual = importFloatRiverOopOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
+    let expected = { defaultOopOptions with Special = [CheckCheck(Donk 50m, CallEQ 12)] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
-  let ``importFloatRiverOptions return continuation from turn if defined`` () =
+  let ``importFloatRiverOopOptions return continuation from turn if defined`` () =
     use xl = useExcel trickyFileName
     let s = { defaultRiver with Board = parseBoard "2s2cJsQdKc"; Hand = parseSuitedHand "5s3s" }
     let history = [
@@ -510,6 +520,60 @@ module ImportTests =
       { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop };
       { Action = Action.Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = Turn };
       { Action = Action.RaiseToAmount 120; Motivation = Some(Float (WithContinuation "75%/so")); VsVillainBet = 50; Street = Turn }]
-    let actual = importFloatRiverOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = { defaultOptions with First = Donk 75m; Then = StackOff } |> Some
+    let actual = importFloatRiverOopOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
+    let expected = { defaultOopOptions with First = Donk 75m; Then = StackOff } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importFloatFlopIpOptions imports float options for a sample cell`` () =
+    use xl = useExcel trickyFileName
+    let s = { defaultFlop with Board = parseBoard "2s2cJd"; Hand = parseSuitedHand "Qh2s" }
+    let actual = importFloatFlopIpOptions xl.Workbook s
+    let expected = ((OnDonk.Call, OnDonkRaise.Undefined), Some(Float ValueFloat)) |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importFloatTurnIpCheckOptions imports float options for a sample cell`` () =
+    use xl = useExcel trickyFileName
+    let s = { defaultTurn with Board = parseBoard "2sTc9s8h"; Hand = parseSuitedHand "7s2d" }
+    let history = [
+      { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
+      { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
+    let actual = importFloatTurnIpCheckOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
+    let expected = ({ defaultOopOptions with First = Donk 62.5m; Then = StackOff; Scenario = "r9" }, Some(Scenario "r9")) |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importFloatTurnIpDonkOptions imports float options for a sample cell`` () =
+    use xl = useExcel trickyFileName
+    let s = { defaultTurn with Board = parseBoard "2sTc9s8h"; Hand = parseSuitedHand "7s2d" }
+    let history = [
+      { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
+      { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop }]
+    let actual = importFloatTurnIpDonkOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
+    let expected = ((OnDonk.RaiseGay, OnDonkRaise.StackOff), Some(Float BluffFloat)) |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importFloatRiverIpCheckOptions imports float options for a sample cell`` () =
+    use xl = useExcel trickyFileName
+    let s = { defaultRiver with Board = parseBoard "2s7cJs3d5d"; Hand = parseSuitedHand "5s3s" }
+    let history = [
+      { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
+      { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop };
+      { Action = Action.Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = Turn }]
+    let actual = importFloatRiverIpCheckOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
+    let expected = { defaultOopOptions with First = Donk 62.5m; Then = AllIn } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importFloatRiverIpDonkOptions imports float options for a sample cell`` () =
+    use xl = useExcel trickyFileName
+    let s = { defaultRiver with Board = parseBoard "2s7cJs3d5d"; Hand = parseSuitedHand "5s3s" }
+    let history = [
+      { Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
+      { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 30; Street = Flop };
+      { Action = Action.Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = Turn }]
+    let actual = importFloatRiverIpDonkOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
+    let expected = (OnDonk.CallEQ 34, OnDonkRaise.Undefined) |> Some
     Assert.Equal(expected, actual)

@@ -6,7 +6,10 @@ module Texture =
   open Import
 
   let toFlopOptions isFlushDraw isFlopFlushDraw eo =
-    let onDonkRaise = function | OnDonk.ForValueStackOff -> OnDonkRaise.StackOff | _ -> OnDonkRaise.Undefined
+    let onDonkRaise = function 
+      | OnDonk.ForValueStackOff -> OnDonkRaise.StackOff 
+      | OnDonk.CallRaisePet -> OnDonkRaise.AllIn
+      | _ -> OnDonkRaise.Undefined
     if isFlushDraw then
       let donk = if eo.DonkFlashDraw.IsSome then eo.DonkFlashDraw.Value else eo.Donk
       let cbetFactor = if eo.CbetFactor = Never then Always 50m else eo.CbetFactor

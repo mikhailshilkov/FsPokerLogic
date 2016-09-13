@@ -127,6 +127,12 @@ module Decision =
     then s.VillainBet * 11 / 5 |> roundTo5 |> RaiseToAmount
     else Action.Call
 
+  let formulaRiverRaise s =
+    let betSize = (7 * s.VillainBet / 2 + s.Pot) / 2 |> roundTo5
+    let stack = effectiveStackOnCurrentStreet s
+    if betSize > 3 * stack / 4 then Action.AllIn 
+    else betSize |> RaiseToAmount
+
   let ensureMinRaise s a =
     match a with
     | RaiseToAmount x when x <= s.BB -> MinRaise
@@ -142,6 +148,7 @@ module Decision =
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
       | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
+      | OnDonk.FormulaRaise, _ -> formulaRiverRaise snapshot |> Some
       | OnDonk.CallEQ eq, _ -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
@@ -155,6 +162,7 @@ module Decision =
         match options.DonkRaise with
         | OnDonkRaise.CallEQ x -> callEQ snapshot x |> Some
         | OnDonkRaise.StackOff -> stackOffDonk snapshot |> Some
+        | OnDonkRaise.AllIn -> Some Action.AllIn
         | OnDonkRaise.Undefined -> None
       else
         match options.CheckRaise with
@@ -199,13 +207,6 @@ module Decision =
     else
       let betSize = rule.BetSize * s.Pot / 100 |> roundTo5
       betSize |> RaiseToAmount |> orAllIn rule.MinChipsLeft s
-
-  let formulaRiverRaise s =
-    let betSize = (7 * s.VillainBet / 2 + s.Pot) / 2 |> roundTo5
-    let stack = effectiveStackOnCurrentStreet s
-    if betSize > 3 * stack / 4 then Action.AllIn 
-    else betSize |> RaiseToAmount
-
 
   let rec decideOop riverBetSizes s options =
     let rec onVillainBet a =

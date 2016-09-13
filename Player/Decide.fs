@@ -91,7 +91,7 @@ module Decide =
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         if screen.Button = Hero then 
-          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver |> Option.map (notMotivated (street s) s.VillainBet)
+          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver xlTricky riverBetSizes
         else
           decidePostFlopOop history s value special xlPostFlopOop xlTricky (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot) riverBetSizes
       | _ -> None
@@ -169,6 +169,10 @@ module Decide =
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
+//      let history = [
+//        {Action = MinRaise; Motivation = None; VsVillainBet = 20; Street = PreFlop;}
+//        {Action = RaiseToAmount 80; Motivation = None; VsVillainBet = 20; Street = Flop;}
+//      ]
       history |> List.iter (sprintf "History: %A" >> log)
 
       try

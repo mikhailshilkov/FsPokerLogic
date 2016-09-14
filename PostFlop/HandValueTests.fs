@@ -129,7 +129,7 @@ let ``cbetFlushDrawOnTurn stack off after Cbet FD with decent hand value`` () =
 let ``bluffMissedFlushDrawOnRiver bluff missed FD with turn/river overcard or ace on flop`` handString boardString =
   let snapshot = { defaultRiver with Board = parseBoard boardString; Hand = parseSuitedHand handString }
   let actual = bluffMissedFlushDrawOnRiver snapshot Nothing [Action.RaiseToAmount 40; Action.RaiseToAmount 50; Action.RaiseToAmount 100] defaultOptions
-  let expected = { defaultOptions with Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 70m; IfRemainingChipsLessThan = 79 } }
+  let expected = { defaultOptions with Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 70m; IfRemainingChipsLessThan = 79 }; CheckRaise = OnCheckRaise.CallEQ 5 }
   Assert.Equal(expected, actual)
 
 [<Fact>]

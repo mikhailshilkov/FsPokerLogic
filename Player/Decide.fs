@@ -97,7 +97,7 @@ module Decide =
       | _ -> None
 
     match screen.Sitout, screen.Board with
-    | Villain, _ -> Action.MinRaise |> (notMotivated PreFlop 0) |> Some
+    | Villain, _ -> Action.MinRaise |> (notMotivated (streetOfBoard screen.Board) 0) |> Some
     | Hero, _ -> Action.SitBack |> (notMotivated PreFlop 0) |> Some
     | _, null -> decidePre screen
     | _, _ -> decidePost screen
@@ -171,7 +171,8 @@ module Decide =
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
 //      let history = [
 //        {Action = MinRaise; Motivation = None; VsVillainBet = 20; Street = PreFlop;}
-//        {Action = RaiseToAmount 80; Motivation = None; VsVillainBet = 20; Street = Flop;}
+//        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 0; Street = Flop;}
+//        {Action = RaiseToAmount 120; Motivation = None; VsVillainBet = 0; Street = Turn;}
 //      ]
       history |> List.iter (sprintf "History: %A" >> log)
 

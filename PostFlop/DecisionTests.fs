@@ -230,6 +230,13 @@ module DecisionTests =
     Assert.Equal(Some Action.AllIn, actual)
 
   [<Fact>]
+  let ``Turn: Cbet all-in for value with < 79 remaining chips after bet`` () =
+    let options = { defaultOptions with CbetFactor = OrAllIn { DefaultCBetOr with Factor = 70m; IfRemainingChipsLessThan = 79 } }
+    let snapshot = { defaultTurn with Pot = 400; HeroStack = 290; VillainStack = 310 }
+    let actual = Decision.decide snapshot [] options
+    Assert.Equal(Some Action.AllIn, actual)
+
+  [<Fact>]
   let ``Turn: Cbet for bluff with effective stack 19bb or more`` () =
     let options = { defaultOptions with CbetFactor = Always 50m }
     let snapshot = { defaultTurn with HeroStack = 288; VillainStack = 532 }

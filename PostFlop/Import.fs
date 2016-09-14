@@ -422,7 +422,7 @@ module Import =
       | Decimal x, p3 -> OopOnCBet.Raise(x, parseOopCbet p3)
       | _ -> failwith ("Failed parsing Flop Oop OnCbet rmodx" + s)
     | "f" -> OopOnCBet.Fold
-    | "so" -> OopOnCBet.StackOff
+    | "so" | "sot" -> OopOnCBet.StackOff
     | "so+" -> OopOnCBet.StackOffFast
     | "c" -> OopOnCBet.Call
     | "ai" -> OopOnCBet.AllIn

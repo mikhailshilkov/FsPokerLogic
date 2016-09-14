@@ -17,6 +17,15 @@ module Decision =
     Board: Board
   }
 
+  let streetOfBoard (b: string) = 
+    let length = if b = null then 0 else b.Length / 2
+    match length with
+    | 5 -> River
+    | 4 -> Turn 
+    | 3 -> Flop
+    | 0 -> PreFlop
+    | _ -> failwith "Weird board length"
+
   let street s = 
     match s.Board.Length with
     | 5 -> River
@@ -64,6 +73,7 @@ module Decision =
     let size = cbet s.Pot f.Factor
     if times size (defaultArg f.IfStackFactorLessThan 0m) < stack s
       && effectiveStackPre s >= f.IfPreStackLessThan 
+      && stack s > size + f.IfRemainingChipsLessThan
     then size |> RaiseToAmount
     else defaultAction
 

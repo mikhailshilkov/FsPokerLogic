@@ -71,7 +71,13 @@ module Click =
         let w = InteractionFacade.GetWindow(msg.WindowTitle, new System.Drawing.Size(650, 490))
         let s = ScreenRecognition.recognizeScreen(w.Bitmap)
         if s = msg.Screen then imp (attempts-1)
-    if not msg.IsInstant then Thread.Sleep(r.Next(200, 1000))
+    if not msg.IsInstant then 
+      let dmin, dmax =
+        match InteractionFacade.GetWindowCount("Heads Up ") with
+        | 1 -> (1000, 2400)
+        | 2 -> (600, 1900)
+        | _ -> (200, 1000)
+      Thread.Sleep(r.Next(dmin, dmax))
     imp 3
     // Move to random place below
     Thread.Sleep(150)

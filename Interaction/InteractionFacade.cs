@@ -62,6 +62,11 @@ namespace Interaction
             }
         }
 
+        public static int GetWindowCount(string searchString)
+        {
+            return HwndObject.GetWindows().Count(w => w.Title.StartsWith(searchString));
+        }
+
         public static IEnumerable<WindowInfo> GetWindowList(Size screenSize, Size targetSize, params string[] searchStrings)
         {
             foreach (string searchString in searchStrings)

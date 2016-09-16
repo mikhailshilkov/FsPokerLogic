@@ -19,7 +19,7 @@ module Facade =
   let floatedBefore h = h |> List.exists (fun hi -> match hi.Motivation with | Some(Float _) -> true | _ -> false)
 
   let toMotivated s (d, m) =
-    d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s }) 
+    d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = null }) 
 
   let canFloatIp s h =
     effectiveStackPre s >= 10 && match List.tryHead h with | Some x when x.VsVillainBet = s.BB -> true | _ -> false

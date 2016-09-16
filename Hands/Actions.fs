@@ -24,6 +24,13 @@ module Actions =
     Motivation: Motivation option
     VsVillainBet: int
     Street: Street
+    Source: string
   }
 
-  let notMotivated street vb action = { Action = action; Motivation = None; VsVillainBet = vb; Street = street }
+  let notMotivated street vb action = { Action = action; Motivation = None; VsVillainBet = vb; Street = street; Source = null }
+  let bluff street vb hb = { Action = RaiseToAmount hb; Motivation = Some Bluff; VsVillainBet = vb; Street = street; Source = null }
+  let scenario street vb action s = { Action = action; Motivation = (Some(Scenario(s))); VsVillainBet = vb; Street = street; Source = null }
+  let floatBluff street vb = { Action = Call; Motivation = Some(Float BluffFloat); VsVillainBet = vb; Street = street; Source = null }
+  let floatValue street vb = { Action = Call; Motivation = Some(Float ValueFloat); VsVillainBet = vb; Street = street; Source = null }
+  let floatContinuation street vb action s = { Action = action; Motivation = Some(Float(WithContinuation s)); VsVillainBet = vb; Street = street; Source = null }
+  let floatBluffCheck street = { Action = Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = street; Source = null }

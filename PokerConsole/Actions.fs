@@ -20,4 +20,4 @@ let mapPatternToAction street vb stack (pattern : ActionPattern) =
     | ActionPattern.Check -> Check
     | ActionPattern.Fold -> Fold
   let motivation = match pattern with | ActionPattern.RaiseBluffX x -> Some Bluff | _ -> None
-  { Action = action; Motivation = motivation; VsVillainBet = vb; Street = street }
+  { Action = action; Motivation = motivation; VsVillainBet = vb; Street = street; Source = null }

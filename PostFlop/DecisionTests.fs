@@ -333,7 +333,7 @@ module DecisionTests =
     let actual = Decision.decide snapshot [] options
     Assert.Equal(Some Action.AllIn, actual)
 
-  let donkAction = { Action = Action.RaiseToAmount 90; Motivation = None; VsVillainBet = 90; Street = Turn }
+  let donkAction = { Action = Action.RaiseToAmount 90; Motivation = None; VsVillainBet = 90; Street = Turn; Source = null }
 
   [<Fact>]
   let ``Stack-off after donk-raise on turn`` () =

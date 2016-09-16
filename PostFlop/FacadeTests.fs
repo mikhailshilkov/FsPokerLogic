@@ -151,8 +151,7 @@ let ``decidePostFlop 61 special rule on turn 2`` () =
 [<Fact>]
 let ``decidePostFlop 7 special rule on turn`` () =
   let s = { Hand = parseSuitedHand "8d9h"; Board = parseBoard "9cQd8s6h"; Pot = 100; VillainStack = 450; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let h = [ { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-            { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }]
+  let h = [ notMotivated PreFlop 40 Action.Call; notMotivated Flop 0 Action.Check]
   testPostFlopMotivated h s 0 (Action.RaiseToAmount 75)
 
 [<Fact>]
@@ -173,9 +172,9 @@ let ``decidePostFlop cbet flop after raising limp pre`` () =
 [<Fact>]
 let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
   let s = { Hand = parseSuitedHand "6h9h"; Board = parseBoard "Jd7h3d5s"; Pot = 300; VillainStack = 340; HeroStack = 340; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let h = [ { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-            { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
-            { Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop } ]
+  let h = [ notMotivated PreFlop 40 Action.Call 
+            notMotivated Flop 0 Action.Check 
+            bluff Flop 40 110]
   testPostFlopMotivated h s 0 Action.AllIn
 
 
@@ -192,7 +191,7 @@ let ``decidePostFlop bet turn for value after 3bet pf and bet flop`` () =
 [<Fact>]
 let ``decidePostFlop cbet flop after bluffy 3bet pf`` () =
   let s = { Hand = parseSuitedHand "5c4d"; Board = parseBoard "AhKcJh"; Pot = 200; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 (Action.RaiseToAmount 100)
+  testPostFlopMotivated [bluff Flop 40 110] s 0 (Action.RaiseToAmount 100)
 
 [<Fact>]
 let ``decidePostFlop does not bluffy overtake turn after wrong flop`` () =
@@ -222,7 +221,7 @@ let ``2`` () =
 [<Fact>]
 let ``8`` () =
   let s = { Hand = parseSuitedHand "5s7c"; Board = parseBoard "4cAdQc"; Pot = 200; VillainStack = 370; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlopMotivated [{ Action = Action.RaiseToAmount 100; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 (Action.RaiseToAmount 100)
+  testPostFlopMotivated [bluff Flop 40 100] s 0 (Action.RaiseToAmount 100)
 
 [<Fact>]
 let ``13`` () =
@@ -238,24 +237,24 @@ let ``14f`` () =
 let ``14`` () =
   let s = { Hand = parseSuitedHand "4hJh"; Board = parseBoard "7d5s8s6d"; Pot = 300; VillainStack = 220; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivated [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
-    { Action = Action.RaiseToAmount 110; Motivation = Some Bluff; VsVillainBet = 40; Street = Flop }] s 0 Action.AllIn
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 0 Action.Check 
+    bluff Flop 40 110] s 0 Action.AllIn
 
 [<Fact>]
 let ``Turn OOP bet returns appropriate scenario name`` () =
   let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKs"; Pot = 80; VillainStack = 320; HeroStack = 580; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivatedExt [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }] s 0 (fun actual -> Assert.Equal(Some(Scenario "r8"), actual.Value.Motivation))
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 0 Action.Check] s 0 (fun actual -> Assert.Equal(Some(Scenario "r8"), actual.Value.Motivation))
 
 [<Fact>]
 let ``River OOP bet is made based on turn scenario`` () =
   let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKsTh"; Pot = 160; VillainStack = 280; HeroStack = 440; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivated [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop }; 
-    { Action = Action.RaiseToAmount 40; Motivation = Some(Scenario "r8"); VsVillainBet = 00; Street = Turn }] s 0 (Action.RaiseToAmount 95)
+    notMotivated PreFlop 40 Action.Call;
+    notMotivated Flop 0 Action.Check 
+    scenario Turn 0 (Action.RaiseToAmount 40) "r8"] s 0 (Action.RaiseToAmount 95)
 
 [<Fact>]
 let ``Flop OOP: float call`` () =
@@ -267,30 +266,30 @@ let ``Flop OOP: float call`` () =
 let ``Turn OOP: float call for bluffy`` () =
   let s = { Hand = parseSuitedHand "Ad6h"; Board = parseBoard "2s7c3h6h"; Pot = 205; VillainStack = 285; HeroStack = 540; VillainBet = 45; HeroBet = 0; BB = 20 }
   testPostFlopMotivatedExt [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
-    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn }] s 0 
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 0 Action.Check
+    floatBluff Flop 40
+    notMotivated Turn 0 Action.Check] s 0 
     (fun actual -> Assert.Equal(Action.Call, actual.Value.Action); Assert.Equal(Some(Float BluffFloat), actual.Value.Motivation))
 
 [<Fact>]
 let ``River OOP: bet after floats`` () =
   let s = { Hand = parseSuitedHand "QdQh"; Board = parseBoard "2s7c2hJhTc"; Pot = 250; VillainStack = 285; HeroStack = 495; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivated [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop }; 
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop };
-    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 40; Street = Flop };
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Turn };
-    { Action = Action.Call; Motivation = Some(Float BluffFloat); VsVillainBet = 45; Street = Turn }] s 0 (Action.RaiseToAmount 155)
+    notMotivated PreFlop 40 Action.Call
+    notMotivated Flop 0 Action.Check
+    floatBluff Flop 40
+    notMotivated Turn 0 Action.Check
+    floatBluff Turn 45] s 0 (Action.RaiseToAmount 155)
 
 [<Fact>]
 let ``River OOP: bet float after check-check on turn`` () =
   let s = { Hand = parseSuitedHand "QhKc"; Board = parseBoard "Ts5c3hQs7d"; Pot = 144; VillainStack = 418; HeroStack = 438; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivated [
-    { Action = Action.Call; Motivation = None; VsVillainBet = 40; Street = PreFlop; }
-    { Action = Action.Check; Motivation = None; VsVillainBet = 0; Street = Flop; }
-    { Action = Action.Call; Motivation = Some (Float BluffFloat); VsVillainBet = 32; Street = Flop; }
-    { Action = Action.Check; Motivation = Some (Float BluffFloat); VsVillainBet = 0; Street = Turn; }] s 0 (Action.RaiseToAmount 90)
+    notMotivated PreFlop 40 Action.Call
+    notMotivated Flop 0 Action.Check
+    floatBluff Flop 32
+    floatBluffCheck Turn] s 0 (Action.RaiseToAmount 90)
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
@@ -326,59 +325,45 @@ let ``decidePostFlopIP cbet flush draw on turn`` () =
 let ``decidePostFlopIP call 4bet on flop with stackoff`` () =
   let s = { Hand = parseSuitedHand "7sJh"; Board = parseBoard "3h7h6c"; Pot = 765; VillainStack = 0; HeroStack = 120; VillainBet = 460; HeroBet = 225; BB = 20 }
   let history = [
-    {Action = MinRaise; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 0; Street = Flop;}
-    {Action = RaiseToAmount 225; Motivation = None; VsVillainBet = 100; Street = Flop;}]
+    notMotivated PreFlop 20 MinRaise
+    notMotivated Flop 0 (RaiseToAmount 40)
+    notMotivated Flop 100 (RaiseToAmount 225)]
   testIP s history Action.AllIn
 
 [<Fact>]
 let ``Flop IP: float call`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c"; Pot = 60; VillainStack = 450; HeroStack = 470; VillainBet = 20; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop}]
+  let history = [notMotivated PreFlop 20 Action.Call]
   testIPm s history Action.Call (Float(ValueFloat))
 
 [<Fact>]
 let ``Turn IP: float call donk`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c"; Pot = 120; VillainStack = 410; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = Action.Call; Motivation = Some(Float(ValueFloat)); VsVillainBet = 20; Street = Flop}]
+  let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20]
   testIPm s history Action.Call (Float(ValueFloat))
 
 [<Fact>]
 let ``Turn IP: bet after bluff float call on flop`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4cAc"; Pot = 80; VillainStack = 460; HeroStack = 460; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = Action.Call; Motivation = Some(Float(BluffFloat)); VsVillainBet = 20; Street = Flop}]
+  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20]
   testIPm s history (Action.RaiseToAmount 40) (Scenario("r9"))
 
 [<Fact>]
 let ``River IP: float raise donk`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c7h"; Pot = 240; VillainStack = 330; HeroStack = 410; VillainBet = 80; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = Action.Call; Motivation = Some(Float(ValueFloat)); VsVillainBet = 20; Street = Flop};
-    {Action = Action.Call; Motivation = Some(Float(ValueFloat)); VsVillainBet = 40; Street = Turn}]
+  let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20; floatValue Turn 40]
   testIP s history (Action.RaiseToAmount 260)
 
 [<Fact>]
 let ``River IP: bet after bluff float call on flop`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4cAcJd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = Action.Call; Motivation = Some(Float(BluffFloat)); VsVillainBet = 20; Street = Flop};
-    {Action = Action.RaiseToAmount 40; Motivation = Some(Float(BluffFloat)); VsVillainBet = 40; Street = Turn}]
+  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; floatBluff Turn 40]
   testIP s history (Action.RaiseToAmount 65)
 
 [<Fact>]
 let ``River IP float bet is made based on turn scenario`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4cAcTd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let history = [
-    {Action = Action.Call; Motivation = None; VsVillainBet = 20; Street = PreFlop};
-    {Action = Action.Call; Motivation = Some(Float(BluffFloat)); VsVillainBet = 20; Street = Flop};
-    {Action = Action.RaiseToAmount 40; Motivation = Some(Scenario("r9")); VsVillainBet = 0; Street = Flop}]
+  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; scenario Flop 0 (Action.RaiseToAmount 40) "r9"]
   testIP s history (Action.RaiseToAmount 95)
 
 

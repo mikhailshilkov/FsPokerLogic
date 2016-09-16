@@ -35,8 +35,8 @@ let main argv =
 
     let snapshot = { Hand = suitedHand; Board = board; Pot = 270; VillainStack = 350; HeroStack = 380; VillainBet = 90; HeroBet = 0; BB = 20 }
     let history = [
-      { Action = Action.RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop }; 
-      { Action = Action.RaiseToAmount 50; Motivation = None; VsVillainBet = 0; Street = Flop }]
+      notMotivated PreFlop 20 (Action.RaiseToAmount 40); 
+      notMotivated Flop 0 (Action.RaiseToAmount 50)]
 
     let turnDonkOption = importTurnDonk xl.Workbook value texture snapshot history
     printf "Turn donk action is: %A.\nPress any key to continue or 'q' to exit:" turnDonkOption

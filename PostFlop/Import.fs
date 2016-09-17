@@ -1,5 +1,6 @@
 ﻿namespace PostFlop
 
+open Microsoft.FSharp.Core
 open System
 open Microsoft.Office.Interop.Excel
 open System.Runtime.InteropServices
@@ -26,6 +27,8 @@ module Import =
 
   let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
   let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }
+
+  let excelColumns = ["A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z";"AA";"AB";"AC";"AD";"AE";"AF";"AG";"AH";"AI";"AJ";"AK";"AL";"AM";"AN"]
 
   let orElse b a = match a with | Some _ -> a | None -> b()
 
@@ -503,7 +506,7 @@ module Import =
 
   let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    let index = 
+    let row = 
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 21
       | FullHouse(_) -> 20
@@ -544,7 +547,7 @@ module Import =
         | NoFD, GutShot -> 23
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
+    let cellValues = getCellValues xlWorkSheet ("B" + row) ("G" + row)
     let (column, specialRulesColumn) = 
       match texture.Monoboard, handValue.FD with
       | 3, NoFD -> (2, 4)
@@ -552,10 +555,11 @@ module Import =
       | 3, Draw(_) -> (3, 4)
       | _ -> (0, 1)
     parseOopOption cellValues.[column] cellValues.[specialRulesColumn]
+    |> Option.add (fun o -> sheetName + " -> " + excelColumns.[column + 1] + "/" + excelColumns.[specialRulesColumn + 1] + row)
 
   let importOopTurn (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    let index = 
+    let row = 
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 24
       | FullHouse(Normal) -> 22
@@ -602,7 +606,7 @@ module Import =
         | NoFD, GutShot -> 26
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("K" + index) ("AB" + index)
+    let cellValues = getCellValues xlWorkSheet ("K" + row) ("AB" + row)
 
     let specialConditionsColumn = 
       match texture.Monoboard with
@@ -624,6 +628,7 @@ module Import =
       | _ -> (0, 3)
     let specialRules = if texture.Monoboard < 3 then cellValues.[1] else "" // monoboard rules are in the cell itself after @ sign
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
+    |> Option.add (fun o -> sheetName + " -> " + excelColumns.[column + 10] + "/" + excelColumns.[specialColumn + 10] + row)
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture s =
     let defaultMapping () =
@@ -728,8 +733,8 @@ module Import =
       if texture.Monoboard = 5 then monoMapping ()
       else defaultMapping ()
 
-    let indexString = index |> string
-    let cellValues = getCellValues xlWorkSheet ("AE" + indexString) ("AL" + indexString)
+    let row = index |> string
+    let cellValues = getCellValues xlWorkSheet ("AE" + row) ("AL" + row)
 
     let (specialConditionsColumn, specialColumn, specialRulesColumn) = 
       match texture.Monoboard with
@@ -739,7 +744,13 @@ module Import =
     let sc = Option.map (fun scc -> specialConditionsApply texture cellValues.[scc]) specialConditionsColumn |> defaultArg <| false
     let sr = defaultArg (Option.map (fun src -> cellValues.[src]) specialRulesColumn) ""
 
+    let source o = 
+      sheetName + " -> " + excelColumns.[column + 30]
+      + if column <> specialColumn then "/" + excelColumns.[specialColumn + 30] else ""
+      + row
+
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr
+    |> Option.add source
 
   let importFlopList sheetName (xlWorkBook : Workbook) =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -776,13 +787,14 @@ module Import =
 
   let importFloatFlopOptions (xlWorkBook : Workbook) sheet rangesToCompare s =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheet] :?> Worksheet
-    let index = s.Board |> rowIndex |> (+) 5 |> string
-    let cellValues = getCellValues xlWorkSheet ("F" + index) ("H" + index)
+    let row = s.Board |> rowIndex |> (+) 5 |> string
+    let cellValues = getCellValues xlWorkSheet ("F" + row) ("H" + row)
+    let columns = ["F"; "G"; "H"]
     
     rangesToCompare
-    |> Seq.map (fun (i, m) -> (Ranges.parseRanges cellValues.[i], m))
-    |> Seq.filter (fun (r, _) -> toHand s.Hand |> Ranges.isHandInRanges r)
-    |> Seq.map snd
+    |> Seq.map (fun (i, m) -> (Ranges.parseRanges cellValues.[i], m, "tricky -> " + sheet + " -> " + columns.[i] + row))
+    |> Seq.filter (fun (r, _, _) -> toHand s.Hand |> Ranges.isHandInRanges r)
+    |> Seq.map (fun (_, m, s) -> (m, s))
     |> Seq.tryHead
 
   let importFloatFlopOopOptions (xlWorkBook : Workbook) s =    
@@ -792,7 +804,7 @@ module Import =
       if villainBetSize = 0 || villainBetSize >= 26 then yield (1, ValueFloat)
     }    
     importFloatFlopOptions xlWorkBook "float OOP" rangesToCompare s
-    |> Option.map (fun m -> ({ defaultOopOptions with Then = OopOnCBet.Call }, Some(Float m)))
+    |> Option.map (fun (m, source) -> { defaultOopOptions with Then = OopOnCBet.Call }, Some(Float m), source)
 
   let importFloatFlopIpOptions (xlWorkBook : Workbook) s =
     let villainBetSize = relativeBet s
@@ -802,7 +814,7 @@ module Import =
       if villainBetSize = 0 || villainBetSize >= 26 then yield (2, ValueFloat)
     }
     importFloatFlopOptions xlWorkBook "float IP" rangesToCompare s
-    |> Option.map (fun m -> ((OnDonk.Call, OnDonkRaise.Undefined), Some(Float m)))
+    |> Option.map (fun (m, source) -> (OnDonk.Call, OnDonkRaise.Undefined), Some(Float m), source)
 
   let floatTurnOopColumns value texture s =
     let villainBetHigh = relativeBet s >= 60
@@ -919,32 +931,33 @@ module Import =
       else flopFloatMotivation
 
     column
-    |> Option.map (fun col -> getCellValue xlWorkSheet (col + row))
-    |> Option.map (fun cell -> (cell, motivation cell))
+    |> Option.map (fun col -> col + row, getCellValue xlWorkSheet (col + row))
+    |> Option.map (fun (source, cell) -> (cell, motivation cell, source))
 
   let importFloatTurnOopOptions (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
     let yellowColumn, greenColumn = floatTurnOopColumns value texture s
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
-    |> Option.bind (fun (cell, motivation) -> 
+    |> Option.bind (fun (cell, motivation, source) -> 
       match parseOopOption cell "" with
-      | Some o -> Some (o, motivation)
+      | Some o -> Some (o, motivation, "tricky -> float OOP -> " + source)
       | None -> None)
 
   let importFloatTurnIpCheckOptions (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["float IP"] :?> Worksheet
     let yellowColumn, greenColumn = floatTurnIpCheckColumns value texture s h
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
-    |> Option.bind (fun (cell, motivation) -> 
+    |> Option.bind (fun (cell, motivation, source) -> 
+      let motiv o = if String.IsNullOrEmpty(o.Scenario) then motivation else Some(Motivation.Scenario(o.Scenario))
       match parseOopOption cell "" with
-      | Some o -> Some (o, if String.IsNullOrEmpty(o.Scenario) then motivation else Some(Motivation.Scenario(o.Scenario)))
+      | Some o -> Some (o, motiv o, "tricky -> float IP -> " + source)
       | None -> None)
 
   let importFloatTurnIpDonkOptions (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["float IP"] :?> Worksheet
     let yellowColumn, greenColumn = floatTurnIpDonkColumns value texture s
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
-    |> Option.map (fun (cell, motivation) -> (parseTurnDonk cell, motivation))
+    |> Option.map (fun (cell, motivation, source) -> (parseTurnDonk cell, motivation, "tricky -> float IP -> " + source))
 
   let importFloatRiverOptions (xlWorkBook : Workbook) sheetName column value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -1035,7 +1048,10 @@ module Import =
         else 43
       | StraightFlush -> 43
       |> string
-    let continuation =  h |> List.tryLast |> Option.bind (fun hi -> match hi.Motivation with | Some(Float(WithContinuation x)) -> Some (x, "") | _ -> None)
+    let continuation =  
+      h 
+      |> List.tryLast 
+      |> Option.bind (fun hi -> match hi.Motivation with | Some(Float(WithContinuation x)) -> Some (x, "", "continuation") | _ -> None)
     
     let villainBet = relativeBet s
     let specialColumn =
@@ -1049,7 +1065,7 @@ module Import =
     let readColumn () =      
       let special = specialColumn |> Option.map (fun x -> getCellValue xlWorkSheet (x + row))
       column 
-      |> Option.map (fun col -> getCellValue xlWorkSheet (col + row), defaultArg special "")
+      |> Option.map (fun col -> getCellValue xlWorkSheet (col + row), defaultArg special "", col + row)
 
     continuation |> orElse readColumn
 
@@ -1064,7 +1080,7 @@ module Import =
         elif texture.ThreeOfKind then "BB"
         else "AX"
     importFloatRiverOptions xlWorkBook "float OOP" column value texture s h
-    |> Option.bind (fun (c1, c2) -> parseOopOption c1 c2)
+    |> Option.bind (fun (c1, c2, source) -> parseOopOption c1 c2 |> Option.map (fun x -> x, "tricky -> float OOP -> " + source))
 
   let importFloatRiverIpCheckOptions (xlWorkBook : Workbook) value texture s h =
     let column = 
@@ -1077,7 +1093,8 @@ module Import =
         elif texture.ThreeOfKind then "CT"
         else "CP"
     importFloatRiverOptions xlWorkBook "float IP" column value texture s h
-    |> Option.bind (fun (c1, c2) -> parseOopOption c1 c2)
+    |> Option.bind (fun (c1, c2, source) -> 
+      parseOopOption c1 c2 |> Option.map (fun x -> x, "tricky -> float IP -> " + source))
 
   let importFloatRiverIpDonkOptions (xlWorkBook : Workbook) value texture s h =
     let column = 
@@ -1090,4 +1107,4 @@ module Import =
         elif texture.ThreeOfKind then "DC"
         else "CZ"
     importFloatRiverOptions xlWorkBook "float IP" column value texture s h
-    |> Option.map (fun (c1, _) -> parseTurnDonk c1)
+    |> Option.map (fun (c1, _, source) -> parseTurnDonk c1, "tricky -> float IP -> " + source)

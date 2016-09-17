@@ -1,5 +1,6 @@
 ﻿namespace PostFlop
 
+open Microsoft.FSharp.Core
 open Hands
 open Cards.HandValues
 open Decision
@@ -18,8 +19,8 @@ module Facade =
 
   let floatedBefore h = h |> List.exists (fun hi -> match hi.Motivation with | Some(Float _) -> true | _ -> false)
 
-  let toMotivated s (d, m) =
-    d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = null }) 
+  let toMotivated s (d, m, source) =
+    d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = source }) 
 
   let canFloatIp s h =
     effectiveStackPre s >= 10 && match List.tryHead h with | Some x when x.VsVillainBet = s.BB -> true | _ -> false
@@ -32,12 +33,12 @@ module Facade =
         | Turn when floatedBefore history -> importFloatTurnIpDonkOptions xlTricky value texture s history
         | River when floatedBefore history -> 
           importFloatRiverIpDonkOptions xlTricky value.Made texture s history
-          |> Option.map (fun x -> (x, None))
+          |> Option.map (fun (x, source) -> x, None, source)
         | _ -> None
       else None
     float
-    |> Option.map (fun (o, m) -> ({ CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = fst o; DonkRaise = snd o }, m))
-    |> Option.map (fun (o, m) -> (decide s history o, m))
+    |> Option.map (fun (o, m, source) -> ({ CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = fst o; DonkRaise = snd o }, m, source))
+    |> Option.map (fun (o, m, source) -> (decide s history o, m, source))
     |> Option.bind (toMotivated s)
 
   let decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes () =
@@ -47,12 +48,12 @@ module Facade =
         | Turn when floatedBefore history -> importFloatTurnIpCheckOptions xlTricky value texture s history
         | River when floatedBefore history -> 
           importFloatRiverIpCheckOptions xlTricky value.Made texture s history
-          |> Option.map (fun x -> (x, None))
+          |> Option.map (fun (x, source) -> (x, None, source))
         | _ -> None
       else None
     float
-    |> Option.map (fun (o, m) -> scenarioRulesOop history o, m)
-    |> Option.map (fun (o, m) -> decideOop riverBetSizes s o, m)
+    |> Option.map (fun (o, m, source) -> scenarioRulesOop history o, m, source)
+    |> Option.map (fun (o, m, source) -> decideOop riverBetSizes s o, m, source)
     |> Option.bind (toMotivated s)
 
   let decidePostFlopNormal history s value texture xlFlopTurn xlTurnDonkRiver =
@@ -87,7 +88,9 @@ module Facade =
     let rules = [
       decidePostFlopFloatOnDonk history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
-      fun () -> decidePostFlopNormal history s value texture xlFlopTurn xlTurnDonkRiver |> Option.map (notMotivated (street s) s.VillainBet)
+      fun () -> 
+        decidePostFlopNormal history s value texture xlFlopTurn xlTurnDonkRiver 
+        |> Option.map (fun a -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = if s.VillainBet > 0 then "HandStrength" else "PostflopIP" })
     ]
     rules |> List.choose apply |> List.tryHead
 
@@ -116,9 +119,9 @@ module Facade =
         | Turn when floatedBefore history -> importFloatTurnOopOptions xlTricky value texture s history
         | River when floatedBefore history -> 
           importFloatRiverOopOptions xlTricky value.Made texture s history 
-          |> Option.map (fun o -> specialRulesOop s history o, None)
+          |> Option.map (fun (o, source) -> specialRulesOop s history o, None, source)
         | _ -> None
-        |> Option.map (fun (o, m) -> scenarioRulesOop history o, m)
+        |> Option.map (fun (o, m, source) -> scenarioRulesOop history o, m, source)
       else None
 
     let normalPlay() =
@@ -127,11 +130,12 @@ module Facade =
       | Turn, Some p -> importOopTurn xlOop p value texture
       | River, Some p -> importOopRiver xlOop p value.Made texture s
       | _ -> failwith "Unkown street at decidePostFlopOop"
-      |> Option.map (specialRulesOop s history)
-      |> Option.map (scenarioRulesOop history)
-      |> Option.map (strategicRulesOop s value history bluffyFlops bluffyHand)
+      |> Option.mapFst (specialRulesOop s history)
+      |> Option.mapFst (scenarioRulesOop history)
+      |> Option.mapFst (strategicRulesOop s value history bluffyFlops bluffyHand)
+      |> Option.map (fun ((a, b), c) -> a, b, "PostflopOOP -> " + c)
 
     float
     |> orElse normalPlay
-    |> Option.map (fun (o, m) -> (decideOop riverBetSizes s o, m))
+    |> Option.map (fun (o, m, source) -> (decideOop riverBetSizes s o, m, source))
     |> Option.bind (toMotivated s)

@@ -305,7 +305,7 @@ let ``Three of kind`` handS flopS =
 [<InlineData("KdTc", "Jh2cQd9h3h")>]
 [<InlineData("KdTc", "Jh3cQd9h3h")>]
 [<InlineData("2d3c", "4h5cAd")>]
-let ``Straight normal (not weak)`` handS flopS =
+let ``Straight normal - not weak`` handS flopS =
   Straight(Normal) |> test handS flopS
 
 [<Theory>]

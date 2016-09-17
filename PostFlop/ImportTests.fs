@@ -312,7 +312,7 @@ module ImportTests =
   let ``parseFlopOop ch/rModx2,3/so works`` () = testParseFlopOop "ch/rModx2,3/so" Check (Raise(2.3m, OopOnCBet.StackOff))
 
   [<Fact>]
-  let ``parseOopOption ch works (mostly used for IP vs check)`` () = 
+  let ``parseOopOption ch works - mostly used for IP vs check`` () = 
     let actual = parseOopOption "ch" ""
     let expected = { defaultOopOptions with First = Check } |> Some
     Assert.Equal(expected, actual)

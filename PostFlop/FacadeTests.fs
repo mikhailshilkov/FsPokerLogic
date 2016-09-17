@@ -209,7 +209,7 @@ let ``decidePostFlop bet river after overtake turn on main rule 2`` () =
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
 
 [<Fact>]
-let ``decidePostFlop bet river after overtake turn on main rule 2 (2)`` () =
+let ``decidePostFlop bet river after overtake turn on main rule 2.2`` () =
   let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "8h3h4dKsJh"; Pot = 100; VillainStack = 390; HeroStack = 610; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Check; Action.Check; Action.RaiseToAmount 30] s 0 (Action.RaiseToAmount 50)
 

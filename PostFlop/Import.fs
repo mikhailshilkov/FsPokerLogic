@@ -1108,3 +1108,19 @@ module Import =
         else "CZ"
     importFloatRiverOptions xlWorkBook "float IP" column value texture s h
     |> Option.map (fun (c1, _, source) -> parseTurnDonk c1, "tricky -> float IP -> " + source)
+
+  let importIPTurnBooster (xlWorkBook : Workbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.Worksheets.["postflop IP turn booster"] :?> Worksheet
+    let row = turnDonkOrFloatOopRow 6 value s texture
+    let extra = match h with | { Action = Action.Call; VsVillainBet = v } :: _ when v > s.BB -> 7 | _ -> 0
+    let column =
+      if texture.Streety then 5
+      elif texture.DoublePaired then 6
+      elif texture.ThreeOfKind then 7
+      else 2
+      |> (+) extra
+      |> List.item <| excelColumns
+    let cellValue = getCellValue xlWorkSheet (column + row)
+    parseOopOption cellValue ""
+    |> Option.addValue ("HandStrength -> postflop IP turn booster -> " + column + row)
+    

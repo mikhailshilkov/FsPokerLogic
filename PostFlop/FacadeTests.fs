@@ -349,6 +349,18 @@ let ``Turn IP: bet after bluff float call on flop`` () =
   testIPm s history (Action.RaiseToAmount 40) (Scenario("r9"))
 
 [<Fact>]
+let ``Turn IP: bet turn booster`` () =
+  let s = { Hand = parseSuitedHand "QdJh"; Board = parseBoard "2hThJc4c"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let history = [notMotivated PreFlop 40 Action.Call; notMotivated Flop 0 (Action.RaiseToAmount 40)]
+  testIP s history (Action.RaiseToAmount 100)
+
+[<Fact>]
+let ``Turn IP: turn booster calls bet after bluffy bet based on Postflop IP O column`` () =
+  let s = { Hand = parseSuitedHand "QdTh"; Board = parseBoard "2h3h6cJc"; Pot = 500; VillainStack = 220; HeroStack = 280; VillainBet = 120; HeroBet = 60; BB = 20 }
+  let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 50); notMotivated Flop 0 (Action.RaiseToAmount 110); bluff Turn 0 60]
+  testIP s history Action.Call
+
+[<Fact>]
 let ``River IP: float raise donk`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c7h"; Pot = 240; VillainStack = 330; HeroStack = 410; VillainBet = 80; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20; floatValue Turn 40]

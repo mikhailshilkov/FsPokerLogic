@@ -555,3 +555,14 @@ module ImportTests =
     let actual = importFloatRiverIpDonkOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
     let expected = ((OnDonk.CallEQ 34, OnDonkRaise.Undefined), "tricky -> float IP -> CZ35") |> Some
     Assert.Equal(expected, actual)
+
+  let handStrengthFileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+
+  [<Fact>]
+  let ``importIPTurnBooster imports turn booster options for a sample cell`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultTurn with Board = parseBoard "6s7c4d5d"; Hand = parseSuitedHand "5s3s" }
+    let history = [notMotivated PreFlop 40 Action.Call]
+    let actual = importIPTurnBooster xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
+    let expected = ({ defaultOopOptions with First = Donk 40m; Then = CallEQ 8 }, "HandStrength -> postflop IP turn booster -> J40") |> Some
+    Assert.Equal(expected, actual)

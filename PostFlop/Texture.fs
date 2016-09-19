@@ -2,6 +2,7 @@
 
 module Texture =
   open Hands
+  open Cards.HandValues
   open Options
   open Import
 
@@ -19,8 +20,9 @@ module Texture =
     else
       { Options.CbetFactor = eo.CbetFactor; CheckRaise = eo.CheckRaise; Donk = eo.Donk; DonkRaise = onDonkRaise eo.Donk }
 
-  let toTurnOptions turnFace isFlush onDonk onDonkRaise monoboard (eo:ExcelOptions) =
-    let turn = turnFace |> faceToChar |> string
+  let toTurnOptions (board: Board) value onDonk onDonkRaise monoboard (eo:ExcelOptions) =
+    let isFlush = match value.Made with | Flush(_) -> true | _ -> false
+    let turn = board.[3].Face |> faceToChar |> string
     if isFlush then
       { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = onDonk; DonkRaise = onDonkRaise }
     else if eo.TurnFVCbetCards.Contains(turn) then

@@ -57,11 +57,21 @@ module Facade =
     |> Option.bind (toMotivated s)
 
   let decidePostFlopTurnBooster history s value texture xl riverBetSizes eo () =
-    let o = eo |> Option.map (fun eov -> toTurnOptions s.Board value OnDonk.Undefined OnDonkRaise.Undefined 0 eov)
-    match street s, s.VillainBet, o with
-    | Turn, vb, Some ov 
-      when ov.CbetFactor = Never || (vb > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
-      importIPTurnBooster xl value texture s history
+    match street s, s.VillainBet with
+    | Turn, vb ->
+      let o = eo |> Option.map (fun eov -> toTurnOptions s.Board value OnDonk.Undefined OnDonkRaise.Undefined 0 eov)
+      match o with
+      | Some ov when ov.CbetFactor = Never || (vb > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
+        importIPTurnBooster xl value texture s history
+        |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
+        |> Option.bind (toMotivated s)
+      | _ -> None
+    | _ -> None
+
+  let decidePostFlopRiver h s value texture xlHandStrength riverBetSizes patterns () =
+    match street s with
+    | River -> 
+      importRiverIP xlHandStrength patterns value s h texture
       |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
       |> Option.bind (toMotivated s)
     | _ -> None
@@ -71,9 +81,6 @@ module Facade =
     let historySimple = List.map fst historyTuples
 
     (match street s, eo with
-    | River, _ ->
-      let mono = if texture.Monoboard >= 4 then monoboardRiver texture.Monoboard value.Made else None
-      defaultArgLazy mono (fun x -> importRiver xlTurnDonkRiver texture value.Made)
     | Turn, Some eoo ->
       let (turnDonkOption, turnDonkRaiseOption) = 
         if s.VillainBet > 0 
@@ -90,7 +97,7 @@ module Facade =
     |> decide s history
 
   let apply f = f()
-  let decidePostFlop history s value texture xlFlopTurn xlTurnDonkRiver xlTricky riverBetSizes =
+  let decidePostFlop history s value texture xlFlopTurn xlHandStrength xlTricky riverBetSizes riverHistoryPatterns =
     let eo = 
       match street s with
       | Turn | Flop -> 
@@ -101,9 +108,10 @@ module Facade =
     let rules = [
       decidePostFlopFloatOnDonk history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
-      decidePostFlopTurnBooster history s value texture xlTurnDonkRiver riverBetSizes eo;
+      decidePostFlopTurnBooster history s value texture xlHandStrength riverBetSizes eo;
+      decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 
-        decidePostFlopNormal history s value texture xlFlopTurn xlTurnDonkRiver eo
+        decidePostFlopNormal history s value texture xlFlopTurn xlHandStrength eo
         |> Option.map (fun a -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = if s.VillainBet > 0 then "HandStrength" else "PostflopIP" })
     ]
     rules |> Seq.choose apply |> Seq.tryHead

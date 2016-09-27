@@ -293,18 +293,19 @@ let ``River OOP: bet float after check-check on turn`` () =
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+let fileNameHandStrength = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
 let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
 
 let testIPext s h test =
   use xlFlopTurn = useExcel fileNameFlopTurn
-  use xlTurnDonk = useExcel fileNameTurnDonk
+  use xlHandStrength = useExcel fileNameHandStrength
   use xlTricky = useExcel fileNameTricky
   let riverBetSizing = [
     { MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
+  let riverHistoryPatterns = importRiverPatterns xlHandStrength.Workbook
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
-  let actual = decidePostFlop h s v t xlFlopTurn.Workbook xlTurnDonk.Workbook xlTricky.Workbook riverBetSizing
+  let actual = decidePostFlop h s v t xlFlopTurn.Workbook xlHandStrength.Workbook xlTricky.Workbook riverBetSizing riverHistoryPatterns
   test actual
 
 let testIP s h expected =
@@ -378,5 +379,10 @@ let ``River IP float bet is made based on turn scenario`` () =
   let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; scenario Flop 0 (Action.RaiseToAmount 40) "r9"]
   testIP s history (Action.RaiseToAmount 95)
 
+[<Fact>]
+let ``River IP: sample decision`` () =
+  let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4c4cJd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 40); notMotivated Flop 0 (Action.RaiseToAmount 40); notMotivated Turn 0 Action.Check]
+  testIP s history (Action.RaiseToAmount 100)
 
 adxl.Dispose()

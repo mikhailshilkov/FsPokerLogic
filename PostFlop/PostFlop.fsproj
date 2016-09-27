@@ -69,7 +69,6 @@
     <Compile Include="Facade.fs" />
     <Compile Include="FacadeTests.fs" />
     <Content Include="packages.config" />
-    <Compile Include="MonoboardTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FsCheck">

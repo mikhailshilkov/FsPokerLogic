@@ -64,7 +64,7 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise (hb * 2 / 5) bb; raise 5 2; raise vb hb]
     | _ -> failwith "History is not clear"
 
-  let decide' log xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky (screen: Screen) history: MotivatedAction option =
+  let decide' log xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky riverHistoryPatterns (screen: Screen) history: MotivatedAction option =
     let decidePre (screen: Screen) =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
@@ -91,7 +91,7 @@ module Decide =
         let hb = defaultArg screen.HeroBet 0
         let s = { Hand = suitedHand; Board = board; Pot = tp; VillainStack = vs; HeroStack = hs; VillainBet = vb; HeroBet = hb; BB = b.BB }
         if screen.Button = Hero then 
-          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver xlTricky riverBetSizes
+          decidePostFlop history s value special xlFlopTurn xlTurnDonkRiver xlTricky riverBetSizes riverHistoryPatterns
         else
           decidePostFlopOop history s value special xlPostFlopOop xlTricky (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (isHandBluffyForFlopCheckRaise, isHandOvertakyInLimpedPot) riverBetSizes
       | _ -> None
@@ -140,7 +140,7 @@ module Decide =
     let filename = sprintf "%s_%s_%s_%s" title msg.TableName msg.Screen.HeroHand msg.Screen.Board
     Dumper.SaveBitmap(msg.Bitmap, filename)
 
-  let decisionActor xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky msg (state:DecisionState option) =
+  let decisionActor xlFlopTurn xlHandStrength xlPostFlopOop xlTricky riverHistoryPatterns msg (state:DecisionState option) =
     let log (s: string) =
       System.IO.File.AppendAllLines(sprintf "%s.log" msg.TableName, [s])
       System.Console.WriteLine(s)
@@ -177,7 +177,7 @@ module Decide =
       history |> List.iter (sprintf "History: %A" >> log)
 
       try
-        let decision = decide' log xlFlopTurn xlTurnDonk xlPostFlopOop xlTricky screen history
+        let decision = decide' log xlFlopTurn xlHandStrength xlPostFlopOop xlTricky riverHistoryPatterns screen history
         let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
         match decision with
         | Some d ->

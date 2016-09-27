@@ -62,26 +62,25 @@ module ImportTests =
     }
     Assert.Equal(expected, actual)
 
+  let handStrengthFileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+
   [<Fact>]
   let ``importTurnDonk returns correct option for a sample cell`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
+    use xl = useExcel handStrengthFileName
     let actual = importTurnDonk xl.Workbook { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
     Assert.Equal(OnDonk.Call, fst actual)
     Assert.Equal(OnDonkRaise.Undefined, snd actual)
 
   [<Fact>]
   let ``importTurnDonk returns correct option when special conditions apply`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
+    use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Streety = true }
     let actual = importTurnDonk xl.Workbook { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
     Assert.Equal(OnDonk.CallEQ 18, fst actual)
 
   [<Fact>]
   let ``importTurnDonk returns correct option on monobooard`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
+    use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Monoboard = 4 }
     let actual = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
     Assert.Equal(OnDonk.RaiseX 260, fst actual)
@@ -89,39 +88,12 @@ module ImportTests =
 
   [<Fact>]
   let ``importTurnDonk calculates donk size properly in 3bet pot`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
+    use xl = useExcel handStrengthFileName
     let s = { defaultTurn with VillainBet = 140; HeroBet = 60; Pot = 280 }
     let h = [notMotivated PreFlop 20 Action.Call; notMotivated Flop 20 Action.Call; notMotivated Turn 20 (RaiseToAmount 60)]
     let actual = importTurnDonk xl.Workbook { Made = Pair(Top Five); FD = NoFD; FD2 = NoFD; SD = GutShot } defaultTexture s h
     Assert.Equal(OnDonk.RaiseGay, fst actual)
     Assert.Equal(OnDonkRaise.StackOff, snd actual)
-
-  [<Fact>]
-  let ``importRiver returns correct options for a sample cell`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
-    let actual = importRiver xl.Workbook defaultTexture (FullHouse(Weak))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 25; DonkRaise = OnDonkRaise.Undefined }
-    Assert.Equal(expected, actual)
-
-  [<Fact>]
-  let ``importRiver returns correct option when special conditions apply`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
-    let special = { defaultTexture with DoublePaired = true }
-    let actual = importRiver xl.Workbook special (Flush(NotNut Ten))
-    let expected = { Options.CbetFactor = Always(37.5m); CheckRaise = OnCheckRaise.CallEQ 11; Donk = OnDonk.CallEQ 20; DonkRaise = OnDonkRaise.Undefined }
-    Assert.Equal(expected, actual)
-
-  [<Fact>]
-  let ``importRiver returns correct option when special conditions apply but no special action defined`` () =
-    let fileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-    use xl = useExcel fileName
-    let special = { defaultTexture with Streety = true; DoublePaired = true }
-    let actual = importRiver xl.Workbook special (Pair(Under))
-    let expected = { Options.CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined }
-    Assert.Equal(expected, actual)
 
   let postflopOOPFileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
 
@@ -315,6 +287,12 @@ module ImportTests =
   let ``parseOopOption ch works - mostly used for IP vs check`` () = 
     let actual = parseOopOption "ch" ""
     let expected = { defaultOopOptions with First = Check } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``parseOopOption 34 works - mostly used for IP vs donk`` () = 
+    let actual = parseOopOption "34" ""
+    let expected = { defaultOopOptions with Then = CallEQ 34 } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -556,8 +534,6 @@ module ImportTests =
     let expected = ((OnDonk.CallEQ 34, OnDonkRaise.Undefined), "tricky -> float IP -> CZ35") |> Some
     Assert.Equal(expected, actual)
 
-  let handStrengthFileName = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-
   [<Fact>]
   let ``importIPTurnBooster imports turn booster options for a sample cell`` () =
     use xl = useExcel handStrengthFileName
@@ -565,4 +541,113 @@ module ImportTests =
     let history = [notMotivated PreFlop 40 Action.Call]
     let actual = importIPTurnBooster xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
     let expected = ({ defaultOopOptions with First = Donk 40m; Then = CallEQ 8 }, "HandStrength -> postflop IP turn booster -> J40") |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes x/x + x/x + x`` () =
+    let s = { defaultRiver with VillainBet = 0 }
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 0 Action.Check
+      notMotivated Turn 0 Action.Check]
+    let actual = historyPattern s history
+    Assert.Equal("x/x+x/x+x", actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes db/c + x/c + db`` () =
+    let s = { defaultRiver with VillainBet = 100 }
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 50 (Action.RaiseToAmount 120)
+      notMotivated Turn 0 (Action.RaiseToAmount 150)]
+    let actual = historyPattern s history
+    Assert.Equal("db/c+x/c+db", actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes x/r + db + x`` () =
+    let s = { defaultRiver with VillainBet = 0 }
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 0 (Action.RaiseToAmount 50)
+      notMotivated Flop 120 Action.Call
+      notMotivated Turn 150 Action.Call]
+    let actual = historyPattern s history
+    Assert.Equal("x/r+db+x", actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes hero 3bet on flop`` () =
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 0 (Action.RaiseToAmount 50)
+      notMotivated Flop 120 (Action.RaiseToAmount 220)
+      notMotivated Turn 150 Action.Call]
+    let actual = historyPattern defaultRiver history
+    Assert.Equal("3bet", actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes villain 3bet on turn`` () =
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 0 Action.Check
+      notMotivated Turn 50 (Action.RaiseToAmount 100)
+      notMotivated Turn 200 Action.Call]
+    let actual = historyPattern defaultRiver history
+    Assert.Equal("3bet", actual)
+
+  [<Fact>]
+  let ``historyPattern recognizes 4bet on turn`` () =
+    let history = [
+      notMotivated PreFlop 40 Action.Call 
+      notMotivated Flop 0 Action.Check
+      notMotivated Turn 0 (Action.RaiseToAmount 50)
+      notMotivated Turn 120 (Action.RaiseToAmount 220)
+      notMotivated Turn 400 Action.Call]
+    let actual = historyPattern defaultRiver history
+    Assert.Equal("3bet", actual)
+
+  [<Fact>]
+  let ``importRiverPatterns imports correctly`` () =
+    use xl = useExcel handStrengthFileName
+    let actual = importRiverPatterns xl.Workbook
+    Assert.Equal(26 * 3, actual.Count)
+    Assert.Equal(4, actual.["river - villain check - db+db+x"])
+    Assert.Equal(2, actual.["river - villain donkbet to 30% - db/c+db/c+db"])
+    Assert.Equal(1, actual.["river - villain donkbet 31%+ - x/x+db/c+db"])
+
+  [<Fact>]
+  let ``importRiverIP imports correct IP river options a sample cell vs check`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultRiver with Board = parseBoard "Qs2cJd5h7h"; Hand = parseSuitedHand "QhJc"; VillainBet = 0 }
+    let h = [
+      notMotivated Flop 0 Action.Check
+      notMotivated Turn 0 (Action.RaiseToAmount 50)
+      notMotivated Turn 0 Action.Call]
+    let patterns = importRiverPatterns xl.Workbook
+    let actual = importRiverIP xl.Workbook patterns (handValue s.Hand s.Board) s h defaultTexture
+    let expected = ({ defaultOopOptions with First = OopDonk.Donk 62.5m; Then = CallEQ 15 }, "river - villain check -> AF48") |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importRiverIP imports correct IP river options a sample cell vs small donkbet`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultRiver with Board = parseBoard "Qs2c5hAd7h"; Hand = parseSuitedHand "7hKc"; VillainBet = 50; Pot = 250 }
+    let h = [
+      notMotivated Flop 30 Action.Call
+      notMotivated Turn 40 Action.Call]
+    let patterns = importRiverPatterns xl.Workbook
+    let actual = importRiverIP xl.Workbook patterns (handValue s.Hand s.Board) s h defaultTexture
+    let expected = ({ defaultOopOptions with Then = CallEQ 20 }, "river - villain donkbet to 30% -> V32") |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importRiverIP imports correct IP river options a sample cell vs big donkbet`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultRiver with Board = parseBoard "Qs2c5h7hAd"; Hand = parseSuitedHand "5hKc"; VillainBet = 50; Pot = 200 }
+    let h = [
+      notMotivated Flop 30 (Action.RaiseToAmount 60)
+      notMotivated Flop 100 Action.Call
+      notMotivated Turn 0 Action.Check]
+    let patterns = importRiverPatterns xl.Workbook
+    let actual = importRiverIP xl.Workbook patterns (handValue s.Hand s.Board) s h defaultTexture
+    let expected = ({ defaultOopOptions with Then = CallEQ 10 }, "river - villain donkbet 31%+ -> V37") |> Some
     Assert.Equal(expected, actual)

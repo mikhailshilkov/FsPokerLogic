@@ -9,6 +9,7 @@ open Find
 open Enable
 open ActorPatterns
 open Excel.Import
+open PostFlop.Import
 
 [<EntryPoint>]
 let main argv = 
@@ -17,8 +18,9 @@ let main argv =
   let rc = Seq.head Decide.rulesLow
   let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
   use xlFlopTurn = useExcel fileNameFlopTurn
-  let fileNameTurnDonk = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-  use xlTurnDonk = useExcel fileNameTurnDonk
+  let fileNameHandStrength = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
+  use xlHandStrength = useExcel fileNameHandStrength
+  let riverHistoryPatterns = importRiverPatterns xlHandStrength.Workbook
   let fileNamePostFlopOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   use xlPostFlopOop = useExcel fileNamePostFlopOop
   let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
@@ -31,7 +33,7 @@ let main argv =
   
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
 
-  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlTurnDonk.Workbook xlPostFlopOop.Workbook xlTricky.Workbook) None clickerRef
+  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlHandStrength.Workbook xlPostFlopOop.Workbook xlTricky.Workbook riverHistoryPatterns) None clickerRef
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 

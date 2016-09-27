@@ -28,7 +28,7 @@ module Import =
   let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
   let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }
 
-  let excelColumns = ["A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z";"AA";"AB";"AC";"AD";"AE";"AF";"AG";"AH";"AI";"AJ";"AK";"AL";"AM";"AN"]
+  let excelColumns = ["A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z";"AA";"AB";"AC";"AD";"AE";"AF";"AG";"AH";"AI";"AJ";"AK";"AL";"AM";"AN";"AO";"AP";"AQ";"AR";"AS";"AT";"AU";"AV";"AW";"AX";"AY";"AZ";"BA";"BB";"BC";"BD"]
 
   let orElse b a = match a with | Some _ -> a | None -> b()
 
@@ -318,11 +318,7 @@ module Import =
       | _ -> failwith "Could not pick turn donkbet sheet"
 
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    let villainDonkBetSize = 
-      match (h |> List.filter (fun i -> i.Street = street s) |> List.tryHead) with
-      | Some hi -> hi.VsVillainBet
-      | None -> s.VillainBet
-    let betSize = 100 * villainDonkBetSize / (s.Pot - s.VillainBet - s.HeroBet)
+    let betSize = relativeDonkSize s h
     let hasFlush = match handValue.Made with | Flush(_) | StraightFlush -> true | _ -> false
     let row = turnDonkOrFloatOopRow 6 handValue s texture
     let column = 
@@ -354,40 +350,6 @@ module Import =
     | "check" -> (Never, OnCheckRaise.Undefined)
     | Decimal d -> (Always(d), OnCheckRaise.CallEQ 11)
     | _ -> failwith ("Failed parsing River on check" + i)
-
-  let importRiver (xlWorkBook : Workbook) specialConditions handValue =
-    let xlWorkSheet = xlWorkBook.Worksheets.["river"] :?> Worksheet
-    let index = 
-      (match handValue with
-      | StraightFlush | FourOfKind -> 21
-      | FullHouse(Normal) -> 19
-      | FullHouse(Weak) | FullHouse(OnBoard) -> 20
-      | Flush(_) -> 18
-      | Straight(Normal) -> 16
-      | Straight(Weak) | Straight(OnBoard) -> 17
-      | ThreeOfKind -> 15
-      | TwoPair -> 14
-      | Pair(x) -> 
-        let highKicker k = k = Ace || k = King || k = Queen || k = Jack
-        match x with
-        | Over -> 5
-        | Top(k) when highKicker k -> 6
-        | Top(_) -> 7
-        | Second(k) when highKicker k -> 8
-        | Second(_) -> 9
-        | Third -> 10
-        | Fourth -> 11
-        | Fifth -> 12
-        | Under -> 13
-      | TwoOvercards | Nothing -> 4
-      )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + index) ("G" + index)
-    let check = parseRiverCbet (if specialConditionsApply specialConditions cellValues.[1] then cellValues.[2] else cellValues.[0])
-    let donk = parseTurnRiverDonk (if specialConditionsApply specialConditions cellValues.[4] then cellValues.[5] else cellValues.[3])
-    { Options.CbetFactor = fst check
-      CheckRaise = snd check
-      Donk = fst donk
-      DonkRaise = snd donk }
 
   let parseOopDonk = function
     | "ch" -> OopDonk.Check
@@ -489,6 +451,7 @@ module Import =
       match parts.[0] with 
       | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
       | "ch" -> Some { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
+      | Int i -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ i; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
       | "x" -> None
       | _ -> failwith ("Failed parsing Flop Oop (1)" + strategy)
     else if parts.Length = 2 then
@@ -503,6 +466,182 @@ module Import =
       | None -> parseOopOption strategy specialRules
       | x -> x
     else parseOopOption strategy specialRules
+
+  let streetPattern = function
+    | [{Action = Action.Check}] -> "x/x"
+    | [{Action = Action.RaiseToAmount(_); VsVillainBet = 0}] -> "x/c"
+    | [{Action = Action.RaiseToAmount(_); VsVillainBet = b}] when b > 0 -> "db/c"
+    | [{VsVillainBet = b}] when b > 0 -> "db"
+    | [{Action = Action.RaiseToAmount(_); VsVillainBet = 0}; {Action = Action.RaiseToAmount(_)}] -> "3bet"
+    | [{Action = Action.RaiseToAmount(_); VsVillainBet = 0}; _] -> "x/r"
+    | [{Action = Action.RaiseToAmount(_); VsVillainBet = b}; _] when b > 0 -> "3bet"
+    | fst::snd::_ -> "3bet"
+    | _ -> failwith "Failed to recognize street history pattern"
+
+  let historyPattern s h =
+    let flopTurnPattern =
+      [Flop; Turn]
+      |> List.map (fun s-> h |> List.filter (fun x -> x.Street = s) |> streetPattern)
+      |> (fun x -> System.String.Join("+", x))
+    if flopTurnPattern.Contains("3bet") 
+    then "3bet" 
+    else flopTurnPattern + "+" + if s.VillainBet > 0 then "db" else "x"
+
+  let importRiverPatterns (xlWorkBook : Workbook) = 
+    [for sheetName in ["river - villain check"; "river - villain donkbet to 30%"; "river - villain donkbet 31%+"] do
+       let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet 
+       let headers = getCellValues xlWorkSheet "AF1" "AZ1"
+       let startIndex = headers |> Array.findIndex (fun x -> x = "PATHS") |> (+) 31
+       for index in [0..4] do
+         let column = excelColumns.[startIndex + index]
+         yield!
+           getCellValues xlWorkSheet (column + "3") (column + "29")
+           |> Array.filter (String.IsNullOrEmpty >> not)
+           |> Array.map (fun x -> sheetName + " - " + x.Replace(" ", "").ToLowerInvariant(), index)
+    ] |> Map.ofList
+
+  let importRiverIP (xlWorkBook : Workbook) patterns value s h texture =
+    let relativeBet = relativeDonkSize s h
+    let sheetName = 
+      if s.VillainBet = 0 then "river - villain check"
+      elif relativeBet <= 30 then "river - villain donkbet to 30%"
+      else "river - villain donkbet 31%+"
+    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet 
+    let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
+    let isRiverAce = (Array.last s.Board).Face = Ace
+    let turn = s.Board |> Array.take 4
+    let turnCard = s.Board.[3]
+    let isTurnAce = (Array.last turn).Face = Ace
+    let isFlopAce = s.Board |> Array.take 3 |> Array.exists (fun c -> c.Face = Ace)
+    let isAceTurnOnly = isTurnAce && not isFlopAce && not isRiverAce
+    let isAceRiverOnly = isRiverAce && not isFlopAce && not isTurnAce
+    let isAceTurnOrRiver = isTurnAce || isRiverAce
+    let isTurnOvercard = isLastBoardCardOvercard turn
+    let isRiverOvercard = isLastBoardCardOvercard s.Board
+    let areTurnAndRiverOverFlop = isTurnOvercard && isLastBoardCardOvercard (s.Board |> Array.except [turnCard])
+    let isRiverMiddlecard = isLastBoardCardSecondCard s.Board
+    let isRiverUndercard = isLastBoardCardUndercard s.Board
+    let riverDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = s.Board.[4].Face) |> Array.length = 1
+    let turnDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = turnCard.Face) |> Array.length = 1
+    let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+    let topPairedBoard = topPaired s.Board
+    let isPairedBoard = isPaired s.Board
+    let topPairedBoardOnRiver = topPairedBoard && not isPairedBoard
+    let hadPairOnFlop = s.Board |> Array.take 3 |> Array.exists (fun x -> x.Face = s.Hand.Card1.Face || x.Face = s.Hand.Card2.Face)
+    let row = 
+      match value with
+      | Nothing | TwoOvercards -> 
+        if handHasAce then 13
+        else if isFlopAce && not isTurnAce && not isRiverAce then 5
+        elif isAceTurnOnly then 6
+        elif isTurnOvercard && isRiverAce && not isTurnAce then 9
+        elif isRiverAce && not isFlopAce && not isRiverAce then 7
+        elif isTurnOvercard && isRiverOvercard then 8
+        elif isTurnOvercard && isRiverMiddlecard then 10
+        elif isRiverOvercard && turnDoesNotPair then 11
+        elif isTurnOvercard && isRiverUndercard && riverDoesNotPair then 12
+        else 4
+      | Pair(Over) -> 14
+      | Pair(Top _) when isPairedBoard -> 17
+      | Pair(Top k) when highKicker k -> 15
+      | Pair(Top _) -> 16
+      | Pair(Second _) when isTurnAce -> 18
+      | Pair(Second _) when isRiverAce -> 19
+      | Pair(Second k) when isPairedBoard && isRiverOvercard -> 29
+      | Pair(Second k) when isPairedBoard && isTurnOvercard -> 30
+      | Pair(Second k) when highKicker k && topPairedBoardOnRiver -> 24
+      | Pair(Second k) when topPairedBoardOnRiver -> 25
+      | Pair(Second k) when highKicker k && topPairedBoard -> 22
+      | Pair(Second k) when topPairedBoard -> 23
+      | Pair(Second k) when isRiverOvercard -> 26
+      | Pair(Second k) when isTurnOvercard -> 27
+      | Pair(Second k) when hadPairOnFlop -> 28
+      | Pair(Second k) when highKicker k -> 20
+      | Pair(Second _) -> 21
+      | Pair(Third _) when isAceTurnOnly -> 32
+      | Pair(Third _) when isAceRiverOnly -> 33
+      | Pair(Third _) when areTurnAndRiverOverFlop -> 34
+      | Pair(Third _) -> 31
+      | Pair(Fourth _) when isAceTurnOnly -> 36
+      | Pair(Fourth _) when isAceRiverOnly -> 37
+      | Pair(Fourth _) when areTurnAndRiverOverFlop -> 38
+      | Pair(Fourth _) when isRiverOvercard -> 39
+      | Pair(Fourth _) -> 35
+      | Pair(Fifth _) when isTurnAce -> 41
+      | Pair(Fifth _) when isRiverAce -> 42
+      | Pair(Fifth _) when areTurnAndRiverOverFlop -> 43
+      | Pair(Fifth _) when isRiverOvercard -> 44
+      | Pair(Fifth _) -> 40
+      | Pair(Under) when isAceTurnOnly -> 46
+      | Pair(Under) when isAceRiverOnly -> 47
+      | Pair(Under) -> 45
+      | TwoPair -> 
+        let pairIndeces = pairIndeces s.Hand s.Board
+        let topPair = pairIndeces |> Seq.head = 1
+        let topTwoPairs = pairIndeces |> Seq.truncate 2 |> List.ofSeq = [1; 2]
+
+        if topTwoPairs && not isPairedBoard then 48
+        elif topPair && not isPairedBoard then 49
+        elif topPair && bottomPaired s.Board then 51
+        else 50
+      | ThreeOfKind -> 52
+      | Straight(Normal) -> 53
+      | Straight(Weak) -> 54
+      | Straight(OnBoard) -> 59
+      | Flush(x) -> 
+        if texture.Monoboard = 4 then
+          match x with
+          | Nut -> 67
+          | NotNut(King) -> 68
+          | NotNut(Queen) -> 69
+          | NotNut(Jack) -> 70
+          | NotNut(Ten) | NotNut(Nine) -> 71
+          | NotNut(Eight) | NotNut(Seven) -> 72
+          | NotNut(Six) | NotNut(Five) -> 73
+          | _ -> 74
+        elif texture.Monoboard = 5 then
+          match x with
+          | Board -> 67
+          | Nut -> 68
+          | NotNut(King) -> 69
+          | NotNut(Queen) -> 70
+          | NotNut(Jack) -> 71
+          | NotNut(Ten) | NotNut(Nine) -> 72
+          | NotNut(Eight) | NotNut(Seven) -> 73
+          | NotNut(Six) | NotNut(Five) -> 74
+          | _ -> 75
+        else 55
+      | FullHouse(Normal) -> 56
+      | FullHouse(Weak) -> 57
+      | FullHouse(OnBoard) -> 60
+      | FourOfKind ->
+        if texture.FourOfKind then 
+          let kicker = maxFace [s.Hand.Card1; s.Hand.Card2]
+          let isNuts = kicker = Ace || (kicker = Ace && s.Board.[0].Face = King)
+          if isNuts then 61
+          elif kicker = King || kicker = Queen || kicker = Jack then 62 else 63
+        else 58
+      | StraightFlush -> if texture.Monoboard = 5 then 76 else 58
+      |> string
+
+    let columnShift = Map.find (sheetName + " - " + (historyPattern s h)) patterns
+    let column =
+      match texture.Monoboard, value with
+        | 5, _ -> 5
+        | 4, Flush(_) -> 3
+        | 4, _ -> if texture.Streety then 7 else 8
+        | _ ->
+          if texture.Streety then 4
+          elif texture.DoublePaired then 5
+          elif texture.ThreeOfKind then 6
+          elif isLastBoardCardFlushy s.Board then 2
+          else 1
+      |> (+) (columnShift * 10)
+      |> List.item <| excelColumns
+
+    let cellValue = getCellValue xlWorkSheet (column + row)
+    parseOopOption cellValue ""
+    |> Option.add (fun _ -> sheetName + " -> " + column + row)
 
   let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -555,7 +694,7 @@ module Import =
       | 3, Draw(_) -> (3, 4)
       | _ -> (0, 1)
     parseOopOption cellValues.[column] cellValues.[specialRulesColumn]
-    |> Option.add (fun o -> sheetName + " -> " + excelColumns.[column + 1] + "/" + excelColumns.[specialRulesColumn + 1] + row)
+    |> Option.add (fun _ -> sheetName + " -> " + excelColumns.[column + 1] + "/" + excelColumns.[specialRulesColumn + 1] + row)
 
   let importOopTurn (xlWorkBook : Workbook) sheetName handValue texture =
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -628,7 +767,7 @@ module Import =
       | _ -> (0, 3)
     let specialRules = if texture.Monoboard < 3 then cellValues.[1] else "" // monoboard rules are in the cell itself after @ sign
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
-    |> Option.add (fun o -> sheetName + " -> " + excelColumns.[column + 10] + "/" + excelColumns.[specialColumn + 10] + row)
+    |> Option.add (fun _ -> sheetName + " -> " + excelColumns.[column + 10] + "/" + excelColumns.[specialColumn + 10] + row)
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture s =
     let defaultMapping () =
@@ -663,7 +802,7 @@ module Import =
         | TwoPair -> 
           let pairIndeces = pairIndeces s.Hand s.Board
           let topPair = pairIndeces |> Seq.head = 1
-          let topTwoPairs = pairIndeces |> Seq.take 2 = seq [1; 2]
+          let topTwoPairs = pairIndeces |> Seq.truncate 2 |> List.ofSeq = [1; 2]
 
           if topTwoPairs && not isPairedBoard then 40
           elif topPair && not isPairedBoard then 41
@@ -1014,7 +1153,7 @@ module Import =
       | TwoPair -> 
         let pairIndeces = pairIndeces s.Hand s.Board
         let topPair = pairIndeces |> Seq.head = 1
-        let topTwoPairs = pairIndeces |> Seq.take 2 = seq [1; 2]
+        let topTwoPairs = pairIndeces |> Seq.truncate 2 |> List.ofSeq = [1; 2]
 
         if topTwoPairs && not isPairedBoard then 33
         elif topPair && not isPairedBoard then 34

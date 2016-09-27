@@ -66,6 +66,15 @@ module Decision =
   let times i d = ((i |> decimal) * d) |> int
   let wasRaisedPre s = betPre s > s.BB
   let relativeBet s = s.VillainBet * 100 / (s.Pot - s.VillainBet)
+  let relativeDonkSize s h =
+    let villainDonk = 
+      h 
+      |> List.filter (fun x -> x.Street = street s)
+      |> List.tryHead
+      |> Option.map (fun x -> x.VsVillainBet)
+      |> defaultArg <| s.VillainBet
+    villainDonk * 100 / (s.Pot - s.VillainBet - s.HeroBet)
+
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
 

@@ -28,7 +28,7 @@ module DecisionTests =
     let options = { defaultOptions with CbetFactor = Always 50m }
     let snapshot = { defaultFlop with Pot = 40 }
     let actual = Decision.decide snapshot [] options
-    Assert.Equal(Some MinRaise, actual)
+    Assert.Equal(RaiseToAmount 20 |> Some, actual)
 
   [<Fact>]
   let ``Condition 2: No CBet IP on flop if size is undefined`` () =

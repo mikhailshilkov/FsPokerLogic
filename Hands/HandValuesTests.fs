@@ -51,6 +51,7 @@ let ``handValueWithDraws returns FD face value for flush draw`` handS flopS expe
 [<InlineData("Ac9s", "Ts8c2cJc", true)>]
 [<InlineData("Jc9s", "8s7c5c3d", true)>]
 [<InlineData("6c7s", "Ts9c5c3d", true)>]
+[<InlineData("4c3d", "2d5s2c", true)>]
 [<InlineData("AcKh", "QcJs8d", false)>]
 [<InlineData("AcKh", "2c3s4d", false)>]
 [<InlineData("2c3s", "Ts9cQcJc", false)>]
@@ -68,6 +69,7 @@ let ``isOpenEndedStraightDraw returns true for OESD`` handS flopS expected =
 [<InlineData("QcKs", "Th3s9sJd", false)>]
 [<InlineData("Ac9s", "Ts8c2cJc", false)>]
 [<InlineData("2c3s", "Ts8cQcJc", false)>]
+[<InlineData("4c3d", "2d5s2c", false)>]
 let ``isGutShot returns true for GS`` handS flopS expected =
   let hand = parseSuitedHand handS
   let board = parseBoard flopS

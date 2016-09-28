@@ -97,7 +97,7 @@ module Decide =
       | _ -> None
 
     match screen.Sitout, screen.Board with
-    | Villain, _ -> Action.MinRaise |> (notMotivated (streetOfBoard screen.Board) 0) |> Some
+    | Villain, _ -> Action.RaiseToAmount 1 |> (notMotivated (streetOfBoard screen.Board) 0) |> Some
     | Hero, _ -> Action.SitBack |> (notMotivated PreFlop 0) |> Some
     | _, null -> decidePre screen
     | _, _ -> decidePost screen
@@ -114,7 +114,7 @@ module Decide =
     PreviousActions: MotivatedAction list
   }
 
-  let mapAction action buttons : ClickAction[] =
+  let mapAction action minBet buttons : ClickAction[] =
     let findButton names =
       names 
       |> List.choose (fun x -> Seq.tryFind (fun y -> x = y.Name) buttons)
@@ -124,7 +124,6 @@ module Decide =
       | Action.Fold -> ["Check"; "Fold"]
       | Action.Check -> ["Check"]
       | Action.Call -> ["Call"; "AllIn"]
-      | Action.MinRaise -> ["RaiseTo"; "Bet"; "AllIn"; "Call"]
       | Action.RaiseToAmount _ -> ["RaiseTo"; "Bet"; "AllIn"; "Call"]
       | Action.AllIn -> ["AllIn"; "RaiseTo"; "Bet"; "Call"]
       | Action.SitBack -> ["SitBack"]
@@ -132,7 +131,7 @@ module Decide =
 
     match (action, button) with
     | (Action.AllIn, Some b) when b.Name <> "AllIn" -> [|Click({ Region = (368, 389, 42, 7); Name = "Max" }); Click(b)|]
-    | (Action.RaiseToAmount x, Some b) -> [| Amount(x); Click(b)|]
+    | (Action.RaiseToAmount x, Some b) when x > minBet -> [| Amount(x); Click(b)|]
     | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"
 
@@ -168,12 +167,11 @@ module Decide =
     | _ ->
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
-      let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
-//      let history = [
-//        {Action = MinRaise; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = null}
-//        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 0; Street = Flop; Source = null}
-//        {Action = RaiseToAmount 120; Motivation = None; VsVillainBet = 0; Street = Turn; Source = null}
-//      ]
+      //let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
+      let history = [
+        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = null;}
+        {Action = Call; Motivation = None; VsVillainBet = 80; Street = Flop; Source = "HandStrength";}
+      ]
       history |> List.iter (sprintf "History: %A" >> log)
 
       try
@@ -182,7 +180,13 @@ module Decide =
         match decision with
         | Some d ->
           sprintf "Decision is: %A" d |> log
-          let action = mapAction d.Action screen.Actions
+          let minBet = 
+            screen.Blinds
+            |> Option.map (fun x -> x.SB)
+            |> defaultArg <| 0
+            |> defaultArg screen.VillainBet
+            |> (*) 2
+          let action = mapAction d.Action minBet screen.Actions
           sprintf "Action is: %A" action |> log
           if (d.Action = SitBack) then
             dump "SitBack" msg

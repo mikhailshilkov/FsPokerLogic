@@ -67,33 +67,36 @@ module ImportTests =
   [<Fact>]
   let ``importTurnDonk returns correct option for a sample cell`` () =
     use xl = useExcel handStrengthFileName
-    let actual = importTurnDonk xl.Workbook { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
-    Assert.Equal(OnDonk.Call, fst actual)
-    Assert.Equal(OnDonkRaise.Undefined, snd actual)
+    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
+    Assert.Equal(OnDonk.Call, fst)
+    Assert.Equal(OnDonkRaise.Undefined, snd)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> F17", source)
 
   [<Fact>]
   let ``importTurnDonk returns correct option when special conditions apply`` () =
     use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Streety = true }
-    let actual = importTurnDonk xl.Workbook { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
-    Assert.Equal(OnDonk.CallEQ 18, fst actual)
+    let (fst, _, _) = importTurnDonk xl.Workbook { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    Assert.Equal(OnDonk.CallEQ 18, fst)
 
   [<Fact>]
   let ``importTurnDonk returns correct option on monobooard`` () =
     use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Monoboard = 4 }
-    let actual = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
-    Assert.Equal(OnDonk.RaiseX 260, fst actual)
-    Assert.Equal(OnDonkRaise.CallEQ 10, snd actual)
+    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    Assert.Equal(OnDonk.RaiseX 260, fst)
+    Assert.Equal(OnDonkRaise.CallEQ 10, snd)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> AG9", source)
 
   [<Fact>]
   let ``importTurnDonk calculates donk size properly in 3bet pot`` () =
     use xl = useExcel handStrengthFileName
     let s = { defaultTurn with VillainBet = 140; HeroBet = 60; Pot = 280 }
     let h = [notMotivated PreFlop 20 Action.Call; notMotivated Flop 20 Action.Call; notMotivated Turn 20 (RaiseToAmount 60)]
-    let actual = importTurnDonk xl.Workbook { Made = Pair(Top Five); FD = NoFD; FD2 = NoFD; SD = GutShot } defaultTexture s h
-    Assert.Equal(OnDonk.RaiseGay, fst actual)
-    Assert.Equal(OnDonkRaise.StackOff, snd actual)
+    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Pair(Top Five); FD = NoFD; FD2 = NoFD; SD = GutShot } defaultTexture s h
+    Assert.Equal(OnDonk.RaiseGay, fst)
+    Assert.Equal(OnDonkRaise.StackOff, snd)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> C55", source)
 
   let postflopOOPFileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
 

@@ -326,7 +326,7 @@ let ``decidePostFlopIP cbet flush draw on turn`` () =
 let ``decidePostFlopIP call 4bet on flop with stackoff`` () =
   let s = { Hand = parseSuitedHand "7sJh"; Board = parseBoard "3h7h6c"; Pot = 765; VillainStack = 0; HeroStack = 120; VillainBet = 460; HeroBet = 225; BB = 20 }
   let history = [
-    notMotivated PreFlop 20 MinRaise
+    notMotivated PreFlop 20 (RaiseToAmount 40)
     notMotivated Flop 0 (RaiseToAmount 40)
     notMotivated Flop 100 (RaiseToAmount 225)]
   testIP s history Action.AllIn

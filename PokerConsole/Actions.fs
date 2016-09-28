@@ -14,7 +14,7 @@ let mapPatternToAction street vb stack (pattern : ActionPattern) =
   let action =
     match pattern with
     | ActionPattern.AllIn -> AllIn
-    | ActionPattern.MinRaise -> MinRaise
+    | ActionPattern.MinRaise -> RaiseToAmount (vb * 2)
     | ActionPattern.RaiseX x | ActionPattern.RaiseBluffX x -> raiseSize x vb stack
     | ActionPattern.Call -> Call
     | ActionPattern.Check -> Check

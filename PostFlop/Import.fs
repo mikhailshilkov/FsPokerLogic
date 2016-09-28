@@ -312,7 +312,6 @@ module Import =
       match historyFlop with
       | [{ Action = Action.Check }] -> "xx flop + vill bet turn"
       | [{ Action = Action.RaiseToAmount(_); VsVillainBet = 0 }] 
-      | [{ Action = Action.MinRaise; VsVillainBet = 0 }] 
       | [{ Action = Action.Call }] -> "vill xc F + dbT or dbF + dbT"
       | _ when historyFlop |> List.exists (fun x -> x.VsVillainBet > 0) -> "vill xr F + dbT or dbF-c + dbT"
       | _ -> failwith "Could not pick turn donkbet sheet"
@@ -342,7 +341,8 @@ module Import =
         elif texture.ThreeOfKind && (match handValue.Made with | FullHouse(_) -> false | _ -> true) then "J" 
         elif betSize <= 25 then "C" elif betSize < 50 then "D" elif betSize = 50 then "E" else "F"
     let cellValue = getCellValue xlWorkSheet (column + row)
-    parseTurnDonk cellValue
+    let (t1, t2) = parseTurnDonk cellValue
+    t1, t2, "HandStrength -> " + sheetName + " -> " + column + row
 
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with

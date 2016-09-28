@@ -152,11 +152,6 @@ module Decision =
     if betSize > 3 * stack / 4 then Action.AllIn 
     else betSize |> RaiseToAmount
 
-  let ensureMinRaise s a =
-    match a with
-    | RaiseToAmount x when x <= s.BB -> MinRaise
-    | x -> x
-
   let decide snapshot history options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk, street snapshot with
@@ -168,9 +163,10 @@ module Decision =
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
       | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
       | OnDonk.FormulaRaise, _ -> formulaRiverRaise snapshot |> Some
-      | OnDonk.CallEQ eq, _ -> 
+      | OnDonk.CallEQ eq, Flop -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
+      | OnDonk.CallEQ eq, _ -> callEQ snapshot eq |> Some
       | OnDonk.AllIn, _ -> Some Action.AllIn
       | OnDonk.Call, _ -> Some Action.Call
       | OnDonk.Fold, _ -> Some Action.Fold
@@ -197,7 +193,6 @@ module Decision =
       | OrAllIn f -> cbetOr snapshot f Action.AllIn |> Some
       | Never -> Action.Check |> Some
       | CBet.Undefined -> None      
-      |> Option.map (ensureMinRaise snapshot)
 
   let betXPot x s =
     let raiseSize = (s.Pot |> decimal) * x / 100m |> int |> roundTo5 
@@ -252,7 +247,7 @@ module Decision =
     if s.VillainBet = 0 then
       match options.First with
       | Check -> Action.Check
-      | Donk x -> betXPot x s |> ensureMinRaise s
+      | Donk x -> betXPot x s
       | OopDonk.AllIn -> Action.AllIn
       | RiverBetSizing -> riverBetBluff riverBetSizes s
       |> Some

@@ -80,21 +80,28 @@ module Facade =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
 
-    (match street s, eo with
-    | Turn, Some eoo ->
-      let (turnDonkOption, turnDonkRaiseOption) = 
-        if s.VillainBet > 0 
-        then importTurnDonk xlTurnDonkRiver value texture s history 
-        else (OnDonk.Undefined, OnDonkRaise.Undefined)
-      toTurnOptions s.Board value turnDonkOption turnDonkRaiseOption texture.Monoboard eoo
-      |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)
-    | Flop, Some eoo ->
-      toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eoo
-      |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
-    | _ -> failwith "Failed to produce IP options"
-    )
+    let (options, source) =
+      match street s, eo with
+      | Turn, Some eoo ->
+        let (turnDonkOption, turnDonkRaiseOption, source) = 
+          if s.VillainBet > 0 
+          then importTurnDonk xlTurnDonkRiver value texture s history 
+          else (OnDonk.Undefined, OnDonkRaise.Undefined, "PostflopIP")
+        let o =
+          toTurnOptions s.Board value turnDonkOption turnDonkRaiseOption texture.Monoboard eoo
+          |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)      
+        o, source
+      | Flop, Some eoo ->
+        let o =
+          toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eoo
+          |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
+        o, "PostflopIP"
+      | _ -> failwith "Failed to produce IP options"
+    
+    options
     |> augmentOptions s value texture historySimple
     |> decide s history
+    |> Option.add (fun _ -> source)
 
   let apply f = f()
   let decidePostFlop history s value texture xlFlopTurn xlHandStrength xlTricky riverBetSizes riverHistoryPatterns =
@@ -112,7 +119,7 @@ module Facade =
       decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 
         decidePostFlopNormal history s value texture xlFlopTurn xlHandStrength eo
-        |> Option.map (fun a -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = if s.VillainBet > 0 then "HandStrength" else "PostflopIP" })
+        |> Option.map (fun (a, source) -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source })
     ]
     rules |> Seq.choose apply |> Seq.tryHead
 

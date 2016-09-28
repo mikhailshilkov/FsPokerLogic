@@ -3,7 +3,7 @@
 module Actions =
   type Action = 
   | AllIn
-  | MinRaise
+  //| MinRaise
   | RaiseToAmount of int
   | Call
   | Check

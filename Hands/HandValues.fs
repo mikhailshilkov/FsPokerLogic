@@ -63,7 +63,7 @@ module HandValues =
   let isOpenEndedStraightDraw hand board =
     let combined = concat hand board |> List.ofArray |> List.map (fun x -> faceValue x.Face)
     let possibleStraits =
-      [2..14]
+      [1..14]
       |> List.map (fun x -> x :: combined)
       |> List.filter (fun x -> streetyFaces 5 0 x |> Option.isSome)
       |> List.length

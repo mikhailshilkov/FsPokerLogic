@@ -1,5 +1,6 @@
 ﻿namespace PostFlop
 
+open Microsoft.FSharp.Core
 open Cards.Actions
 open Hands
 open Options
@@ -146,13 +147,15 @@ module Decision =
     then s.VillainBet * 11 / 5 |> roundTo5 |> RaiseToAmount
     else Action.Call
 
-  let formulaRiverRaise s =
-    let betSize = (7 * s.VillainBet / 2 + s.Pot) / 2 |> roundTo5
+  let formulaRiverRaise (riverBetSizes: F1RRRTVEntry list) thin orAction s =
+    let rule = riverBetSizes |> List.filter (fun x -> x.MinPotSize <= s.Pot && s.Pot <= x.MaxPotSize) |> List.head
+    let ratio = if thin then rule.RTVRatio else rule.F1RRRatio
+    let betSize = ((7 * s.VillainBet / 2 + s.Pot) |> decimal) / ratio |> int |> roundTo5
     let stack = effectiveStackOnCurrentStreet s
-    if betSize > 3 * stack / 4 then Action.AllIn 
+    if betSize > 3 * stack / 4 then orAction
     else betSize |> RaiseToAmount
 
-  let decide snapshot history options =
+  let decide riverBetSizes snapshot history options =
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
       match options.Donk, street snapshot with
       | ForValueStackOffX(x), _ | RaiseX(x), _ -> stackOffDonkX x snapshot |> Some
@@ -162,7 +165,8 @@ module Decision =
       | CallRaisePet, River -> callRaiseRiver snapshot |> Some
       | CallRaisePet, _ -> raisePetDonk snapshot |> Some
       | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
-      | OnDonk.FormulaRaise, _ -> formulaRiverRaise snapshot |> Some
+      | OnDonk.FormulaRaise, _ -> formulaRiverRaise riverBetSizes false Action.AllIn snapshot |> Some
+      | OnDonk.RaiseThinValue, _ -> formulaRiverRaise riverBetSizes true Action.AllIn snapshot |> Some
       | OnDonk.CallEQ eq, Flop -> 
         let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
         callEQ snapshot modifiedEq |> Some
@@ -213,7 +217,7 @@ module Decision =
     elif s.VillainBet < s.Pot / 3 then raiseGay s
     else s.VillainBet * 11 / 4 |> RaiseToAmount |> orAllIn 69 s
 
-  let riverBetBluff riverBetSizes s =
+  let riverBetBluff (riverBetSizes: RBSEntry list) s =
     let rule = riverBetSizes |> List.filter (fun x -> x.MinPotSize <= s.Pot && s.Pot <= x.MaxPotSize) |> List.head
     let stack = effectiveStackOnCurrentStreet s * 100 / s.Pot
     if stack < rule.MinAllInPercentage then Action.Check
@@ -221,6 +225,12 @@ module Decision =
     else
       let betSize = rule.BetSize * s.Pot / 100 |> roundTo5
       betSize |> RaiseToAmount |> orAllIn rule.MinChipsLeft s
+
+  let riverBetValue (riverBetSizes: RBVEntry list) thin s =
+    let rule = riverBetSizes |> List.filter (fun x -> x.MinPotSize <= s.Pot && s.Pot <= x.MaxPotSize) |> List.head
+    let stack = effectiveStackOnCurrentStreet s * 100 / s.Pot
+    let betSize = (if thin then rule.ThinBetSize else rule.BetSize) * s.Pot / 100 |> roundTo5
+    betSize |> RaiseToAmount |> orAllIn 79 s
 
   let rec decideOop riverBetSizes s options =
     let rec onVillainBet a =
@@ -237,10 +247,17 @@ module Decision =
       | StackOffGay -> stackOffGay s
       | Raise (x, t) -> if s.HeroBet > 0 then onVillainBet t else raiseOop x x 4m s
       | RaiseGayCallEQ _ when s.HeroBet = 0 -> stackOffGay s
-      | FormulaRaise x -> if s.HeroBet > 0 then onVillainBet x else formulaRiverRaise s
+      | FormulaRaise { Or = x; On3Bet = y } -> 
+        if s.HeroBet > 0 then onVillainBet y 
+        else formulaRiverRaise (riverBetSizes |> Tuple.thrd3) false (onVillainBet x) s
+      | RaiseThinValue { Or = x; On3Bet = y } -> 
+        if s.HeroBet > 0 then onVillainBet y 
+        elif s.VillainBet = 0 then onVillainBet x
+        else formulaRiverRaise (riverBetSizes |> Tuple.thrd3) true Action.AllIn s
       | RaiseConditional x -> if s.HeroBet > 0 then onVillainBet x.On3Bet else conditionalRaise x s
       | Fold -> Action.Fold
       | Call -> Action.Call
+      | CallEQIfRaised (raised, notRaised) -> (if s.HeroBet > 0 then raised else notRaised) |> callEQ s
       | CallEQ i | RaiseGayCallEQ i -> callEQ s i
       | AllIn -> Action.AllIn      
 
@@ -249,7 +266,9 @@ module Decision =
       | Check -> Action.Check
       | Donk x -> betXPot x s
       | OopDonk.AllIn -> Action.AllIn
-      | RiverBetSizing -> riverBetBluff riverBetSizes s
+      | RiverBetSizing -> riverBetBluff (riverBetSizes |> Tuple.fst3) s
+      | RiverBetValue -> riverBetValue (riverBetSizes |> Tuple.snd3) false s
+      | RiverBetThinValue -> riverBetValue (riverBetSizes |> Tuple.snd3) true s
       |> Some
     elif s.VillainBet > 0 then
       onVillainBet options.Then |> Some

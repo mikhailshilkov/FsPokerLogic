@@ -84,11 +84,14 @@ let bluffy =
     importFlopList "bluffy hero ch-r flop vs minr" adxl.Workbook,
     importFlopList "bluffy overtaking, vill ch b fl" adxl.Workbook)
 
+let riverBetSizing = 
+  ([{ MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
+  ,[{ MinPotSize = 0; MaxPotSize = 500; BetSize = 60; ThinBetSize = 50 }]
+  ,[{ MinPotSize = 0; MaxPotSize = 500; F1RRRatio = 2m; RTVRatio = 2.5m }])
+
 let testPostFlopMotivatedExt h s mono test =
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = mono }
-  let riverBetSizing = [
-    { MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
 
   let fileNameOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
   use xlOop = useExcel fileNameOop
@@ -124,14 +127,14 @@ let ``decidePostFlop folds flop on 3 bet with OE`` () =
   testPostFlop [Action.Check; Action.RaiseToAmount 90] s 0 (Action.Fold)
 
 [<Fact>]
-let ``decidePostFlop ovso special rule on turn`` () =
+let ``decidePostFlop bov#55% special rule on turn`` () =
   let s = { Hand = parseSuitedHand "7s8s"; Board = parseBoard "5s7c3hTd"; Pot = 200; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.RaiseToAmount 40; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 135)
+  testPostFlop [Action.RaiseToAmount 40; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 110)
 
 [<Fact>]
-let ``decidePostFlop ovso special rule on turn 2`` () =
+let ``decidePostFlop bov#55% special rule on turn 2`` () =
   let s = { Hand = parseSuitedHand "Jh9c"; Board = parseBoard "5sJc5dKs"; Pot = 240; VillainStack = 400; HeroStack = 400; VillainBet = 0; HeroBet = 0; BB = 20 }
-  testPostFlop [Action.RaiseToAmount 60; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 160)
+  testPostFlop [Action.RaiseToAmount 60; Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 130)
 
 [<Fact>]
 let ``decidePostFlop A/f special rule on turn`` () =
@@ -300,8 +303,6 @@ let testIPext s h test =
   use xlFlopTurn = useExcel fileNameFlopTurn
   use xlHandStrength = useExcel fileNameHandStrength
   use xlTricky = useExcel fileNameTricky
-  let riverBetSizing = [
-    { MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
   let riverHistoryPatterns = importRiverPatterns xlHandStrength.Workbook
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
@@ -384,5 +385,11 @@ let ``River IP: sample decision`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4c4cJd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 40); notMotivated Flop 0 (Action.RaiseToAmount 40); notMotivated Turn 0 Action.Check]
   testIP s history (Action.RaiseToAmount 100)
+
+[<Fact>]
+let ``River IP: sample decision vs villain bet`` () =
+  let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4c4cJd"; Pot = 240; VillainStack = 340; HeroStack = 420; VillainBet = 80; HeroBet = 0; BB = 20 }
+  let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 40); notMotivated Flop 0 (Action.RaiseToAmount 40); notMotivated Turn 0 Action.Check]
+  testIP s history (Action.RaiseToAmount 210)
 
 adxl.Dispose()

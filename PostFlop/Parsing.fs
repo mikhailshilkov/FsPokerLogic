@@ -31,3 +31,14 @@ module Parsing =
     match s with
     | Decimal f -> Some f
     | _ -> None
+
+  let parseDecimalThrowing (s: string) = 
+    match s with
+    | Decimal f -> f
+    | _ -> failwith ("Failed to parse " + s)
+
+  let (|SplittedTuple|_|) c (s: string) =
+   let parts = s.Split([|c|], 2)
+   match parts with
+   | [| a; b |] -> Some(a, b)
+   | _ -> None

@@ -167,11 +167,11 @@ module Decide =
     | _ ->
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
-      //let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
-      let history = [
-        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = null;}
-        {Action = Call; Motivation = None; VsVillainBet = 80; Street = Flop; Source = "HandStrength";}
-      ]
+      let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
+//      let history = [
+//        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = null;}
+//        {Action = Call; Motivation = None; VsVillainBet = 80; Street = Flop; Source = "HandStrength";}
+//      ]
       history |> List.iter (sprintf "History: %A" >> log)
 
       try

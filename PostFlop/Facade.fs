@@ -25,7 +25,7 @@ module Facade =
   let canFloatIp s h =
     effectiveStackPre s >= 10 && match List.tryHead h with | Some x when x.VsVillainBet = s.BB -> true | _ -> false
 
-  let decidePostFlopFloatOnDonk history s value texture xlTricky () =
+  let decidePostFlopFloatOnDonk riverBetSizes history s value texture xlTricky () =
     let float = 
       if s.VillainBet > 0 && canFloatIp s history then
         match street s with
@@ -38,7 +38,7 @@ module Facade =
       else None
     float
     |> Option.map (fun (o, m, source) -> ({ CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = fst o; DonkRaise = snd o }, m, source))
-    |> Option.map (fun (o, m, source) -> (decide s history o, m, source))
+    |> Option.map (fun (o, m, source) -> (decide riverBetSizes s history o, m, source))
     |> Option.bind (toMotivated s)
 
   let decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes () =
@@ -76,7 +76,7 @@ module Facade =
       |> Option.bind (toMotivated s)
     | _ -> None
 
-  let decidePostFlopNormal history s value texture xlFlopTurn xlTurnDonkRiver eo =
+  let decidePostFlopNormal riverBetSizes history s value texture xlFlopTurn xlTurnDonkRiver eo =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
 
@@ -100,7 +100,7 @@ module Facade =
     
     options
     |> augmentOptions s value texture historySimple
-    |> decide s history
+    |> decide riverBetSizes s history
     |> Option.add (fun _ -> source)
 
   let apply f = f()
@@ -113,12 +113,12 @@ module Facade =
       | _ -> None
 
     let rules = [
-      decidePostFlopFloatOnDonk history s value texture xlTricky;
+      decidePostFlopFloatOnDonk (riverBetSizes |> Tuple.thrd3) history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
       decidePostFlopTurnBooster history s value texture xlHandStrength riverBetSizes eo;
       decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 
-        decidePostFlopNormal history s value texture xlFlopTurn xlHandStrength eo
+        decidePostFlopNormal (riverBetSizes |> Tuple.thrd3) history s value texture xlFlopTurn xlHandStrength eo
         |> Option.map (fun (a, source) -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source })
     ]
     rules |> Seq.choose apply |> Seq.tryHead

@@ -144,6 +144,7 @@ module Import =
         | "rtg" -> OnDonk.RaiseGay
         | "rtfb" -> OnDonk.RaiseX 220
         | "f1rr" -> OnDonk.FormulaRaise
+        | "rtv" -> OnDonk.RaiseThinValue
         | StartsWith "rmodx" s -> match s with | Decimal x -> OnDonk.RaiseX (x * 100m |> int) | _ -> failwith ("Failed parsing Turn Donk (5)" + strategy)
         | _ -> failwith ("Failed parsing Turn Donk (2)" + strategy)
       let raise =
@@ -354,6 +355,8 @@ module Import =
   let parseOopDonk = function
     | "ch" -> OopDonk.Check
     | "rbs" -> OopDonk.RiverBetSizing
+    | "rbv" -> OopDonk.RiverBetValue
+    | "rbtv" -> OopDonk.RiverBetThinValue
     | DecimalPerc n -> OopDonk.Donk n
     | v -> failwith ("Failed parsing Flop Oop Donk " + v)
 
@@ -369,6 +372,15 @@ module Import =
         | StartsWith "&" v -> match v with | Decimal d -> d | _ -> 0m
         | _ -> 0m
       OopOnCBet.RaiseConditional { Size = x; MinStackRemaining = minStackRemaining; MinStackPotRatio = minStackPotRatio; On3Bet = parseOopCbet parts.[1] }
+
+    let parseFormulaRaise = function
+      | StartsWith "/" s -> { Or = OopOnCBet.AllIn; On3Bet = parseOopCbet s }
+      | StartsWith "\"" s ->
+        match s with
+          | SplittedTuple '/' (a, b) -> { Or = parseOopCbet a; On3Bet = parseOopCbet b }
+          | _ -> failwith ("Failed to parseFormulaRaise " + s)
+      | v -> failwith ("Failed to parseFormulaRaise2 " + v)
+
     match s with
     | StartsWith "r/" p3 -> 
       match p3 with 
@@ -376,7 +388,8 @@ module Import =
       | "c" -> OopOnCBet.Raise(2.75m, OopOnCBet.Call)
       | Int i -> OopOnCBet.Raise(2.75m, OopOnCBet.CallEQ i)
       | _ -> failwith ("Failed parsing Flop Oop OnCbet raise" + s)
-    | StartsWith "f1rr/" p3 -> parseOopCbet p3 |> FormulaRaise
+    | StartsWith "f1rr" p3 -> parseFormulaRaise p3 |> FormulaRaise
+    | StartsWith "rtv" p3 -> parseFormulaRaise p3 |> RaiseThinValue
     | StartsWith "rtfbft" p3 -> parseConditionalRaise 2.9m p3
     | StartsWith "rcombo" p3 -> parseConditionalRaise 2.2m p3
     | StartsWith "rtbdb/" p3 -> OopOnCBet.Raise(2.6m, parseOopCbet p3)
@@ -391,6 +404,7 @@ module Import =
     | "so+" -> OopOnCBet.StackOffFast
     | "c" -> OopOnCBet.Call
     | "ai" -> OopOnCBet.AllIn
+    | SplittedTuple '"' (Int a, Int b) -> CallEQIfRaised(a,b)
     | Int i -> CallEQ i
     | _ -> failwith ("Failed parsing Flop Oop OnCbet" + s)
 
@@ -640,7 +654,8 @@ module Import =
       |> List.item <| excelColumns
 
     let cellValue = getCellValue xlWorkSheet (column + row)
-    parseOopOption cellValue ""
+    let optionToParse = if relativeBet > 0 then "ch/" + cellValue else cellValue
+    parseOopOption optionToParse ""
     |> Option.add (fun _ -> sheetName + " -> " + column + row)
 
   let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
@@ -908,20 +923,46 @@ module Import =
       match s with
       | Decimal d -> d * 100m |> int
       | _ -> failwith ("Failed parsing river bet size " + s)
-    let xlWorkSheet = xlWorkBook.Worksheets.["r8 & r9  riv bet sizings"] :?> Worksheet
-    [3..10]
-    |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("E" + row.ToString()))
-    |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
-    |> Seq.map (fun vs ->  
-       let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
-       { MinPotSize = Int32.Parse(potParts.[0])
-         MaxPotSize = if potParts.Length > 1 then Int32.Parse(potParts.[1]) else 1000
-         MinAllInPercentage = parsePercentage vs.[1]
-         MaxAllInPercentage = parsePercentage vs.[2]
-         BetSize = parsePercentage vs.[3]
-         MinChipsLeft = Int32.Parse(vs.[4])
-       })
-    |> List.ofSeq
+    let importr8r9 () =
+      let xlWorkSheet = xlWorkBook.Worksheets.["r8 & r9  riv bet sizings"] :?> Worksheet
+      [3..10]
+      |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("K" + row.ToString()))
+      |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
+      |> Seq.map (fun vs ->  
+         let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
+         let minPotSize = Int32.Parse(potParts.[0])
+         let maxPotSize = if potParts.Length > 1 then Int32.Parse(potParts.[1]) else 1000
+         { MinPotSize = minPotSize
+           MaxPotSize = maxPotSize
+           MinAllInPercentage = parsePercentage vs.[1]
+           MaxAllInPercentage = parsePercentage vs.[2]
+           BetSize = parsePercentage vs.[3]
+           MinChipsLeft = Int32.Parse(vs.[4])
+         },
+         {
+           MinPotSize = minPotSize
+           MaxPotSize = maxPotSize
+           BetSize = parsePercentage vs.[9]
+           ThinBetSize = parsePercentage vs.[10]
+         })
+      |> List.ofSeq
+      |> List.unzip
+    let importf1rrrtv () =
+      let xlWorkSheet = xlWorkBook.Worksheets.["F1RR & RTV bez sizings"] :?> Worksheet
+      [3..20]
+      |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("F" + row.ToString()))
+      |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
+      |> Seq.map (fun vs ->  
+         let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
+         let minPotSize = Int32.Parse(potParts.[0])
+         let maxPotSize = if potParts.Length > 1 then Int32.Parse(potParts.[1]) else 1000
+         { MinPotSize = minPotSize
+           MaxPotSize = maxPotSize
+           F1RRRatio = parseDecimalThrowing vs.[3]
+           RTVRatio = parseDecimalThrowing vs.[5]
+         })
+      |> List.ofSeq
+    match importr8r9() with | (a, b) -> a, b, importf1rrrtv()
 
 
   let importFloatFlopOptions (xlWorkBook : Workbook) sheet rangesToCompare s =

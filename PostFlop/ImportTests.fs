@@ -2,6 +2,7 @@
 
 module ImportTests =
 
+  open Microsoft.FSharp.Core
   open Import
   open Hands
   open Decision
@@ -111,7 +112,7 @@ module ImportTests =
   let ``importOopFlop returns AI special option`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopFlop xl.Workbook "hero call raise pre" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 10] }, "hero call raise pre -> B/C13") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 5] }, "hero call raise pre -> B/C13") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -133,15 +134,15 @@ module ImportTests =
   [<Fact>]
   let ``importOopTurn returns correct scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
-    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with Made = Pair(Top(King)) } defaultTexture
-    let expected = ({ defaultOopOptions with First = Donk(75m); Then = StackOff; Scenario = "r9" }, "hero call raise pre -> K/N10") |> Some
+    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = OpenEnded } defaultTexture
+    let expected = ({ defaultOopOptions with First = Donk 50m; Then = CallEQ 20; Scenario = "r8" }, "hero call raise pre -> K/N32") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct special scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
-    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with Made = Pair(Second(King)) } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 28; Special = [CheckCheck (Donk 75m, StackOff); BoardOvercard(Donk 67m, StackOff)]; SpecialScenario = "r9" }, "hero call raise pre -> K/N12") |> Some
+    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = GutShot } defaultTexture
+    let expected = ({ defaultOopOptions with Then = CallEQ 13; Special = [CheckCheckAndBoardOvercard (Donk 75M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K/N26") |> Some
     Assert.Equal(expected, actual)
 
   let testParseTurnDonk s d r =
@@ -191,7 +192,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let s = { defaultRiver with Hand = parseSuitedHand "Qd4c"; Board = parseBoard "8s9d3hQh3c" }
     let actual = importOopRiver xl.Workbook "hero call raise pre" TwoPair defaultTexture s
-    let expected = ({ defaultOopOptions with Then = CallEQ 30 }, "hero call raise pre -> AE/AI42") |> Some
+    let expected = ({ defaultOopOptions with First = RiverBetValue; Then = StackOff }, "hero call raise pre -> AE/AI42") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -207,7 +208,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let s = { defaultRiver with Board = parseBoard "8s9d3hQhTc" }
     let actual = importOopRiver xl.Workbook "hero call raise pre" Nothing defaultTexture s
-    let expected = ({ defaultOopOptions with Then = CallEQ 15; Scenario = "r8/5" }, "hero call raise pre -> AE/AI25") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 5; Scenario = "r8/5" }, "hero call raise pre -> AE/AI25") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -216,7 +217,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "8s9dThQh3h" }
     let texture = { defaultTexture with Monoboard = 3 }
     let actual = importOopRiver xl.Workbook "hero call raise pre" (Pair(Third)) texture s
-    let expected = ({ defaultOopOptions with Then = CallEQ 23; Scenario = "r8/15" }, "hero call raise pre -> AF/AI31") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 21; Scenario = "r9/15" }, "hero call raise pre -> AF/AI31") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -232,7 +233,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4; Streety = true }
     let actual = importOopRiver xl.Workbook "hero raise FV vs limp" ThreeOfKind texture defaultRiver
-    let expected = ({ defaultOopOptions with First = Check; Then = CallEQ 14 }, "hero raise FV vs limp -> AJ/AK17") |> Some
+    let expected = (defaultOopOptions, "hero raise FV vs limp -> AJ/AK17") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -278,6 +279,12 @@ module ImportTests =
   let ``parseFlopOop RBS/18 works`` () = testParseFlopOop "RBS/18" RiverBetSizing (CallEQ 18)
 
   [<Fact>]
+  let ``parseFlopOop RBV/15 works`` () = testParseFlopOop "RBV/15" RiverBetValue (CallEQ 15)
+
+  [<Fact>]
+  let ``parseFlopOop RBtV/AI works`` () = testParseFlopOop "RBtV/AI" RiverBetThinValue OopOnCBet.AllIn
+
+  [<Fact>]
   let ``parseFlopOop ch/rTbdb/so works`` () = testParseFlopOop "ch/rTbdb/so" Check (Raise(2.6m, OopOnCBet.StackOff))
 
   [<Fact>]
@@ -285,6 +292,9 @@ module ImportTests =
 
   [<Fact>]
   let ``parseFlopOop ch/rModx2,3/so works`` () = testParseFlopOop "ch/rModx2,3/so" Check (Raise(2.3m, OopOnCBet.StackOff))
+
+  [<Fact>]
+  let ``parseFlopOop RBS/20"15 works`` () = testParseFlopOop "RBS/20\"15" RiverBetSizing (CallEQIfRaised(20, 15))
 
   [<Fact>]
   let ``parseOopOption ch works - mostly used for IP vs check`` () = 
@@ -313,7 +323,20 @@ module ImportTests =
   [<Fact>]
   let ``parseOopOption ch/F1RR/20 works`` () = 
     let actual = parseOopOption "ch/F1RR/20" ""
-    let expected = { defaultOopOptions with First = Check; Then = FormulaRaise (CallEQ 20) } |> Some
+    let expected = { defaultOopOptions with First = Check; Then = FormulaRaise { Or = AllIn; On3Bet = CallEQ 20 } } |> Some
+    Assert.Equal(expected, actual)
+
+
+  [<Fact>]
+  let ``parseOopOption F1RR/22"14 works`` () = 
+    let actual = parseOopOption "ch/F1RR\"14/22" ""
+    let expected = { defaultOopOptions with Then = FormulaRaise { Or = CallEQ 14; On3Bet = CallEQ 22 } } |> Some
+    Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``parseOopOption RTV/22"14 works`` () = 
+    let actual = parseOopOption "ch/RTV\"c/so" ""
+    let expected = { defaultOopOptions with Then = RaiseThinValue { Or = Call; On3Bet = StackOff } } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -434,13 +457,21 @@ module ImportTests =
     Assert.Equal("235", System.String.Join("", Seq.head actual |> Seq.map (fun x -> faceToChar x)))
 
   [<Fact>]
-  let ``importRiverBetSizes imports list of donk river bet sizes`` () =
+  let ``importRiverBetSizes imports list of river bet sizes`` () =
     let fileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
     use xl = useExcel fileName
-    let actual = importRiverBetSizes xl.Workbook
-    Assert.Equal(5, actual.Length)
-    Assert.Equal({ MinPotSize = 241; MaxPotSize = 320; MinAllInPercentage = 58; MaxAllInPercentage = 70; BetSize = 55; MinChipsLeft = 80 },
-      actual.[2])
+    
+    let rbs = importRiverBetSizes xl.Workbook |> Tuple.fst3
+    Assert.Equal(5, rbs.Length)
+    Assert.Equal({ MinPotSize = 241; MaxPotSize = 320; MinAllInPercentage = 58; MaxAllInPercentage = 70; BetSize = 68; MinChipsLeft = 80 }, rbs.[2])
+
+    let rbv = importRiverBetSizes xl.Workbook |> Tuple.snd3
+    Assert.Equal(5, rbv.Length)
+    Assert.Equal({ MinPotSize = 161; MaxPotSize = 240; BetSize = 65; ThinBetSize = 65 }, rbv.[1])
+
+    let f1rrrtv = importRiverBetSizes xl.Workbook |> Tuple.thrd3
+    Assert.Equal(16, f1rrrtv.Length)
+    Assert.Equal({ MinPotSize = 321; MaxPotSize = 355; F1RRRatio = 2.3m; RTVRatio = 3m }, f1rrrtv.[10])
 
   let trickyFileName = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
 
@@ -627,7 +658,7 @@ module ImportTests =
       notMotivated Turn 0 Action.Call]
     let patterns = importRiverPatterns xl.Workbook
     let actual = importRiverIP xl.Workbook patterns (handValue s.Hand s.Board) s h defaultTexture
-    let expected = ({ defaultOopOptions with First = OopDonk.Donk 62.5m; Then = CallEQ 15 }, "river - villain check -> AF48") |> Some
+    let expected = ({ defaultOopOptions with First = RiverBetThinValue; Then = CallEQ 15 }, "river - villain check -> AF48") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]

@@ -9,9 +9,8 @@ open PostFlop.Parsing
 
 module SpecialRules = 
   let specialRulesOop s history o = 
-    let checkCheckMatch f t other = 
-      let previousStreetHistory = history |> List.filter (fun h -> h.Street = previousStreet s) |> List.map (fun h -> h.Action)
-      match previousStreetHistory with
+    let checkCheckMatch f t other =       
+      match previousStreetHistory s history |> List.map (fun h -> h.Action) with
       | [Action.Check] -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
       | _ -> other
 
@@ -157,11 +156,11 @@ module SpecialRules =
                           let newO = rule options
                           if newO <> options then (newO, ruleMotiv) else (options, motivation)) (o, motivationSeed)
 
-  let scenarioRulesOop history o =
+  let scenarioRulesOop s history o =
     if o.Scenario = null then o
     else
       let parts = o.Scenario.Split([|'/'|], 2)
-      let motivationOfLastAction = history |> List.map (fun x -> x.Motivation) |> List.tryLast
+      let motivationOfLastAction = previousStreetHistory s history |> List.tryLast |> Option.bind (fun x -> x.Motivation)
       match motivationOfLastAction, parts with
-      | Some(Some(Motivation.Scenario(x))), [|p1; Int i|] when p1.Contains(x) -> { o with First = RiverBetSizing; Then = CallEQ i }
+      | Some(Motivation.Scenario(x)), [|p1; Int i|] when p1.Contains(x) -> { o with First = RiverBetSizing; Then = CallEQ i }
       | _ -> o

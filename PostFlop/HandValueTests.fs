@@ -100,7 +100,7 @@ let ``augmentOptions returns check raise stack off when no Q+ FD on 3-suited tur
 let ``cbetFlushDrawOnTurn Cbet FD card with one overcard or ace on board or overcard on board`` handString boardString =
   let snapshot = { defaultTurn with Board = parseBoard boardString; Hand = parseSuitedHand handString }
   let actual = cbetFlushDrawOnTurn snapshot defaultValue defaultTexture defaultOptions
-  let expected = { Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfRemainingChipsLessThan = 99 }; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Undefined; DonkRaise = OnDonkRaise.Undefined }
+  let expected = { defaultOptions with Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfRemainingChipsLessThan = 99 }; CheckRaise = OnCheckRaise.Call }
   Assert.Equal(expected, actual)
 
 [<Fact>]
@@ -119,7 +119,7 @@ let ``cbetFlushDrawOnTurn stack off after Cbet FD with decent hand value`` () =
   let snapshot = { defaultTurn with Board = board; Hand = hand }
   let value = { defaultValue with Made = Pair(Second(Nine)) }
   let actual = cbetFlushDrawOnTurn snapshot value defaultTexture defaultOptions
-  let expected = { Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfRemainingChipsLessThan = 99 }; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.Undefined; DonkRaise = OnDonkRaise.Undefined }
+  let expected = { defaultOptions with Options.CbetFactor = OrAllIn { DefaultCBetOr with Factor = 75m; IfRemainingChipsLessThan = 99 }; CheckRaise = OnCheckRaise.StackOff }
   Assert.Equal(expected, actual)
 
 [<Theory>]

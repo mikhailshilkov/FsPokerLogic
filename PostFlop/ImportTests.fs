@@ -16,7 +16,7 @@ module ImportTests =
 
   let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
   let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
-  let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }  
+  let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined }  
   let defaultFlop = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c"; Pot = 80; VillainStack = 440; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
   let defaultRiver = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d9d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
@@ -68,23 +68,23 @@ module ImportTests =
   [<Fact>]
   let ``importTurnDonk returns correct option for a sample cell`` () =
     use xl = useExcel handStrengthFileName
-    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
+    let (fst, snd, _, source) = importTurnDonk xl.Workbook { Made = Pair(Over); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture defaultTurn defaultHistory
     Assert.Equal(OnDonk.Call, fst)
     Assert.Equal(OnDonkRaise.Undefined, snd)
-    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> F17", source)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> F18", source)
 
   [<Fact>]
   let ``importTurnDonk returns correct option when special conditions apply`` () =
     use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Streety = true }
-    let (fst, _, _) = importTurnDonk xl.Workbook { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    let (fst, _, _, _) = importTurnDonk xl.Workbook { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
     Assert.Equal(OnDonk.CallEQ 18, fst)
 
   [<Fact>]
   let ``importTurnDonk returns correct option on monobooard`` () =
     use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Monoboard = 4 }
-    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
+    let (fst, snd, _, source) = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
     Assert.Equal(OnDonk.RaiseX 260, fst)
     Assert.Equal(OnDonkRaise.CallEQ 10, snd)
     Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> AG9", source)
@@ -94,10 +94,20 @@ module ImportTests =
     use xl = useExcel handStrengthFileName
     let s = { defaultTurn with VillainBet = 140; HeroBet = 60; Pot = 280 }
     let h = [notMotivated PreFlop 20 Action.Call; notMotivated Flop 20 Action.Call; notMotivated Turn 20 (RaiseToAmount 60)]
-    let (fst, snd, source) = importTurnDonk xl.Workbook { Made = Pair(Top Five); FD = NoFD; FD2 = NoFD; SD = GutShot } defaultTexture s h
+    let (fst, snd, _, source) = importTurnDonk xl.Workbook { Made = Pair(Top Five); FD = NoFD; FD2 = NoFD; SD = GutShot } defaultTexture s h
     Assert.Equal(OnDonk.RaiseGay, fst)
     Assert.Equal(OnDonkRaise.StackOff, snd)
-    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> C55", source)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> C56", source)
+
+  [<Fact>]
+  let ``importTurnDonk imports scenario motivation`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultTurn with VillainBet = 40 }
+    let (fst, snd, m, source) = importTurnDonk xl.Workbook { Made = Pair(Fourth); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture s defaultHistory
+    Assert.Equal(OnDonk.RaiseGay, fst)
+    Assert.Equal(OnDonkRaise.CallEQ 12, snd)
+    Assert.Equal(Some(Scenario("r8")), m)
+    Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> C34", source)
 
   let postflopOOPFileName = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
 
@@ -179,6 +189,9 @@ module ImportTests =
 
   [<Fact>]
   let ``parseTurnDonk F1RR/so works`` () = testParseTurnDonk "F1RR/so" OnDonk.FormulaRaise OnDonkRaise.StackOff
+
+  [<Fact>]
+  let ``parseTurnDonk RTV"c/c works`` () = testParseTurnDonk "RTV\"c/c" (OnDonk.RaiseThinValue(OnDonk.Call)) OnDonkRaise.Call
 
   [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =
@@ -490,16 +503,16 @@ module ImportTests =
     let texture = { defaultTexture with Monoboard = 3 }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) texture s history
-    let expected = ({ defaultOopOptions with First = Check; Then = CallEQ 10 }, Some(Float BluffFloat), "tricky -> float OOP -> T40") |> Some
+    let expected = ({ defaultOopOptions with First = Donk 50m; Then = StackOff }, Some(Float BluffFloat), "tricky -> float OOP -> T41") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importFloatTurnOopOptions imports float options with continuation`` () =
     use xl = useExcel trickyFileName
-    let s = { defaultTurn with Board = parseBoard "2s3cTsAh"; Hand = parseSuitedHand "KsQd" }
+    let s = { defaultTurn with Board = parseBoard "2s3c6s7h"; Hand = parseSuitedHand "Ts9d" }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30]
     let actual = importFloatTurnOopOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.51m; On3Bet = CallEQ 15 } }, Some(Float (WithContinuation "62.5%/f")), "tricky -> float OOP -> N49") |> Some
+    let expected = ({ defaultOopOptions with Then = RaiseConditional { Size = 2.2m; MinStackRemaining = 0; MinStackPotRatio = 0.4m; On3Bet = AllIn } }, Some(Float (WithContinuation "62.5%/f")), "tricky -> float OOP -> N54") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -508,7 +521,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "2s2cJsQdKc"; Hand = parseSuitedHand "5s3s" }
     let history = [notMotivated PreFlop 20 Action.Call; notMotivated Flop 30 Action.Call; floatBluffCheck Turn]
     let actual = importFloatRiverOopOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOopOptions with Special = [CheckCheck(Donk 50m, CallEQ 12)] }, "tricky -> float OOP -> AX8") |> Some
+    let expected = ({ defaultOopOptions with Special = [CheckCheck(RiverBetSizing, CallEQIfRaised(8, 5))]; Scenario = "r8/5" }, "tricky -> float OOP -> AX8") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -538,7 +551,7 @@ module ImportTests =
     let s = { defaultTurn with Board = parseBoard "2sTc9s8h"; Hand = parseSuitedHand "7s2d" }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30]
     let actual = importFloatTurnIpCheckOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOopOptions with First = Donk 62.5m; Then = StackOff; Scenario = "r9" }, Some(Scenario "r9"), "tricky -> float IP -> N79") |> Some
+    let expected = ({ defaultOopOptions with First = Donk 62.5m; Then = CallEQ 30 }, Some(Float BluffFloat), "tricky -> float IP -> N80") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -547,7 +560,7 @@ module ImportTests =
     let s = { defaultTurn with Board = parseBoard "2sTc9s8h"; Hand = parseSuitedHand "7s2d" }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30]
     let actual = importFloatTurnIpDonkOptions xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s history
-    let expected = ((OnDonk.RaiseGay, OnDonkRaise.StackOff), Some(Float BluffFloat), "tricky -> float IP -> AZ79") |> Some
+    let expected = ((OnDonk.CallEQ 28, OnDonkRaise.Undefined), Some(Float BluffFloat), "tricky -> float IP -> AZ80") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -556,7 +569,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "2s7cJs3d5d"; Hand = parseSuitedHand "5s3s" }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30; floatBluffCheck Turn]
     let actual = importFloatRiverIpCheckOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOopOptions with First = Donk 62.5m; Then = AllIn }, "tricky -> float IP -> CP35") |> Some
+    let expected = ({ defaultOopOptions with First = RiverBetValue; Then = Call }, "tricky -> float IP -> CP35") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -565,7 +578,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "2s7cJs3d5d"; Hand = parseSuitedHand "5s3s" }
     let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 30; floatBluffCheck Turn]
     let actual = importFloatRiverIpDonkOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = ((OnDonk.CallEQ 34, OnDonkRaise.Undefined), "tricky -> float IP -> CZ35") |> Some
+    let expected = ((OnDonk.RaiseThinValue OnDonk.Call, OnDonkRaise.Call), "tricky -> float IP -> CZ35") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]

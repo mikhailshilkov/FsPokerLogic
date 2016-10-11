@@ -42,6 +42,9 @@ module Decision =
     | 3 -> PreFlop
     | _ -> failwith "Weird board for previous street"
 
+  let previousStreetHistory s h = 
+    h |> List.filter (fun h -> h.Street = previousStreet s)
+
   let streetIndex s = 
     match s with
     | River -> 5
@@ -75,6 +78,7 @@ module Decision =
       |> Option.map (fun x -> x.VsVillainBet)
       |> defaultArg <| s.VillainBet
     villainDonk * 100 / (s.Pot - s.VillainBet - s.HeroBet)
+  let donkedOnThisStreet s h = relativeDonkSize s h > 0
 
 
   let cbet pot cbetf = (pot |> decimal) * cbetf / 100m |> int
@@ -156,25 +160,29 @@ module Decision =
     else betSize |> RaiseToAmount
 
   let decide riverBetSizes snapshot history options =
+    let rec onDonk d =
+      match d, street snapshot with
+        | ForValueStackOffX(x), _ | RaiseX(x), _ -> stackOffDonkX x snapshot |> Some
+        | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
+        | RaisePreDonkX(x), _ -> raisePreDonk x snapshot |> Some
+        | RaiseGay, _ -> raiseGay snapshot |> Some
+        | CallRaisePet, River -> callRaiseRiver snapshot |> Some
+        | CallRaisePet, _ -> raisePetDonk snapshot |> Some
+        | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
+        | OnDonk.FormulaRaise, _ -> formulaRiverRaise riverBetSizes false Action.AllIn snapshot |> Some
+        | OnDonk.RaiseThinValue v, _ -> 
+          if snapshot.VillainStack = 0 then onDonk v
+          else formulaRiverRaise riverBetSizes true Action.AllIn snapshot |> Some
+        | OnDonk.CallEQ eq, Flop -> 
+          let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
+          callEQ snapshot modifiedEq |> Some
+        | OnDonk.CallEQ eq, _ -> callEQ snapshot eq |> Some
+        | OnDonk.AllIn, _ -> Some Action.AllIn
+        | OnDonk.Call, _ -> Some Action.Call
+        | OnDonk.Fold, _ -> Some Action.Fold
+        | OnDonk.Undefined, _ -> None
     if snapshot.VillainBet > 0 && snapshot.HeroBet = 0 then
-      match options.Donk, street snapshot with
-      | ForValueStackOffX(x), _ | RaiseX(x), _ -> stackOffDonkX x snapshot |> Some
-      | ForValueStackOff, _ -> stackOffDonk snapshot |> Some
-      | RaisePreDonkX(x), _ -> raisePreDonk x snapshot |> Some
-      | RaiseGay, _ -> raiseGay snapshot |> Some
-      | CallRaisePet, River -> callRaiseRiver snapshot |> Some
-      | CallRaisePet, _ -> raisePetDonk snapshot |> Some
-      | OnDonk.RaiseConditional x, _ -> conditionalDonkRaise x snapshot |> Some
-      | OnDonk.FormulaRaise, _ -> formulaRiverRaise riverBetSizes false Action.AllIn snapshot |> Some
-      | OnDonk.RaiseThinValue, _ -> formulaRiverRaise riverBetSizes true Action.AllIn snapshot |> Some
-      | OnDonk.CallEQ eq, Flop -> 
-        let modifiedEq = if snapshot.VillainStack = 0 && eq >= 26 then eq + 15 else eq
-        callEQ snapshot modifiedEq |> Some
-      | OnDonk.CallEQ eq, _ -> callEQ snapshot eq |> Some
-      | OnDonk.AllIn, _ -> Some Action.AllIn
-      | OnDonk.Call, _ -> Some Action.Call
-      | OnDonk.Fold, _ -> Some Action.Fold
-      | OnDonk.Undefined, _ -> None
+      onDonk options.Donk
     else if snapshot.VillainBet > 0 && snapshot.HeroBet > 0 then
       let raisedDonk = history |> List.filter (fun a -> a.Street = street snapshot) |> List.tryHead |> Option.filter (fun a -> a.VsVillainBet > 0) |> Option.isSome
       if raisedDonk then
@@ -182,6 +190,7 @@ module Decision =
         | OnDonkRaise.CallEQ x -> callEQ snapshot x |> Some
         | OnDonkRaise.StackOff -> stackOffDonk snapshot |> Some
         | OnDonkRaise.AllIn -> Some Action.AllIn
+        | OnDonkRaise.Call -> Some Action.Call
         | OnDonkRaise.Undefined -> None
       else
         match options.CheckRaise with

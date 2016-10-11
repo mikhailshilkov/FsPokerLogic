@@ -170,7 +170,7 @@ module Decide =
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
 //      let history = [
 //        {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = null;}
-//        {Action = Call; Motivation = None; VsVillainBet = 80; Street = Flop; Source = "HandStrength";}
+//        {Action = Call; Motivation = None; VsVillainBet = 40; Street = Flop; Source = "HandStrength";}
 //      ]
       history |> List.iter (sprintf "History: %A" >> log)
 

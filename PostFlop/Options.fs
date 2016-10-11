@@ -22,7 +22,7 @@ module Options =
     | RaiseX of int 
     | RaiseGay //(2VB + P) / 2
     | FormulaRaise
-    | RaiseThinValue
+    | RaiseThinValue of OnDonk // Alternative action vs AI
     | AllIn 
     | Call 
     | Fold 
@@ -31,6 +31,7 @@ module Options =
   type OnDonkRaise = 
     | StackOff
     | AllIn
+    | Call
     | CallEQ of int 
     | Undefined
 

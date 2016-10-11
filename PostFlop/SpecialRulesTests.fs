@@ -363,7 +363,7 @@ let ``strategicRulesOop bet non-A river after bluff overtake after no cbet after
 let ``scenarioRulesOop applies scenario if last bet was same scenario`` () =
   let h = [notMotivated PreFlop 40 Action.Call; bluff Flop 0 75; scenario Turn 0 (Action.RaiseToAmount 175) "r8"]
   let options = { defaultOptions with Scenario = "r8/20" }
-  let actual = scenarioRulesOop h options
+  let actual = scenarioRulesOop defaultRiver h options
   let expected = { options with First = RiverBetSizing; Then = CallEQ 20 }
   Assert.Equal(expected, actual)
 
@@ -371,7 +371,7 @@ let ``scenarioRulesOop applies scenario if last bet was same scenario`` () =
 let ``scenarioRulesOop applies scenario if last bet was substring of current scenario`` () =
   let h = [notMotivated PreFlop 40 Action.Call; bluff Flop 0 75; scenario Turn 0 (Action.RaiseToAmount 175) "r9"]
   let options = { defaultOptions with Scenario = "r8r9/8" }
-  let actual = scenarioRulesOop h options
+  let actual = scenarioRulesOop defaultRiver h options
   let expected = { options with First = RiverBetSizing; Then = CallEQ 8 }
   Assert.Equal(expected, actual)
 
@@ -379,12 +379,12 @@ let ``scenarioRulesOop applies scenario if last bet was substring of current sce
 let ``scenarioRulesOop does not apply if last bet was not same scenario`` () =
   let h = [notMotivated PreFlop 40 Action.Call; bluff Flop 0 75; scenario Turn 0 (Action.RaiseToAmount 175) "r9"]
   let options = { defaultOptions with Scenario = "r8/20" }
-  let actual = scenarioRulesOop h options
+  let actual = scenarioRulesOop defaultRiver h options
   Assert.Equal(options, actual)
 
 [<Fact>]
 let ``scenarioRulesOop does not apply if current scenario has no call eq`` () =
   let h = [notMotivated PreFlop 40 Action.Call; bluff Flop 0 75; scenario Turn 0 (Action.RaiseToAmount 175) "r8"]
   let options = { defaultOptions with Scenario = "r8" }
-  let actual = scenarioRulesOop h options
+  let actual = scenarioRulesOop defaultRiver h options
   Assert.Equal(options, actual)

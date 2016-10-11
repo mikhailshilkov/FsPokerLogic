@@ -25,11 +25,13 @@ module Facade =
   let canFloatIp s h =
     effectiveStackPre s >= 10 && match List.tryHead h with | Some x when x.VsVillainBet = s.BB -> true | _ -> false
 
+  let canFloatFlop s value texture = s.HeroBet = 0 && value.FD2 = NoFD && texture.Monoboard < 3
+
   let decidePostFlopFloatOnDonk riverBetSizes history s value texture xlTricky () =
     let float = 
-      if s.VillainBet > 0 && canFloatIp s history then
+      if donkedOnThisStreet s history && canFloatIp s history then
         match street s with
-        | Flop when s.HeroBet = 0 -> importFloatFlopIpOptions xlTricky s
+        | Flop when canFloatFlop s value texture -> importFloatFlopIpOptions xlTricky s
         | Turn when floatedBefore history -> importFloatTurnIpDonkOptions xlTricky value texture s history
         | River when floatedBefore history -> 
           importFloatRiverIpDonkOptions xlTricky value.Made texture s history
@@ -37,13 +39,13 @@ module Facade =
         | _ -> None
       else None
     float
-    |> Option.map (fun (o, m, source) -> ({ CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = fst o; DonkRaise = snd o }, m, source))
+    |> Option.map (fun (o, m, source) -> ({ CbetFactor = Never; CheckRaise = OnCheckRaise.Undefined; Donk = fst o; DonkRaise = snd o }, m, source))
     |> Option.map (fun (o, m, source) -> (decide riverBetSizes s history o, m, source))
     |> Option.bind (toMotivated s)
 
   let decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes () =
     let float = 
-      if s.VillainBet = 0 && canFloatIp s history then
+      if donkedOnThisStreet s history |> not && canFloatIp s history then
         match street s with
         | Turn when floatedBefore history -> importFloatTurnIpCheckOptions xlTricky value texture s history
         | River when floatedBefore history -> 
@@ -52,16 +54,17 @@ module Facade =
         | _ -> None
       else None
     float
-    |> Option.map (fun (o, m, source) -> scenarioRulesOop history o, m, source)
+    |> Option.map (fun (o, m, source) -> scenarioRulesOop s history o, m, source)
     |> Option.map (fun (o, m, source) -> decideOop riverBetSizes s o, m, source)
     |> Option.bind (toMotivated s)
 
   let decidePostFlopTurnBooster history s value texture xl riverBetSizes eo () =
-    match street s, s.VillainBet with
-    | Turn, vb ->
+    let playedBooster = history |> List.exists (fun hi -> hi.Source <> null && hi.Source.Contains("IP turn booster"))
+    match street s with
+    | Turn when s.VillainBet = 0 || playedBooster ->
       let o = eo |> Option.map (fun eov -> toTurnOptions s.Board value OnDonk.Undefined OnDonkRaise.Undefined 0 eov)
       match o with
-      | Some ov when ov.CbetFactor = Never || (vb > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
+      | Some ov when ov.CbetFactor = Never || (s.VillainBet > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
         importIPTurnBooster xl value texture s history
         |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
         |> Option.bind (toMotivated s)
@@ -72,6 +75,7 @@ module Facade =
     match street s with
     | River -> 
       importRiverIP xlHandStrength patterns value s h texture
+      |> Option.mapFst (scenarioRulesOop s h)
       |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
       |> Option.bind (toMotivated s)
     | _ -> None
@@ -80,28 +84,28 @@ module Facade =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
 
-    let (options, source) =
+    let (options, motivation, source) =
       match street s, eo with
       | Turn, Some eoo ->
-        let (turnDonkOption, turnDonkRaiseOption, source) = 
+        let (turnDonkOption, turnDonkRaiseOption, motivation, source) = 
           if s.VillainBet > 0 
           then importTurnDonk xlTurnDonkRiver value texture s history 
-          else (OnDonk.Undefined, OnDonkRaise.Undefined, "PostflopIP")
+          else (OnDonk.Undefined, OnDonkRaise.Undefined, None, "PostflopIP")
         let o =
           toTurnOptions s.Board value turnDonkOption turnDonkRaiseOption texture.Monoboard eoo
           |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)      
-        o, source
+        o, motivation, source
       | Flop, Some eoo ->
         let o =
           toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eoo
           |> (if texture.Monoboard >= 3 then monoboardFlop value else id)
-        o, "PostflopIP"
+        o, None, "PostflopIP"
       | _ -> failwith "Failed to produce IP options"
     
     options
     |> augmentOptions s value texture historySimple
     |> decide riverBetSizes s history
-    |> Option.add (fun _ -> source)
+    |> Option.map (fun x -> x, motivation, source)
 
   let apply f = f()
   let decidePostFlop history s value texture xlFlopTurn xlHandStrength xlTricky riverBetSizes riverHistoryPatterns =
@@ -119,7 +123,7 @@ module Facade =
       decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 
         decidePostFlopNormal (riverBetSizes |> Tuple.thrd3) history s value texture xlFlopTurn xlHandStrength eo
-        |> Option.map (fun (a, source) -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source })
+        |> Option.map (fun (a, m, source) -> { Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = source })
     ]
     rules |> Seq.choose apply |> Seq.tryHead
 
@@ -144,13 +148,14 @@ module Facade =
     let float = 
       if preflopAllowsFloat && effectiveStackPre s >= 10 then
         match street s with
-        | Flop when s.VillainBet > 0 && s.HeroBet = 0 -> importFloatFlopOopOptions xlTricky s
+        | Flop when s.VillainBet > 0 && canFloatFlop s value texture -> 
+          importFloatFlopOopOptions xlTricky s
         | Turn when floatedBefore history -> importFloatTurnOopOptions xlTricky value texture s history
         | River when floatedBefore history -> 
           importFloatRiverOopOptions xlTricky value.Made texture s history 
           |> Option.map (fun (o, source) -> specialRulesOop s history o, None, source)
         | _ -> None
-        |> Option.map (fun (o, m, source) -> scenarioRulesOop history o, m, source)
+        |> Option.map (fun (o, m, source) -> scenarioRulesOop s history o, m, source)
       else None
 
     let normalPlay() =
@@ -160,7 +165,7 @@ module Facade =
       | River, Some p -> importOopRiver xlOop p value.Made texture s
       | _ -> failwith "Unkown street at decidePostFlopOop"
       |> Option.mapFst (specialRulesOop s history)
-      |> Option.mapFst (scenarioRulesOop history)
+      |> Option.mapFst (scenarioRulesOop s history)
       |> Option.mapFst (strategicRulesOop s value history bluffyFlops bluffyHand)
       |> Option.map (fun ((a, b), c) -> a, b, "PostflopOOP -> " + c)
 

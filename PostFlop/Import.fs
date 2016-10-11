@@ -122,6 +122,10 @@ module Import =
     |> List.exists (fun x -> v.Contains(x))
 
   let rec parseTurnDonk (strategy: string) =
+    let rec parseFormulaRaiseDonk = function
+      | StartsWith "\"" s -> parseTurnDonk s |> fst
+      | _ -> OnDonk.AllIn
+
     let canonic = strategy.Trim().ToLowerInvariant()
     let parts = canonic.Split([|'/'|], 2)
     if System.String.IsNullOrEmpty(strategy) then (OnDonk.Undefined, OnDonkRaise.Undefined)
@@ -134,6 +138,7 @@ module Import =
         | _ -> failwith ("Failed parsing Turn Donk (c^)" + s)
       | "f" -> (OnDonk.Fold, OnDonkRaise.Undefined)
       | "ai" -> (OnDonk.AllIn, OnDonkRaise.Undefined)
+      | "so" -> (OnDonk.ForValueStackOff, OnDonkRaise.StackOff)
       | Int n -> (OnDonk.CallEQ n, OnDonkRaise.Undefined)
       | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)      
     elif parts.Length = 2 then
@@ -144,12 +149,13 @@ module Import =
         | "rtg" -> OnDonk.RaiseGay
         | "rtfb" -> OnDonk.RaiseX 220
         | "f1rr" -> OnDonk.FormulaRaise
-        | "rtv" -> OnDonk.RaiseThinValue
+        | StartsWith "rtv" s -> parseFormulaRaiseDonk s |> OnDonk.RaiseThinValue
         | StartsWith "rmodx" s -> match s with | Decimal x -> OnDonk.RaiseX (x * 100m |> int) | _ -> failwith ("Failed parsing Turn Donk (5)" + strategy)
         | _ -> failwith ("Failed parsing Turn Donk (2)" + strategy)
       let raise =
         match parts.[1] with 
         | "so" | "sot" -> OnDonkRaise.StackOff
+        | "c" -> OnDonkRaise.Call
         | Int n -> OnDonkRaise.CallEQ n
         | _ -> failwith ("Failed parsing TurnDonk (3)"  + strategy)
       (donk, raise)
@@ -159,6 +165,7 @@ module Import =
     let isTurnOvercard = isLastBoardCardOvercard s.Board
     let isTurnMiddlecard = isLastBoardCardSecondCard s.Board
     let isTurnAce = (Array.last s.Board).Face = Ace
+    let isFlopAce = s.Board |> Array.take 3 |> Array.exists (fun c -> c.Face = Ace)
     let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
     let overs = overcards s.Hand s.Board
     let highKicker k = k = Ace || k = King || k = Queen || k = Jack
@@ -168,38 +175,39 @@ module Import =
     let noDrawRow = 
       match handValue.Made with
       | Nothing -> 
-        if handHasAce && isTurnOvercard then 10
+        if handHasAce && isTurnOvercard then 11
         elif handHasAce then 9
-        elif overs = 1 && isTurnOvercard then 13
-        elif overs = 1 then 12
+        elif overs = 1 && isTurnOvercard then 14
+        elif overs = 1 then 13
         elif isTurnAce then 8 
         elif isTurnOvercard then 7 
-        elif isTurnMiddlecard then 11
+        elif isFlopAce then 10
+        elif isTurnMiddlecard then 12
         else 6
-      | TwoOvercards -> if isTurnOvercard then 15 else 14
+      | TwoOvercards -> if isTurnOvercard then 16 else 15
       | Pair(x) -> 
         match x with
-        | Over -> 17
-        | Top(k) when highKicker k -> 18
-        | Top(_) when highBoardPair -> 20
-        | Top(_) -> 19
-        | Second(x) when topPairedBoard -> if highKicker x then 21 else 22
-        | Second(x) when isPairedBoard -> if highKicker x then 24 else 26
-        | Second(x) when isTurnOvercard -> if highKicker x then 27 else 28
-        | Second(x) -> if highKicker x then 23 else 25
-        | Third when isPairedBoard -> 30
-        | Third when isTurnAce -> 32
-        | Third when isTurnOvercard -> 31
-        | Third -> 29
-        | Fourth when isTurnAce -> 34
-        | Fourth -> 33
+        | Over -> 18
+        | Top(k) when highKicker k -> 19
+        | Top(_) when highBoardPair -> 21
+        | Top(_) -> 20
+        | Second(x) when topPairedBoard -> if highKicker x then 22 else 23
+        | Second(x) when isPairedBoard -> if highKicker x then 25 else 27
+        | Second(x) when isTurnOvercard -> if highKicker x then 28 else 29
+        | Second(x) -> if highKicker x then 24 else 26
+        | Third when isPairedBoard -> 31
+        | Third when isTurnAce -> 33
+        | Third when isTurnOvercard -> 32
+        | Third -> 30
+        | Fourth when isTurnAce -> 35
+        | Fourth -> 34
         | Fifth -> failwith "Fifth pair impossible on turn"
-        | Under -> 35
-      | TwoPair when isPairedBoard -> 37
-      | TwoPair -> 36
-      | ThreeOfKind -> 38
-      | Straight(Normal) -> 39
-      | Straight(Weak) | Straight(OnBoard) -> 40
+        | Under -> 36
+      | TwoPair when isPairedBoard -> 38
+      | TwoPair -> 37
+      | ThreeOfKind -> 39
+      | Straight(Normal) -> 40
+      | Straight(Weak) | Straight(OnBoard) -> 41
       | Flush(x) -> 
         if texture.Monoboard = 4 then
           match x with 
@@ -212,91 +220,91 @@ module Import =
           | NotNut(Six) | NotNut(Five) -> 12
           | NotNut(_) -> 13
           | Board -> failwith "Board flush impossible on 4 monoboard"
-        else 41
+        else 42
       | FullHouse(x) ->
         match tripsFace s.Board with
         | Some(k) -> 
           let kicker = concat s.Hand s.Board |> anyPairFace |> Option.get
-          if highKicker kicker then 44 else 43
-        | None -> if x = Normal then 42 else 45
+          if highKicker kicker then 45 else 44
+        | None -> if x = Normal then 43 else 46
       | FourOfKind -> 
         if texture.FourOfKind then 
           let kicker = maxFace [s.Hand.Card1; s.Hand.Card2]
           let isNuts = kicker = Ace || (kicker = Ace && s.Board.[0].Face = King)
-          if isNuts then 102
-          elif kicker = King || kicker = Queen || kicker = Jack then 103 else 104 
-        else 46
-      | StraightFlush -> 46
+          if isNuts then 103
+          elif kicker = King || kicker = Queen || kicker = Jack then 104 else 105
+        else 47
+      | StraightFlush -> 47
     let gutShotRow = 
       match handValue.Made with
       | Nothing -> 
-        if overs = 1 && isTurnOvercard then 52
-        elif overs = 1 then 51
-        elif isTurnAce then 50
-        elif isTurnOvercard then 49
-        else 48
-      | TwoOvercards -> if isTurnOvercard then 54 else 53
+        if overs = 1 && isTurnOvercard then 53
+        elif overs = 1 then 52
+        elif isTurnAce then 51
+        elif isTurnOvercard then 50
+        else 49
+      | TwoOvercards -> if isTurnOvercard then 55 else 54
       | Pair(x) -> 
         match x with
-        | Top(_) -> 55
-        | Second(x) when topPairedBoard -> 58
-        | Second(x) when isPairedBoard -> 59
-        | Second(x) when isTurnOvercard -> 57
-        | Second(x) -> 56
-        | Third when isTurnOvercard -> 61
-        | Third -> 60
-        | Fourth when isTurnAce -> 63
-        | Fourth when isTurnOvercard -> 64
-        | Fourth -> 62
+        | Top(_) -> 56
+        | Second(x) when topPairedBoard -> 59
+        | Second(x) when isPairedBoard -> 60
+        | Second(x) when isTurnOvercard -> 58
+        | Second(x) -> 57
+        | Third when isTurnOvercard -> 62
+        | Third -> 61
+        | Fourth when isTurnAce -> 64
+        | Fourth when isTurnOvercard -> 65
+        | Fourth -> 63
         | _ -> 0
       | _ -> 0
     let openEndedRow = 
       match handValue.Made with
       | Nothing -> 
-        if overs = 1 && isTurnOvercard then 70
-        elif overs = 1 then 69
-        elif isTurnAce then 67
-        elif isTurnOvercard then 68
-        else 66
-      | TwoOvercards -> if isTurnOvercard then 72 else 71
+        if overs = 1 && isTurnOvercard then 71
+        elif overs = 1 then 70
+        elif isTurnAce then 68
+        elif isTurnOvercard then 69
+        else 67
+      | TwoOvercards -> if isTurnOvercard then 73 else 72
       | Pair(x) -> 
         match x with
-        | Top(_) -> 73
-        | Second(x) when topPairedBoard -> 76
-        | Second(x) when isPairedBoard -> 77
-        | Second(x) when isTurnOvercard -> 75
-        | Second(x) -> 74
-        | Third when isTurnOvercard -> 79
-        | Third -> 78
-        | Fourth when isTurnAce -> 81
-        | Fourth -> 80
-        | Under -> 82
+        | Top(_) -> 74
+        | Second(x) when topPairedBoard -> 77
+        | Second(x) when isPairedBoard -> 78
+        | Second(x) when isTurnOvercard -> 76
+        | Second(x) -> 75
+        | Third when isTurnOvercard -> 80
+        | Third -> 79
+        | Fourth when isTurnAce -> 82
+        | Fourth -> 81
+        | Under -> 83
         | _ -> 0
       | _ -> 0
     let flushDrawRow = 
       match handValue.Made with
       | Nothing -> 
         match handValue.SD with
-        | OpenEnded -> 91
-        | GutShot when isTurnOvercard -> 93
-        | GutShot -> 92
+        | OpenEnded -> 92
+        | GutShot when isTurnOvercard -> 94
+        | GutShot -> 93
         | NoSD ->
-          if overs = 1 && isTurnOvercard then 87
-          elif overs = 1 then 86
-          elif isTurnOvercard then 85
-          else 84
-      | TwoOvercards -> if isTurnOvercard then 89 else 88
+          if overs = 1 && isTurnOvercard then 88
+          elif overs = 1 then 87
+          elif isTurnOvercard then 86
+          else 85
+      | TwoOvercards -> if isTurnOvercard then 90 else 89
       | Pair(x) -> 
         match x with
-        | Top(_) -> 90
-        | Second(x) when topPairedBoard -> 96
-        | Second(x) when isPairedBoard -> 97
-        | Second(x) when isTurnOvercard -> 95
-        | Second(x) -> 94
-        | Third when isTurnOvercard -> 99
-        | Third -> 98
-        | Fourth when isTurnOvercard -> 101
-        | Fourth -> 100
+        | Top(_) -> 91
+        | Second(x) when topPairedBoard -> 97
+        | Second(x) when isPairedBoard -> 98
+        | Second(x) when isTurnOvercard -> 96
+        | Second(x) -> 95
+        | Third when isTurnOvercard -> 100
+        | Third -> 99
+        | Fourth when isTurnOvercard -> 102
+        | Fourth -> 101
         | _ -> 0
       | _ -> 0
     let row =
@@ -342,8 +350,11 @@ module Import =
         elif texture.ThreeOfKind && (match handValue.Made with | FullHouse(_) -> false | _ -> true) then "J" 
         elif betSize <= 25 then "C" elif betSize < 50 then "D" elif betSize = 50 then "E" else "F"
     let cellValue = getCellValue xlWorkSheet (column + row)
-    let (t1, t2) = parseTurnDonk cellValue
-    t1, t2, "HandStrength -> " + sheetName + " -> " + column + row
+    let scenarioParts = cellValue.Split([|'*'|], 2)
+    let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
+    let (t1, t2) = parseTurnDonk scenarioParts.[0]
+    let motivation = if String.IsNullOrEmpty scenario then None else Some(Scenario(scenario))
+    t1, t2, motivation, "HandStrength -> " + sheetName + " -> " + column + row
 
   let parseRiverCbet (i: string) =
     match i.ToLowerInvariant() with
@@ -464,7 +475,7 @@ module Import =
     else if parts.Length = 1 then
       match parts.[0] with 
       | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
-      | "ch" -> Some { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
+      | "ch" | "f" -> Some { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
       | Int i -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ i; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
       | "x" -> None
       | _ -> failwith ("Failed parsing Flop Oop (1)" + strategy)
@@ -499,7 +510,7 @@ module Import =
       |> (fun x -> System.String.Join("+", x))
     if flopTurnPattern.Contains("3bet") 
     then "3bet" 
-    else flopTurnPattern + "+" + if s.VillainBet > 0 then "db" else "x"
+    else flopTurnPattern + "+" + if donkedOnThisStreet s h then "db" else "x"
 
   let importRiverPatterns (xlWorkBook : Workbook) = 
     [for sheetName in ["river - villain check"; "river - villain donkbet to 30%"; "river - villain donkbet 31%+"] do
@@ -517,7 +528,7 @@ module Import =
   let importRiverIP (xlWorkBook : Workbook) patterns value s h texture =
     let relativeBet = relativeDonkSize s h
     let sheetName = 
-      if s.VillainBet = 0 then "river - villain check"
+      if donkedOnThisStreet s h |> not then "river - villain check"
       elif relativeBet <= 30 then "river - villain donkbet to 30%"
       else "river - villain donkbet 31%+"
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet 
@@ -643,7 +654,7 @@ module Import =
       match texture.Monoboard, value with
         | 5, _ -> 5
         | 4, Flush(_) -> 3
-        | 4, _ -> if texture.Streety then 7 else 8
+        | 4, _ -> if texture.Streety then 9 else 8
         | _ ->
           if texture.Streety then 4
           elif texture.DoublePaired then 5
@@ -1291,7 +1302,7 @@ module Import =
 
   let importIPTurnBooster (xlWorkBook : Workbook) value texture s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["postflop IP turn booster"] :?> Worksheet
-    let row = turnDonkOrFloatOopRow 6 value s texture
+    let row = turnDonkOrFloatOopRow 5 value s texture
     let extra = match h with | { Action = Action.Call; VsVillainBet = v } :: _ when v > s.BB -> 7 | _ -> 0
     let column =
       if texture.Streety then 5

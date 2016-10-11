@@ -173,6 +173,11 @@ let ``decidePostFlop cbet flop after raising limp pre`` () =
   testPostFlop [Action.RaiseToAmount 60] s 0 (Action.RaiseToAmount 60)
 
 [<Fact>]
+let ``decidePostFlop does not float with 2FD on flop`` () =
+  let s = { Hand = parseSuitedHand "Qh3h"; Board = parseBoard "2hAh3s"; Pot = 120; VillainStack = 530; HeroStack = 350; VillainBet = 40; HeroBet = 0; BB = 20 }
+  testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 110)
+
+[<Fact>]
 let ``decidePostFlop all in on turn after bluffy check/raise on flop`` () =
   let s = { Hand = parseSuitedHand "6h9h"; Board = parseBoard "Jd7h3d5s"; Pot = 300; VillainStack = 340; HeroStack = 340; VillainBet = 0; HeroBet = 0; BB = 20 }
   let h = [ notMotivated PreFlop 40 Action.Call 
@@ -283,7 +288,7 @@ let ``River OOP: bet after floats`` () =
     notMotivated Flop 0 Action.Check
     floatBluff Flop 40
     notMotivated Turn 0 Action.Check
-    floatBluff Turn 45] s 0 (Action.RaiseToAmount 155)
+    floatBluff Turn 45] s 0 (Action.RaiseToAmount 150)
 
 [<Fact>]
 let ``River OOP: bet float after check-check on turn`` () =
@@ -292,7 +297,7 @@ let ``River OOP: bet float after check-check on turn`` () =
     notMotivated PreFlop 40 Action.Call
     notMotivated Flop 0 Action.Check
     floatBluff Flop 32
-    floatBluffCheck Turn] s 0 (Action.RaiseToAmount 90)
+    floatBluffCheck Turn] s 0 (Action.RaiseToAmount 85)
 
 
 let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
@@ -305,7 +310,7 @@ let testIPext s h test =
   use xlTricky = useExcel fileNameTricky
   let riverHistoryPatterns = importRiverPatterns xlHandStrength.Workbook
   let v = handValueWithDraws s.Hand s.Board
-  let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
+  let t = boardTexture s.Board
   let actual = decidePostFlop h s v t xlFlopTurn.Workbook xlHandStrength.Workbook xlTricky.Workbook riverBetSizing riverHistoryPatterns
   test actual
 
@@ -316,6 +321,12 @@ let testIPm s h e m =
   let test actual =
     Assert.Equal(e |> Some, actual |> Option.map (fun m -> m.Action))
     Assert.Equal(m |> Some, actual |> Option.bind (fun m -> m.Motivation))
+  testIPext s h test
+
+let testIPSource s h a source =
+  let test actual =
+    Assert.Equal(a |> Some, actual |> Option.map (fun m -> m.Action))
+    Assert.Equal(source |> Some, actual |> Option.map (fun m -> m.Source))
   testIPext s h test
 
 [<Fact>]
@@ -336,11 +347,11 @@ let ``decidePostFlopIP call 4bet on flop with stackoff`` () =
 let ``Flop IP: float call`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c"; Pot = 60; VillainStack = 450; HeroStack = 470; VillainBet = 20; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call]
-  testIPm s history Action.Call (Float(ValueFloat))
+  testIPm s history Action.Call (Float(BluffFloat))
 
 [<Fact>]
 let ``Turn IP: float call donk`` () =
-  let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c"; Pot = 120; VillainStack = 410; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "6d4d"; Board = parseBoard "2h3h4c7c"; Pot = 120; VillainStack = 410; HeroStack = 450; VillainBet = 40; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20]
   testIPm s history Action.Call (Float(ValueFloat))
 
@@ -348,7 +359,7 @@ let ``Turn IP: float call donk`` () =
 let ``Turn IP: bet after bluff float call on flop`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4cAc"; Pot = 80; VillainStack = 460; HeroStack = 460; VillainBet = 0; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20]
-  testIPm s history (Action.RaiseToAmount 40) (Scenario("r9"))
+  testIPm s history (Action.RaiseToAmount 50) (Scenario("r9"))
 
 [<Fact>]
 let ``Turn IP: bet turn booster`` () =
@@ -359,14 +370,22 @@ let ``Turn IP: bet turn booster`` () =
 [<Fact>]
 let ``Turn IP: turn booster calls bet after bluffy bet based on Postflop IP O column`` () =
   let s = { Hand = parseSuitedHand "QdTh"; Board = parseBoard "2h3h6cJc"; Pot = 500; VillainStack = 220; HeroStack = 280; VillainBet = 120; HeroBet = 60; BB = 20 }
-  let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 50); notMotivated Flop 0 (Action.RaiseToAmount 110); bluff Turn 0 60]
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 50); notMotivated Flop 0 (Action.RaiseToAmount 110); 
+    { Action = RaiseToAmount 60; Motivation = Some Bluff; VsVillainBet = 0; Street = Turn; Source = "HandStrength -> postflop IP turn booster -> C13" }]
   testIP s history Action.Call
+
+[<Fact>]
+let ``Turn IP: uses proper non-donk cell of tricky float after check raise`` () =
+  let s = { Hand = parseSuitedHand "Th9h"; Board = parseBoard "3s5d6h4c"; Pot = 600; VillainStack = 0; HeroStack = 400; VillainBet = 470; HeroBet = 50; BB = 20 }
+  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; scenario Turn 0 (Action.RaiseToAmount 50) "r9"]
+  testIPSource s history Action.Fold "tricky -> float IP -> P14"
 
 [<Fact>]
 let ``River IP: float raise donk`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c7h"; Pot = 240; VillainStack = 330; HeroStack = 410; VillainBet = 80; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20; floatValue Turn 40]
-  testIP s history (Action.RaiseToAmount 260)
+  testIP s history (Action.RaiseToAmount 210)
 
 [<Fact>]
 let ``River IP: bet after bluff float call on flop`` () =
@@ -376,8 +395,8 @@ let ``River IP: bet after bluff float call on flop`` () =
 
 [<Fact>]
 let ``River IP float bet is made based on turn scenario`` () =
-  let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4cAcTd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; scenario Flop 0 (Action.RaiseToAmount 40) "r9"]
+  let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3hAc4cTd"; Pot = 160; VillainStack = 420; HeroStack = 420; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let history = [notMotivated PreFlop 20 Action.Call; floatBluff Flop 20; scenario Turn 0 (Action.RaiseToAmount 40) "r9"]
   testIP s history (Action.RaiseToAmount 95)
 
 [<Fact>]
@@ -391,5 +410,24 @@ let ``River IP: sample decision vs villain bet`` () =
   let s = { Hand = parseSuitedHand "KdJh"; Board = parseBoard "2h3h4c4cJd"; Pot = 240; VillainStack = 340; HeroStack = 420; VillainBet = 80; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 40); notMotivated Flop 0 (Action.RaiseToAmount 40); notMotivated Turn 0 Action.Check]
   testIP s history (Action.RaiseToAmount 210)
+
+[<Fact>]
+let ``River IP: picks correct sheet and column vs check-raise`` () =
+  let s = { Hand = parseSuitedHand "AhJs"; Board = parseBoard "2hQd2c5h5s"; Pot = 840; VillainStack = 0; HeroStack = 160; VillainBet = 300; HeroBet = 180; BB = 20 }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 40)
+    notMotivated Flop 0 (Action.RaiseToAmount 40)
+    notMotivated Turn 0 (Action.RaiseToAmount 100)
+    notMotivated River 0 (Action.RaiseToAmount 180)]
+  testIPSource s history Action.Fold "river - villain check -> Z13"
+
+[<Fact>]
+let ``River IP bet is made based on turn scenario`` () =
+  let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKsTh"; Pot = 160; VillainStack = 280; HeroStack = 440; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let history = [
+    notMotivated PreFlop 40 Action.Call;
+    notMotivated Flop 40 Action.Call
+    scenario Turn 0 (Action.RaiseToAmount 40) "r8"]
+  testIPSource s history (Action.RaiseToAmount 95) "river - villain check -> L10"
 
 adxl.Dispose()

@@ -24,13 +24,13 @@ module Texture =
     let isFlush = match value.Made with | Flush(_) -> true | _ -> false
     let turn = board.[3].Face |> faceToChar |> string
     if isFlush then
-      { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = onDonk; DonkRaise = onDonkRaise }
+      { Options.CbetFactor = Always 62.5m; CheckRaise = OnCheckRaise.StackOff; Donk = onDonk; DonkRaise = onDonkRaise }, "FlushFixedRule"
     else if eo.TurnFVCbetCards.Contains(turn) then
       { Options.CbetFactor = (if monoboard < 2 then eo.TurnFVCbetFactor else Always 62.5m) 
         CheckRaise = eo.TurnCheckRaise
         Donk = onDonk
-        DonkRaise = onDonkRaise }
+        DonkRaise = onDonkRaise }, "L"
     else if eo.TurnFBCbetCards.Contains(turn) then
-      { Options.CbetFactor = eo.TurnFBCbetFactor; CheckRaise = OnCheckRaise.Fold; Donk = onDonk; DonkRaise = onDonkRaise }
+      { Options.CbetFactor = eo.TurnFBCbetFactor; CheckRaise = OnCheckRaise.Fold; Donk = onDonk; DonkRaise = onDonkRaise }, "O"
     else
-      { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = onDonk; DonkRaise = onDonkRaise }
+      { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = onDonk; DonkRaise = onDonkRaise }, "-"

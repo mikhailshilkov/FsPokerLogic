@@ -59,12 +59,12 @@ module Facade =
     |> Option.bind (toMotivated s)
 
   let decidePostFlopTurnBooster history s value texture xl riverBetSizes eo () =
-    let playedBooster = history |> List.exists (fun hi -> hi.Source <> null && hi.Source.Contains("IP turn booster"))
+    let playedBoosterOrBluffBet = history |> List.exists (fun hi -> hi.Source <> null && (hi.Source.Contains("IP turn booster") || hi.Source.Contains("PostflopIP -> O")))
     match street s with
-    | Turn when s.VillainBet = 0 || playedBooster ->
+    | Turn when s.VillainBet = 0 || playedBoosterOrBluffBet ->
       let o = eo |> Option.map (fun eov -> toTurnOptions s.Board value OnDonk.Undefined OnDonkRaise.Undefined 0 eov)
       match o with
-      | Some ov when ov.CbetFactor = Never || (s.VillainBet > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
+      | Some (ov, _) when ov.CbetFactor = Never || (s.VillainBet > 0 && ov.CheckRaise = OnCheckRaise.Fold) ->
         importIPTurnBooster xl value texture s history
         |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
         |> Option.bind (toMotivated s)
@@ -91,10 +91,10 @@ module Facade =
           if s.VillainBet > 0 
           then importTurnDonk xlTurnDonkRiver value texture s history 
           else (OnDonk.Undefined, OnDonkRaise.Undefined, None, "PostflopIP")
-        let o =
+        let o, column =
           toTurnOptions s.Board value turnDonkOption turnDonkRaiseOption texture.Monoboard eoo
-          |> (if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value else id)      
-        o, motivation, source
+          |> (fun (op, c) -> if texture.Monoboard >= 3 then monoboardTurn texture.Monoboard value op, "Mono" else op, c)
+        o, motivation, source + (if s.VillainBet > 0 then "" else " -> " + column)
       | Flop, Some eoo ->
         let o =
           toFlopOptions (isFlushDrawWith2 s.Hand s.Board) (canBeFlushDraw s.Board) eoo

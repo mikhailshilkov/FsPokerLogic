@@ -95,12 +95,12 @@ module HandValues =
   let sameSequence a b = Seq.compareWith Operators.compare a b = 0
 
   let isFullHouse (cards : SuitedCard[]) =
-    cards |> cardValueGroups |> Seq.take 2 |> sameSequence (seq [3; 2])
+    cards |> cardValueGroups |> Seq.truncate 2 |> sameSequence (seq [3; 2])
 
   // If a better full house can be made with just 1 hole card
   let isWeakFullHouse hand board =
     let fullHouseValue cards =
-      let groups = cards |> Array.countBy id |> Array.sortByDescending snd |> Array.take 2
+      let groups = cards |> Array.countBy id |> Array.sortByDescending snd |> Array.truncate 2
       match groups with
       | [|(h, 3); (l, 2)|] -> h * 100 + l
       | _ -> 0

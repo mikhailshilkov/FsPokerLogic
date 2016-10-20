@@ -53,10 +53,11 @@ let ``toFlopOptions when FD but Donk FD is not defined`` () =
   let expected = { Options.CbetFactor = Always 50m; CheckRaise = OnCheckRaise.StackOff; Donk = OnDonk.CallEQ 17; DonkRaise = OnDonkRaise.Undefined }
   Assert.Equal(expected, actual)
 
-let toTurnOptionsAdapter face isFlush =
+let toTurnOptionsAdapter face isFlush p1 p2 p3 p4 =
   let board = parseBoard ("2h2d2c" + (faceToChar face |> string) + "s")
   let value = { Made = (if isFlush then Flush(Nut) else Nothing); FD = NoFD; FD2 = NoFD; SD = NoSD }
-  toTurnOptions board value
+  let (r, _) = toTurnOptions board value p1 p2 p3 p4
+  r
 
 [<Fact>]
 let ``toTurnOptions Cbet FV card`` () =

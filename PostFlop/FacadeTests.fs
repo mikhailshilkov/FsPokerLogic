@@ -367,12 +367,14 @@ let ``Turn IP: bet turn booster`` () =
   let history = [notMotivated PreFlop 40 Action.Call; notMotivated Flop 0 (Action.RaiseToAmount 40)]
   testIP s history (Action.RaiseToAmount 100)
 
-[<Fact>]
-let ``Turn IP: turn booster calls bet after bluffy bet based on Postflop IP O column`` () =
+[<Theory>]
+[<InlineData("HandStrength -> postflop IP turn booster -> C13")>]
+[<InlineData("PostflopIP -> O")>]
+let ``Turn IP: turn booster calls bet after bluffy bet based on turn booster or Postflop IP O column`` previousMotivation =
   let s = { Hand = parseSuitedHand "QdTh"; Board = parseBoard "2h3h6cJc"; Pot = 500; VillainStack = 220; HeroStack = 280; VillainBet = 120; HeroBet = 60; BB = 20 }
   let history = [
     notMotivated PreFlop 20 (Action.RaiseToAmount 50); notMotivated Flop 0 (Action.RaiseToAmount 110); 
-    { Action = RaiseToAmount 60; Motivation = Some Bluff; VsVillainBet = 0; Street = Turn; Source = "HandStrength -> postflop IP turn booster -> C13" }]
+    { Action = RaiseToAmount 60; Motivation = Some Bluff; VsVillainBet = 0; Street = Turn; Source = previousMotivation }]
   testIP s history Action.Call
 
 [<Fact>]

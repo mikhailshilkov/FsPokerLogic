@@ -37,6 +37,19 @@ module StringRecognition =
     { Char = '9'; Pattern = [[B;W;W;W;W;B;B;B;B];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;B;W];[W;B;B;B;B;W;B;W;B];[B;W;W;W;W;W;W;B;B]] }
   |]
 
+  let number7Patterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;B];[W;B;B;B;B;B;W];[W;B;B;B;B;B;W];[B;W;W;W;W;W;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;W];[W;W;W;W;W;W;W];[B;B;B;B;B;B;W]] }
+    { Char = '2'; Pattern = [[W;B;B;B;B;W;W];[W;B;B;B;W;B;W];[W;B;B;W;B;B;W];[B;W;W;B;B;B;W]] }
+    { Char = '3'; Pattern = [[W;B;B;B;B;B;W];[W;B;B;W;B;B;W];[W;B;B;W;B;B;W];[B;W;W;B;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;W;W;B;B];[B;B;W;B;W;B;B];[B;W;B;B;W;B;B];[W;W;W;W;W;W;W];[B;B;B;B;W;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;W];[W;B;B;W;B;B;W];[W;B;B;W;B;B;W];[W;B;B;B;W;W;B]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;B];[W;B;B;W;B;B;W];[W;B;B;W;B;B;W];[B;B;B;B;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;W];[W;B;B;B;W;W;B];[W;B;W;W;B;B;B];[W;W;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;B;W;W;B];[W;B;B;W;B;B;W];[W;B;B;W;B;B;W];[B;W;W;B;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;B;B;B;B];[W;B;B;W;B;B;W];[W;B;B;W;B;B;W];[B;W;W;W;W;W;B]] }
+  |]
+
   let blindNumberPatterns = [|  
     { Char = '0'; Pattern = [[B;W;W;W;W;W;W;B];[W;W;W;W;W;W;W;W];[W;B;B;B;B;B;B;W];[W;B;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[B;W;W;W;W;W;W;B]] }
     { Char = '1'; Pattern = [[B;W;B;B;B;B;B;W];[W;W;W;W;W;W;W;W];[W;W;W;W;W;W;W;W];[B;B;B;B;B;B;B;W]] }
@@ -153,6 +166,7 @@ module StringRecognition =
 
   let noSpacePatterns = [|  
     { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
+    { Char = '4'; Pattern = [[B;B;B;W;W;B;B];[B;B;W;B;W;B;B];[B;W;B;B;W;B;B];[W;W;W;W;W;W;W];[B;B;B;B;W;B;B]] }
   |]
 
   let getChar allowDirtySymbols patterns bws =
@@ -250,8 +264,10 @@ module StringRecognition =
       |> Seq.map (fun dy -> recognizeString (getChar false textPatterns) 0 0 10 (getPixel (y+dy)) width height)
     o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
 
-  let recognizeBetSize x =
-    recognizeString (getChar true number9Patterns) 2 2 9 x
+  let recognizeBetSize x y z =
+    let try1 = recognizeString (getChar true number9Patterns) 2 2 9 x y z
+    if try1 <> null && try1.Replace("?", "") <> "" then try1
+    else recognizeString (getChar true number7Patterns) 2 2 7 x y z
 
   let recognizeButton x y z =
     let b = recognizeString (getChar false buttonPatterns) 2 2 8 x y z

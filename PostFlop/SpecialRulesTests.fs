@@ -14,7 +14,7 @@ let defaultTurn = { Hand = parseSuitedHand "Ah5h"; Board = parseBoard "QsTc6s7d"
 let defaultRiver = { Hand = parseSuitedHand "Kh5h"; Board = parseBoard "QsTc6s7dAd"; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 
 [<Fact>]
-let ``specialRulesOop changes CallEQ based on CallEQPlus10vsAI`` () =
+let ``specialRulesOop changes CallEQ based on CallEQPlusXvsAI`` () =
   let options = { defaultOptions with Then = CallEQ 22; Special = [CallEQPlusXvsAI 10] }
   let expected = { options with Then = CallEQ 32 }
   let s = { defaultFlop with VillainStack = 0 }
@@ -22,10 +22,26 @@ let ``specialRulesOop changes CallEQ based on CallEQPlus10vsAI`` () =
   Assert.Equal(expected, actual)
 
 [<Fact>]
-let ``specialRulesOop does no change CallEQ based on CallEQPlus10vsAI when villain is not AI`` () =
+let ``specialRulesOop does no change CallEQ based on CallEQPlusXvsAI when villain is not AI`` () =
   let options = { defaultOptions with Then = CallEQ 22; Special = [CallEQPlusXvsAI 10] }
   let actual = specialRulesOop defaultFlop [] options
   Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop changes CallEQIfRaised based on CallEQPlusXvsAI`` () =
+  let options = { defaultOptions with Then = CallEQIfRaised(20, 15); Special = [CallEQPlusXvsAI 15] }
+  let expected = { options with Then = CallEQIfRaised(35, 30) }
+  let s = { defaultFlop with VillainStack = 0 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop changes Raise/CallEQ based on CallEQPlusXvsAI`` () =
+  let options = { defaultOptions with Then = Raise(20m, CallEQ(15)); Special = [CallEQPlusXvsAI 15] }
+  let expected = { options with Then = Raise(20m, CallEQ(30)) }
+  let s = { defaultFlop with VillainStack = 0 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(expected, actual)
 
 [<Fact>]
 let ``specialRulesOop returns check/call based on BoardOvercard`` () =

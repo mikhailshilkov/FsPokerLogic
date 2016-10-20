@@ -19,6 +19,8 @@ module SpecialRules =
       | CallEQPlusXvsAI dx::rem ->
         match o.Then, s.VillainStack with
         | CallEQ x, 0 -> { o with Then = CallEQ (x + dx); Scenario = o.SpecialScenario }
+        | CallEQIfRaised(r, nr), 0 -> { o with Then = CallEQIfRaised(r + dx, nr + dx); Scenario = o.SpecialScenario }
+        | Raise(r, CallEQ x), 0 -> { o with Then = Raise(r, CallEQ(x + dx)); Scenario = o.SpecialScenario }
         |_ -> imp rem
       | PairedBoard(f, t)::rem ->
         if isPaired s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem

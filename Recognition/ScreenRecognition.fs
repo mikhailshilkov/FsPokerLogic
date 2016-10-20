@@ -137,10 +137,10 @@ module ScreenRecognition =
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
 
-    let (dxo, dyo) = findCardStart (getPixel 576 404) 8 8
+    let (dxo, dyo) = findCardStart (getPixel 575 403) 8 8
     match (dxo, dyo) with 
     | Some dx, Some dy ->
-      recognizeBetSize (getPixel (575 + dx) (403 + dy)) 40 14
+      recognizeBetSize (getPixel (574 + dx) (402 + dy)) 40 14
     | _ -> null
 
   let isHeroSitout (bitmap : Bitmap) =    

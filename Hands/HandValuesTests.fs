@@ -352,6 +352,7 @@ let ``Flush Board`` handS flopS =
 [<Theory>]
 [<InlineData("JdTd", "AdJhTs2sTc")>]
 [<InlineData("TdTh", "AdJhTs2sJc")>]
+[<InlineData("JsJc", "2h2c2s")>]
 let ``Full house normal`` handS flopS =
   FullHouse(Normal) |> test handS flopS
 

@@ -49,7 +49,7 @@ module Click =
 
   let enterAmount window s i =
     let rec imp attempts =
-      executeClickAction window s { Region = (599, 407, 18, 9); Name = "AmountInput" }
+      executeClickAction window s { Region = (605, 407, 12, 9); Name = "AmountInput" }
       Clicker.backspace 3
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)

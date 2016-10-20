@@ -652,8 +652,8 @@ module Import =
     let columnShift = Map.find (sheetName + " - " + (historyPattern s h)) patterns
     let column =
       match texture.Monoboard, value with
-        | 5, _ -> 5
-        | 4, Flush(_) -> 3
+        | 5, _ -> 4
+        | 4, Flush(_) -> 2
         | 4, _ -> if texture.Streety then 9 else 8
         | _ ->
           if texture.Streety then 4

@@ -698,3 +698,53 @@ module ImportTests =
     let actual = importRiverIP xl.Workbook patterns (handValue s.Hand s.Board) s h defaultTexture
     let expected = ({ defaultOopOptions with Then = CallEQ 10 }, "river - villain donkbet 31%+ -> V37") |> Some
     Assert.Equal(expected, actual)
+
+  let testCbetMixup hand board h expected =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultFlop with Hand = parseSuitedHand hand; Board = parseBoard board }
+    let actual = importFlopCbetMixup xl.Workbook s h
+    Assert.Equal(expected |> Some, actual)
+
+  [<Fact>]
+  let ``importFlopCbetMixup checks a sample hand after PFR`` () =
+    let h = [ notMotivated PreFlop 20 (Action.RaiseToAmount 40) ]
+    let expected = (defaultIpOptions, "HandStrength -> cbet mix up -> E13")
+    testCbetMixup "9s2d" "2cKh2h" h expected
+
+  [<Fact>]
+  let ``importFlopCbetMixup checks a sample hand after limp`` () =
+    let h = [ notMotivated PreFlop 20 Action.Call ]
+    let expected = (defaultIpOptions, "HandStrength -> cbet mix up -> F13")
+    testCbetMixup "9s2d" "2cKh2h" h expected
+
+  [<Fact>]
+  let ``importFlopCbetMixup checks a sample hand after call 3bet`` () =
+    let h = [ notMotivated PreFlop 80 Action.Call ]
+    let expected = (defaultIpOptions, "HandStrength -> cbet mix up -> G13")
+    testCbetMixup "Qs7d" "2cKh2h" h expected
+
+  [<Fact>]
+  let ``importFlopCbetMixup bets a sample hand after call 3bet`` () =
+    let h = [ notMotivated PreFlop 80 Action.Call ]
+    let expected = ({ defaultIpOptions with CbetFactor = Always 50m }, "HandStrength -> cbet mix up -> G13")
+    testCbetMixup "As3s" "2cKh2h"h expected
+
+  [<Fact>]
+  let ``importFlopCbetMixup checks a sample hand after limp-call`` () =
+    let h = [ notMotivated PreFlop 70 Action.Call ]
+    let expected = (defaultIpOptions, "HandStrength -> cbet mix up -> H13")
+    testCbetMixup "Qs7d" "2cKh2h" h expected
+
+  [<Fact>]
+  let ``importFlopCbetMixup bets a sample hand after limp-call`` () =
+    let h = [ notMotivated PreFlop 70 Action.Call ]
+    let expected = ({ defaultIpOptions with CbetFactor = Always 60m }, "HandStrength -> cbet mix up -> H10")
+    testCbetMixup "Jd8d" "2cTh2h" h expected
+
+  [<Fact>]
+  let ``importCbetMixupCheckRaise imports correct options for a sample cell`` () =
+    use xl = useExcel handStrengthFileName
+    let s = { defaultFlop with Hand = parseSuitedHand "KdTd"; Board = parseBoard "4cKh2h" }
+    let actual = importCbetMixupCheckRaise xl.Workbook s (handValueWithDraws s.Hand s.Board)
+    let expected = ({ defaultIpOptions with CheckRaise = OnCheckRaise.CallEQ 16 }, "HandStrength -> flop hand strength -> B12")
+    Assert.Equal(expected, actual)

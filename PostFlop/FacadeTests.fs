@@ -12,6 +12,7 @@ open PostFlop.Facade
 open PostFlop.Import
 
 let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
+let defaultValue = { Made = Nothing; FD = NoFD; FD2 = NoFD; SD = NoSD }
 
 let nml l = l |> List.map (fun nm -> (nm, None))
 
@@ -328,6 +329,26 @@ let testIPSource s h a source =
     Assert.Equal(a |> Some, actual |> Option.map (fun m -> m.Action))
     Assert.Equal(source |> Some, actual |> Option.map (fun m -> m.Source))
   testIPext s h test
+
+[<Fact>]
+let ``decideFlopCbetMixup check on flop`` () =
+  use xlHandStrength = useExcel fileNameHandStrength
+  let s = { Hand = parseSuitedHand "2cQh"; Board = parseBoard "2s2dAs"; Pot = 80; VillainStack = 460; HeroStack = 460; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let h = [notMotivated PreFlop 20 (RaiseToAmount 40)]
+  let actual = decideFlopCbetMixup xlHandStrength.Workbook h s defaultValue ()
+  Assert.Equal(Action.Check |> Some, actual |> Option.map (fun x -> x.Action))
+  Assert.Equal("HandStrength -> cbet mix up -> E14", actual.Value.Source)
+
+[<Fact>]
+let ``decideFlopCbetMixup call check/raise on flop`` () =
+  use xlHandStrength = useExcel fileNameHandStrength
+  let s = { Hand = parseSuitedHand "KcTh"; Board = parseBoard "TsQdQs"; Pot = 220; VillainStack = 360; HeroStack = 420; VillainBet = 100; HeroBet = 40; BB = 20 }
+  let h = [
+    notMotivated PreFlop 20 (RaiseToAmount 40)
+    { notMotivated Flop 0 (RaiseToAmount 40) with Source = "HandStrength -> cbet mix up -> E14" }]
+  let actual = decideFlopCbetMixup xlHandStrength.Workbook h s (handValueWithDraws s.Hand s.Board) ()
+  Assert.Equal(Action.Call |> Some, actual |> Option.map (fun x -> x.Action))
+  Assert.Equal("HandStrength -> flop hand strength -> B14", actual.Value.Source)
 
 [<Fact>]
 let ``decidePostFlopIP cbet flush draw on turn`` () =

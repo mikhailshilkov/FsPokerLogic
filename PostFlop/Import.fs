@@ -50,7 +50,16 @@ module Import =
     | Some n -> Always n
     | None -> Never
 
-  let parseCheckRaise (g: string) (h: string) =
+  let parseCheckRaise (s: string) =
+    match s.ToLowerInvariant() with
+    | "so" -> OnCheckRaise.StackOff
+    | "c" -> OnCheckRaise.Call
+    | "ai" -> OnCheckRaise.AllIn
+    | "f" -> OnCheckRaise.Fold
+    | Int i -> OnCheckRaise.CallEQ i
+    | _ -> OnCheckRaise.Undefined
+
+  let parseCheckRaise2 (g: string) (h: string) =
     match g.ToLowerInvariant(), h with
     | "stack off", _ -> OnCheckRaise.StackOff
     | "call", _ -> OnCheckRaise.Call
@@ -90,7 +99,7 @@ module Import =
     let index = board |> rowIndex |> (+) 6 |> string
     let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
     { CbetFactor = parseCBet cellValues.[0]
-      CheckRaise = parseCheckRaise cellValues.[1] cellValues.[2]
+      CheckRaise = parseCheckRaise2 cellValues.[1] cellValues.[2]
       Donk = parseDonk cellValues.[3] cellValues.[4]
       DonkFlashDraw = parseDonkFD cellValues.[5]
       TurnFVCbetCards = cellValues.[6].Replace(" ", "")
@@ -98,7 +107,7 @@ module Import =
         match parseDecimal cellValues.[7] with
         | Some n -> OrAllIn { DefaultCBetOr with Factor = n; IfPreStackLessThan = if limpedPot then 8 else 14 }
         | None -> Never 
-      TurnCheckRaise = parseCheckRaise cellValues.[8] "100"
+      TurnCheckRaise = parseCheckRaise2 cellValues.[8] "100"
       TurnFBCbetCards = cellValues.[9].Replace(" ", "")
       TurnFBCbetFactor =
         match parseDecimal cellValues.[10] with
@@ -316,13 +325,20 @@ module Import =
     (row + offset - 6) |> string
 
   let importTurnDonk (xlWorkBook : Workbook) handValue texture s h =
+    let villain3betPre = h |> List.tryHead |> Option.filter (fun x -> x.VsVillainBet >= s.BB * 4) |> Option.isSome
     let historyFlop = h |> List.filter (fun x -> x.Street = Flop)
     let sheetName = 
       match historyFlop with
-      | [{ Action = Action.Check }] -> "xx flop + vill bet turn"
+      | [{ Action = Action.Check }]
+      | [{ Action = Action.RaiseToAmount(_); VsVillainBet = 0 }] when villain3betPre 
+        -> "vill xr F + dbT or dbF-c + dbT"
+      | [{ Action = Action.Check }] 
+        -> "xx flop + vill bet turn"
       | [{ Action = Action.RaiseToAmount(_); VsVillainBet = 0 }] 
-      | [{ Action = Action.Call }] -> "vill xc F + dbT or dbF + dbT"
-      | _ when historyFlop |> List.exists (fun x -> x.VsVillainBet > 0) -> "vill xr F + dbT or dbF-c + dbT"
+      | [{ Action = Action.Call }] 
+        -> "vill xc F + dbT or dbF + dbT"
+      | _ when historyFlop |> List.exists (fun x -> x.VsVillainBet > 0) 
+        -> "vill xr F + dbT or dbF-c + dbT"
       | _ -> failwith "Could not pick turn donkbet sheet"
 
     let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
@@ -753,7 +769,7 @@ module Import =
         | Second(_), NoFD, NoSD -> 13
         | Third, NoFD, NoSD -> 14
         | Fourth, _, _ ->   15
-        | Fifth, _, _ -> failwith "Fifth pair impossible on егкт"
+        | Fifth, _, _ -> failwith "Fifth pair impossible on turn"
         | Under, _, OpenEnded -> 37
         | Under, _, _ -> 16
       | TwoOvercards ->
@@ -1315,3 +1331,112 @@ module Import =
     parseOopOption cellValue ""
     |> Option.addValue ("HandStrength -> postflop IP turn booster -> " + column + row)
     
+  let importFlopCbetMixup (xlWorkBook : Workbook) s h =
+    let xlWorkSheet = xlWorkBook.Worksheets.["cbet mix up"] :?> Worksheet
+    let row = rowIndex s.Board + 2 |> string
+    let isInRanged r = toHand s.Hand |> Ranges.isHandInRanges r
+    let noCbet r = if isInRanged r then Some defaultIpOptions else None
+    let bettingRange column r = 
+      if isInRanged r then 
+        getCellValue xlWorkSheet (column + "459")
+        |> parseDecimal
+        |> Option.map (fun d -> { defaultIpOptions with CbetFactor = Always d })
+      else Some defaultIpOptions
+    match h with
+    | [{Action = RaiseToAmount _}] -> Some ("E", noCbet)
+    | [{Action = Action.Call; VsVillainBet = x}] when x = s.BB -> Some ("F", noCbet)
+    | [{Action = Action.Call; VsVillainBet = x}] when x >= s.BB * 4 -> Some ("G", bettingRange "G")
+    | [{Action = Action.Call}] -> Some ("H", bettingRange "H")
+    | _ -> None
+    |> Option.mapFst (fun c -> c + row)
+    |> Option.map (fun (cell, f) -> (cell, getCellValue xlWorkSheet cell, f))
+    |> Option.bind (fun (cell, cellValue, f) -> 
+      Ranges.parseRanges cellValue 
+      |> f 
+      |> Option.add (fun _ -> "HandStrength -> cbet mix up -> " + cell))
+
+  let importCbetMixupCheckRaise (xlWorkBook : Workbook) s handValue =
+    let xlWorkSheet = xlWorkBook.Worksheets.["flop hand strength"] :?> Worksheet
+    let overs = overcards s.Hand s.Board
+    let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
+    let aceOnFlop = s.Board |> Array.exists (fun x -> x.Face = Ace)
+    let singleAceOnFlop = s.Board |> Array.filter (fun x -> x.Face = Ace) |> Array.length = 1
+    let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+    let topPairedBoard = topPaired s.Board
+    let pairedBoard = pairFace s.Board |> Option.isSome
+    let highBoardPair = pairFace s.Board |> Option.filter highKicker |> Option.isSome
+    let row = 
+      (match handValue.Made with
+      | Nothing
+      | TwoOvercards ->
+        match handValue.FD2, handValue.SD with
+        | Draw(_), OpenEnded -> 62
+        | Draw(_), GutShot -> 63
+        | Draw(_), NoSD when overs = 2 -> 60
+        | Draw(_), NoSD when overs = 1 -> 59
+        | Draw(_), NoSD -> 58
+        | NoFD, OpenEnded when overs = 2 -> 49
+        | NoFD, OpenEnded when overs = 1 -> 48
+        | NoFD, OpenEnded when aceOnFlop -> 47
+        | NoFD, OpenEnded -> 46
+        | NoFD, GutShot when overs = 2 -> 37
+        | NoFD, GutShot when overs = 1 -> 36
+        | NoFD, GutShot when aceOnFlop -> 35
+        | NoFD, GutShot -> 34
+        | NoFD, NoSD when overs = 2 -> 8
+        | NoFD, NoSD when overs = 1 -> 7
+        | NoFD, NoSD when singleAceOnFlop -> 6
+        | NoFD, NoSD when handHasAce -> 5
+        | NoFD, NoSD -> 4
+      | Pair(x) -> 
+        match x, handValue.FD2, handValue.SD with
+        | Over, _, _ -> 10
+        | Top(_), Draw(_), _ -> 61
+        | Top(_), _, OpenEnded -> 50
+        | Top(_), _, GutShot -> 38
+        | Top(k), NoFD, NoSD when highBoardPair -> 13
+        | Top(k), NoFD, NoSD when highKicker k -> 11
+        | Top(_), NoFD, NoSD -> 12
+        | Second(_), Draw(_), _  -> 64
+        | Second(_), _, OpenEnded when aceOnFlop -> 52
+        | Second(_), _, OpenEnded -> 51
+        | Second(_), _, GutShot when aceOnFlop -> 40
+        | Second(_), _, GutShot -> 39
+        | Second(k), NoFD, NoSD when highKicker k && topPairedBoard -> 14
+        | Second(_), NoFD, NoSD when topPairedBoard -> 15
+        | Second(k), NoFD, NoSD when highKicker k && pairedBoard -> 17
+        | Second(k), NoFD, NoSD when highKicker k -> 16
+        | Second(k), NoFD, NoSD when aceOnFlop -> 19
+        | Second(_), NoFD, NoSD -> 18
+        | Third, Draw(_), _ -> 65
+        | Third, _, OpenEnded when aceOnFlop -> 54
+        | Third, _, OpenEnded -> 53
+        | Third, _, GutShot when aceOnFlop -> 42
+        | Third, _, GutShot -> 41
+        | Third, NoFD, NoSD when pairedBoard -> 22
+        | Third, NoFD, NoSD when aceOnFlop -> 21
+        | Third, NoFD, NoSD -> 20
+        | Fourth, _, _ -> failwith "Fourth pair impossible on flop"
+        | Fifth, _, _ -> failwith "Fifth pair impossible on flop"
+        | Under, _, OpenEnded when aceOnFlop -> 56
+        | Under, _, OpenEnded -> 55
+        | Under, _, GutShot when aceOnFlop -> 44
+        | Under, _, GutShot -> 43
+        | Under, _, _ when aceOnFlop -> 24
+        | Under, _, _ -> 23
+      | TwoPair -> 25
+      | ThreeOfKind -> 26
+      | Straight(_) -> 27
+      | Flush(_) -> 28
+      | FullHouse(x) ->
+        match tripsFace s.Board with
+        | Some(k) -> 
+          let kicker = concat s.Hand s.Board |> anyPairFace |> Option.get
+          if highKicker kicker then 31 else 30
+        | None -> 29
+      | StraightFlush | FourOfKind -> 32
+      )|> string
+    let column = if s.VillainStack = 0 then "C" else "B"
+    let cellValue = getCellValue xlWorkSheet (column + row)
+    
+    { defaultIpOptions with CheckRaise = parseCheckRaise cellValue }, "HandStrength -> flop hand strength -> " + column + row

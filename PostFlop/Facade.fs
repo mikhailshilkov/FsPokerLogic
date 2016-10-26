@@ -22,10 +22,30 @@ module Facade =
   let toMotivated s (d, m, source) =
     d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = source }) 
 
+  let toNotMotivated s (d, source) =
+    d |> Option.map (fun a -> { MotivatedAction.Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source }) 
+
   let canFloatIp s h =
     effectiveStackPre s >= 10 && match List.tryHead h with | Some x when x.VsVillainBet = s.BB -> true | _ -> false
 
   let canFloatFlop s value texture = s.HeroBet = 0 && value.FD2 = NoFD && texture.Monoboard < 3
+
+  let decideFlopCbetMixup xlHandStrength history s value () = 
+    let mixupedBefore = 
+      history 
+      |> List.tryLast 
+      |> Option.bind (fun x -> Option.ofString x.Source) 
+      |> Option.exists (fun x -> x.Contains("cbet mix up"))
+    match street s, value.FD, s.VillainBet with
+      | Flop, NoFD, 0 ->
+        importFlopCbetMixup xlHandStrength s history
+        |> Option.mapFst (fun o -> decide [] s history o)
+        |> Option.bind (toNotMotivated s)
+      | Flop, NoFD, x when x > 0 && mixupedBefore ->
+        let (o, source) = importCbetMixupCheckRaise xlHandStrength s value
+        decide [] s history o
+        |> Option.map (fun action -> { Action = action; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source })
+      | _ -> None
 
   let decidePostFlopFloatOnDonk riverBetSizes history s value texture xlTricky () =
     let float = 
@@ -117,6 +137,7 @@ module Facade =
       | _ -> None
 
     let rules = [
+      decideFlopCbetMixup xlHandStrength history s value;
       decidePostFlopFloatOnDonk (riverBetSizes |> Tuple.thrd3) history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
       decidePostFlopTurnBooster history s value texture xlHandStrength riverBetSizes eo;

@@ -22,17 +22,21 @@ module ActorPatterns =
   let actorOfConvert f outputRef =
     actorOf2 (fun _ msg -> outputRef <! f msg)
 
-  let actorOfStatefulConvert f initialState outputRef (mailbox : Actor<'a>) =
+  let actorOfStatefulConvert f initialState (outputRef1, outputRef2) (mailbox : Actor<'a>) =
 
     let rec imp lastState =
       actor {
         let! msg = mailbox.Receive()
         let (result, newState) = f msg lastState
-        Option.iter (fun x -> outputRef <! x) result
+        match result with
+        | Some (r1, r2) ->
+          outputRef1 <! r1
+          outputRef2 <! r2
+        | _ -> ()
         return! imp newState
       }
 
-    imp initialState  
+    imp initialState
 
   let actorOfConvertToChild f spawnChild (mailbox : Actor<'a>) =
 

@@ -58,6 +58,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ActorPatterns.fs" />
     <Compile Include="Click.fs" />
+    <Compile Include="Stats.fs" />
     <Compile Include="Decide.fs" />
     <Compile Include="Recognize.fs" />
     <Compile Include="Find.fs" />
@@ -104,6 +105,7 @@
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />

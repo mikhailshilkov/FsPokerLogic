@@ -3,6 +3,7 @@ open System
 open Akka.Actor
 open Player
 open Click
+open Stats
 open Decide
 open Recognize
 open Find
@@ -32,8 +33,9 @@ let main argv =
     spawn mailbox.Context name childActor
   
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
+  let statsRef = actorOfSink stats' |> spawn system "stats-actor"
 
-  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlHandStrength.Workbook xlPostFlopOop.Workbook xlTricky.Workbook riverHistoryPatterns) None clickerRef
+  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlHandStrength.Workbook xlPostFlopOop.Workbook xlTricky.Workbook riverHistoryPatterns) None (clickerRef, statsRef)
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 

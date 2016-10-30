@@ -20,8 +20,8 @@ module Recognize =
     let villainBet = defaultArg result.VillainBet 0
     let bb = defaultArg (result.Blinds |> Option.map (fun b -> b.BB)) 0
     let hasHand = String.IsNullOrEmpty result.HeroHand |> not
-    if (hasHand || result.Sitout = Hero)
-       && (Array.length result.Actions > 1) 
-       && (heroBet < villainBet || (heroBet = villainBet && heroBet <= bb)) then
+    if result.Sitout = Hero ||
+      (hasHand && (Array.length result.Actions > 1) 
+       && (heroBet < villainBet || (heroBet = villainBet && heroBet <= bb))) then
       Some { WindowTitle = window.Title; TableName = window.TableName; Screen = result; Bitmap = window.Bitmap }
     else None    

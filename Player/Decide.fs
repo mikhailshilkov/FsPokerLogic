@@ -3,6 +3,7 @@
 open Akka.FSharp
 open Cards
 open Click
+open Stats
 open Import
 open PostFlop.Import
 open Preflop
@@ -189,8 +190,9 @@ module Decide =
           sprintf "Action is: %A" action |> log
           if (d.Action = SitBack) then
             dump "SitBack" msg
-          let outMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
-          (Some outMsg, newState)
+          let clickMsg = { WindowTitle = msg.WindowTitle; Clicks = action; IsInstant = screen.Sitout <> Unknown; Screen = screen }
+          let statsMsg = { StatsMessage.Source = d.Source }
+          (Some (clickMsg, statsMsg), newState)
         | None ->
           log "Could not make a decision, dumping the screenshot..."
           dump "Dec" msg

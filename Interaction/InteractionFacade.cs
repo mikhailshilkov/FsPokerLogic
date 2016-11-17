@@ -71,7 +71,7 @@ namespace Interaction
         {
             foreach (string searchString in searchStrings)
             {
-                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.StartsWith(searchString)))
+                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.Contains(searchString)))
                 {
                     if (targetSize != window.Size)
                     {

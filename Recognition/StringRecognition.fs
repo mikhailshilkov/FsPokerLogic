@@ -167,7 +167,65 @@ module StringRecognition =
   let noSpacePatterns = [|  
     { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = '4'; Pattern = [[B;B;B;W;W;B;B];[B;B;W;B;W;B;B];[B;W;B;B;W;B;B];[W;W;W;W;W;W;W];[B;B;B;B;W;B;B]] }
+    { Char = '-'; Pattern = [[B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]] } // winamax
   |]
+
+
+  let winamaxNumberPatterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;B]; [W;B;B;B;B;W;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [B;W;W;W;W;W;W;W;B]] }
+    { Char = '1'; Pattern = [[W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;W;W;W;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;B;W;B]; [W;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;W;W;B;B;B;B]; [B;B;W;B;W;B;B;B;B]; [B;W;B;B;W;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;W;B;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;B;W;B]; [W;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;B;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;B]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;B;B;B;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;B]; [W;B;B;B;W;W;W;W;W]; [W;B;B;W;B;B;B;B;B]; [W;W;W;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;W;B;W;W;W;B]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;B;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;B;B;B;W;B]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;W;W;W;W;B]] }
+  |]
+
+  let winamaxNumberBetPatterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;B;B;B;B;B;B;W;W]; [W;W;B;B;B;B;B;B;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;W;W;W;W;W;W;W;B]] }
+    { Char = '1'; Pattern = [[B;W;W;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;B;W;W;B;B;B;B;B;B;B;W;W]; [B;W;W;W;B;B;B;B;B;W;W;W;W]; [W;W;B;B;B;B;B;B;W;W;W;W;W]; [W;W;B;B;B;B;W;W;W;B;B;W;W]; [W;W;W;W;W;W;W;W;B;B;B;W;W]; [B;W;W;W;W;W;B;B;B;B;B;W;W]] }
+    { Char = '3'; Pattern = [[B;W;W;B;B;B;B;B;B;W;W;W;B]; [W;W;W;B;B;B;B;B;B;W;W;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;B;B;W;W;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;B;B;W;W;B;B;B]; [B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;W;W;W;W;B;W;W;B;B;B]; [B;W;W;W;B;B;B;B;W;W;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;W;W;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;W;W;W;B;B;W;W;W;B]; [W;W;W;W;W;W;W;B;B;W;W;W;W]; [W;W;B;B;B;W;B;B;B;B;B;W;W]; [W;W;B;B;W;W;B;B;B;B;B;W;W]; [W;W;B;B;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;W;W;W;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;B;W;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;W;B;B;W;W;W;W;W;W;W;W]; [B;W;W;B;B;B;W;W;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;W;B;B;B;B;B;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;B;W;W;W;W;W]; [W;W;B;B;W;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;B;B;B;B;B]; [W;W;W;B;B;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;B;W;W;W;B;B;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;B;B;W;W;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;B;W;W;W;W;W;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;B;B;W;W;W]; [W;W;B;B;B;B;W;W;B;B;B;W;W]; [W;W;B;B;B;B;W;W;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;W;W;W;W;W;W;W;B]] }
+  |]
+
+  let winamaxNumberPotPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;W;W;W;W;W;W;B;B]; [B;W;B;B;B;B;B;B;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W]; [B;W;B;B;B;B;B;B;B;W]; [B;B;W;W;W;W;W;W;B;B]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B;B;B;B]; [B;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;W;W;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;W;B;W]; [W;B;B;B;B;B;W;B;B;W]; [W;B;B;B;B;W;B;B;B;W]; [B;W;B;B;W;B;B;B;B;W]; [B;B;W;W;B;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;W;B;B;B;B;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;B;W;B;W;B;B;W;W]; [B;B;B;B;B;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;B;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;B;B;B;B;B]; [B;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '5'; Pattern = [[B;B;B;W;W;B;B;W;W;B]; [W;W;B;B;W;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;B;B;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;W;W;W;W;B]; [B;W;B;B;W;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;B;B;W;B;B;B;W;W]; [B;B;B;B;B;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;W;W;W;B;B]; [W;B;B;W;W;B;B;B;B;B]; [W;B;W;B;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;W;B;W;W;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;B;W;B;W;B;B;B;W]; [B;B;W;B;B;B;W;W;W;B]] }
+  |]
+
+  let winamaxNumberBlindPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;W;W;W;W;W;B;B]; [W;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;W]; [B;B;W;W;W;W;W;B;B]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B;B;B]; [B;W;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;W;W;B;B;B;B;W;W]; [W;B;B;B;B;B;W;B;W]; [W;B;B;B;B;W;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;B;W;B]; [W;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;W;W;B;B;B;W]; [B;W;W;B;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;B;B]; [B;B;B;B;W;B;W;B;B]; [B;B;B;W;B;B;W;B;B]; [B;W;B;B;B;B;W;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;W;B;B]] }
+    { Char = '5'; Pattern = [[B;W;W;W;W;B;B;W;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;B;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;B]; [W;B;B;B;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;W]; [B;W;B;B;W;W;W;W;B]] }
+    { Char = '8'; Pattern = [[B;W;W;B;B;W;W;W;B]; [W;B;B;W;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;W;W;B;B;B;W]; [B;W;W;B;B;W;W;W;B]] }
+    { Char = '-'; Pattern = [[B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]] }
+  |]
+
+  let winamaxFold = [[W;W;W;W;W;W;W;W;W]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;B;B]]
+  let winamaxCheck = [[B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;W;B;B;B;B]; [B;B;B;B;W;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;W;W;B;B;B]; [B;B;W;W;W;W;B;B;B]; [W;W;W;B;B;W;W;W;B]; [W;B;B;B;B;B;B;W;W]]
+  let winamaxCall = [[W;W;W;W;W]; [W;B;B;B;W]; [W;W;B;W;W]; [B;W;B;W;B]; [B;B;W;W;W]; [W;W;W;W;B]; [W;W;W;W;B]; [B;B;B;B;W]; [W;W;W;W;W]; [B;B;B;B;W]; [B;B;B;B;W]; [W;W;W;W;W]; [B;B;B;B;W]; [B;B;B;B;W]]
+  let winamaxBet = [[W;W;W;W;W]; [W;B;W;B;W]; [W;W;W;W;W]; [B;B;B;B;B]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;W;B;W]; [W;B;B;B;B]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;B]]
+  let winamaxRaiseTo = [[W;W;W;W;W]; [W;B;W;W;B]; [W;W;W;W;W]; [B;B;B;B;W]; [W;W;W;W;W]; [W;W;W;W;B]; [B;B;W;W;W]; [B;B;B;B;W]; [W;W;W;W;W]; [B;W;B;B;B]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;B;W;W]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;W;B;W]; [B;B;B;B;B]; [B;B;B;B;B]; [W;B;B;B;B]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;W]; [W;B;B;B;W]; [W;W;W;W;W]]
 
   let getChar allowDirtySymbols patterns bws =
     let samePatterns h p =
@@ -179,6 +237,23 @@ module StringRecognition =
         |> Array.filter (fun p -> samePatterns bws p.Pattern)
         |> Array.tryHead
     defaultArg (Option.map (fun p -> p.Char) matchingPattern) '?'
+
+  let getCharApproximate allowDirtySymbols patterns bws =
+    let matchCount h p =
+      Seq.zip h p
+      |> Seq.map (fun (s1, s2) -> Seq.zip s1 s2 |> Seq.map (fun (v1, v2) -> if v1 = v2 then 1 else -2))
+      |> Seq.concat
+      |> Seq.sum
+    let rating = 
+      patterns 
+      |> Array.map (fun p -> (p, matchCount bws p.Pattern))
+      |> Array.filter (fun (_, m) -> m > 0)
+      |> Array.sortByDescending snd
+    let bestMatch =
+      rating
+        |> Array.tryHead
+        |> Option.map (fun (p, _) -> p.Char)
+    defaultArg bestMatch '?'
 
   let lessThanXWhite x seq =
     (Seq.filter ((=) W) seq |> Seq.length) >= x
@@ -201,7 +276,11 @@ module StringRecognition =
     if c.B > 180uy && c.G > 180uy && c.R > 180uy then W
     else B
 
-  let recognizeString (matchSymbol: BW list list -> char) upThreshold downThreshold minHeight getPixel width height =
+  let isYellow (c : Color) =
+    if c.B < 100uy && c.G > 127uy && c.R > 160uy then W
+    else B
+
+  let recognizeString isWhite (matchSymbol: BW list list -> char) upThreshold downThreshold minHeight getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
     let invertifWhiteBackground pixels = 
@@ -255,26 +334,36 @@ module StringRecognition =
     |> Array.ofSeq
     |> String.Concat
 
+  let recognizeBlock pattern getPixel width height =
+    let pixels = 
+      Array2D.init width height (fun x y -> isWhite (getPixel x y))
+      |> removePadding 2 2 5    
+    let pixelColumns =
+      [0..Array2D.length1 pixels - 1] 
+      |> Seq.map (fun x -> pixels.[x, 0..Array2D.length2 pixels - 1] |> List.ofArray)      
+    pixels.Length > (width * height / 10)
+    && Seq.zip pattern pixelColumns |> Seq.forall (fun (v1, v2) -> v1 = v2)
+
   let recognizeNumber x =
-    recognizeString (getChar false numberPatterns) 1 2 8 x
+    recognizeString isWhite (getChar false numberPatterns) 1 2 8 x
 
   let recognizeText getPixel (y:int) width height =
     let o = 
       [0..5]
-      |> Seq.map (fun dy -> recognizeString (getChar false textPatterns) 0 0 10 (getPixel (y+dy)) width height)
+      |> Seq.map (fun dy -> recognizeString isWhite (getChar false textPatterns) 0 0 10 (getPixel (y+dy)) width height)
     o |> Seq.maxBy (fun x -> x |> Seq.map (fun c -> match c with | '?' -> 1 | _ -> 5) |> Seq.sum)
 
   let recognizeBetSize x y z =
-    let try1 = recognizeString (getChar true number9Patterns) 2 2 9 x y z
+    let try1 = recognizeString isWhite (getChar true number9Patterns) 2 2 9 x y z
     if try1 <> null && try1.Replace("?", "") <> "" then try1
-    else recognizeString (getChar true number7Patterns) 2 2 7 x y z
+    else recognizeString isWhite (getChar true number7Patterns) 2 2 7 x y z
 
   let recognizeButton x y z =
-    let b = recognizeString (getChar false buttonPatterns) 2 2 8 x y z
+    let b = recognizeString isWhite (getChar false buttonPatterns) 2 2 8 x y z
     if b <> "?" then b else null
 
   let recognizeBlinds x y z =
-    let s = recognizeString (getChar false blindNumberPatterns) 3 3 8 x y z
+    let s = recognizeString isWhite (getChar false blindNumberPatterns) 3 3 8 x y z
     s.Replace("?", "")
 
   let parseStringPattern getPixel width height =
@@ -285,3 +374,19 @@ module StringRecognition =
         "[" + b + "]")
       |> String.concat "; "
     "{ Char = '?'; Pattern = [" + a + "] }\n"
+
+  let recognizeWinamaxNumber x =
+    recognizeString isYellow (getChar false winamaxNumberPatterns) 1 1 9 x
+
+  let recognizeWinamaxWhiteNumber x =
+    recognizeString isWhite (getChar false winamaxNumberPatterns) 1 1 9 x
+
+  let recognizeWinamaxBetNumber x =
+    recognizeString isYellow (getCharApproximate false winamaxNumberBetPatterns) 1 1 13 x
+
+  let recognizeWinamaxPotNumber x =
+    recognizeString isYellow (getCharApproximate false winamaxNumberPotPatterns) 1 1 10 x
+
+  let recognizeWinamaxBlinds x y z =
+    let s = recognizeString isWhite (getCharApproximate false winamaxNumberBlindPatterns) 2 2 9 x y z
+    s.Replace("?", "")

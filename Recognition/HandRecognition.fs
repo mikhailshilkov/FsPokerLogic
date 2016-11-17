@@ -9,7 +9,7 @@ module HandRecognition =
     Pattern: BW array
   }
 
-  let patterns = [|  
+  let ipokerPatterns = [|  
     { Card = "2"; Pattern = [|
     W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
     W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
@@ -181,6 +181,152 @@ module HandRecognition =
     W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
   |]
 
+  let winamaxPatterns = [|  
+    { Card = "2"; Pattern = [|
+      W;W;B;B;B;W;W;W;W;W;W;B;B;B;B;
+      W;B;B;B;B;W;W;W;W;B;B;B;B;B;B;
+      B;B;B;B;B;W;W;W;B;B;B;B;B;B;B;
+      B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;W;B;B;B;B;W;W;B;B;B;
+      B;B;W;W;W;B;B;B;B;W;W;W;B;B;B;
+      B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;
+      B;B;B;B;B;B;B;W;W;W;B;B;B;B;B;
+      W;B;B;B;B;B;W;W;W;W;B;B;B;B;B|] }
+    { Card = "3"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;
+      W;B;B;B;W;W;W;W;W;W;B;B;B;B;W;
+      B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      W;B;B;B;B;B;W;W;B;B;B;B;B;W;W|] }
+    { Card = "4"; Pattern = [|
+      W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;
+      W;W;W;W;W;W;B;B;B;B;B;W;W;W;W;
+      W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;
+      W;W;W;B;B;B;W;W;W;B;B;W;W;W;W;
+      W;B;B;B;B;W;W;W;W;B;B;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      W;W;W;W;W;W;W;W;B;B;B;W;B;B;B|] }
+    { Card = "5"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;W;W;B;B;B;B;W;
+      B;B;B;B;B;B;B;B;W;W;B;B;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;W;W;W;B;B;W;W;W;W;W;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;B;W;W;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;W;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;W;W;W;B;B;B;B;B;B;B;W;W|] }
+    { Card = "6"; Pattern = [|
+      W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;
+      B;B;B;W;W;B;B;B;B;W;W;B;B;B;B;
+      B;B;B;B;W;B;B;B;B;B;B;B;B;B;W;
+      W;B;B;B;W;W;B;B;B;B;B;B;B;B;W|] }  
+    { Card = "7"; Pattern = [|
+      B;B;B;B;B;W;W;W;W;W;W;W;W;B;W;
+      B;B;B;B;B;W;W;W;W;W;W;W;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;B;B;B;B;B;
+      B;B;W;W;W;W;W;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;
+      B;B;B;B;B;W;W;W;W;W;W;W;W;B;W;
+      B;B;B;W;W;W;W;W;W;W;W;W;W;W;W|] }  
+    { Card = "8"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;
+      W;B;B;B;B;B;W;W;B;B;B;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;B;B;B;B;W;W;W;B;B;B;
+      B;B;W;W;W;W;B;B;W;W;W;W;B;B;B;
+      B;B;B;W;W;B;B;B;B;W;W;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W|] } 
+    { Card = "9"; Pattern = [|
+      W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;
+      W;B;B;B;B;B;B;B;W;W;W;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;W;W;B;B;B;W;
+      B;B;B;B;W;B;B;B;B;B;W;B;B;B;B;
+      B;B;B;W;W;W;W;B;B;B;W;W;B;B;B;
+      B;B;B;W;W;W;W;B;B;W;W;W;B;B;B;
+      B;B;B;B;W;W;B;B;B;W;W;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;W;W|] } 
+    { Card = "T"; Pattern = [|
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;
+      W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;W;W;W;W;W;W;W;B;B;B|] }             
+    { Card = "J"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }    
+    { Card = "Q"; Pattern = [|
+      W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;
+      B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;
+      B;B;B;B;B;W;W;W;W;W;B;B;B;B;B;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;B;W|] }
+    { Card = "K"; Pattern = [|
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;W;B;B;W;W;W;W;B;B;B;
+      W;W;W;W;W;B;B;B;B;W;W;W;W;B;W;
+      B;B;W;W;B;B;B;B;B;B;B;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;W;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;W;W;W;W;B;B;B;B;B;B|] }
+    { Card = "A"; Pattern = [|
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;W;
+      B;B;B;B;W;W;W;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;W;W;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;W;B;B;B;B;B;B;B;B;B|] }
+  |]
+
+  let winamaxStackPatterns = [|  
+    { Card = "3"; Pattern = [|
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;W;
+      B;B;B;B;W;W;W;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;W;W;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
+      B;B;W;W;W;W;B;B;B;B;B;B;B;B;B|] }
+  |]
+
   let findCardStart getPixel width height = 
     let isWhite (c : Color) = c.B > 160uy && c.G > 160uy && c.R > 160uy
     let firstX = [0..width] |> Seq.tryFindIndex (fun x -> [0..height] |> List.map (fun y -> getPixel x y |> isWhite)  |> Seq.exists id)
@@ -202,7 +348,7 @@ module HandRecognition =
       | _ when c.B < 127uy && c.G < 127uy && c.R > 127uy -> Some "h"
       | _ when c.B > 127uy && c.G < 127uy && c.R < 127uy -> Some "d"
       | _ when c.B < 127uy && c.G > 127uy && c.R < 127uy -> Some "c"
-      | _ when c.B < 127uy && c.G < 127uy && c.R < 127uy -> Some "s"
+      | _ when c.B < 100uy && c.G < 100uy && c.R < 100uy -> Some "s"
       | _ -> None
     let suits = 
       seq { for x in 0 .. width - 1 do
@@ -231,22 +377,18 @@ module HandRecognition =
       |> Array.map (fun p -> (p, matchCountWithShift bws p.Pattern))
       |> Array.filter (fun (p, m) -> m > 0)
       |> Array.sortByDescending (fun (p_, m) -> m)
-    let str = 
-      bws
-      |> Seq.map (fun x -> if x = B then "B" else "W") 
-      |> String.concat ";"
     rating
       |> Array.tryHead
-      |> Option.map (fun (p, _) -> p)
+      |> Option.map fst
 
   let getCardString height getCardPattern getCardSuit =
-    let value = getCardPattern |> getCardValue patterns height
+    let value = getCardPattern |> getCardValue ipokerPatterns height
     let suit = getCardSuit
     match value with
     | Some v -> v.Card + suit
     | None -> null
 
-  let recognizeCard getPixel width height = 
+  let recognizeCard patterns getPixel width height = 
     let value = getCardPattern getPixel width height |> getCardValue patterns height
     let suit = getCardSuit getPixel width height
     match value, suit with
@@ -261,9 +403,13 @@ module HandRecognition =
     |> (*) 5
     |> (<) (width * height)
 
-  let isButton x = 
+  let isGreenButton x = 
     let isGreen (c : Color) = c.B < 127uy && c.G > 127uy && c.R < 127uy
     hasSpecialColor isGreen x
+
+  let isYellowButton x = 
+    let isYellow (c : Color) = c.B < 127uy && c.G > 127uy && c.R > 127uy
+    hasSpecialColor isYellow x
 
   let isFlop x = 
     let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy

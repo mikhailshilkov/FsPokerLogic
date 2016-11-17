@@ -1,6 +1,5 @@
 ﻿namespace Recognition
 
-
 module ScreenRecognition =
   open System
   open System.Drawing
@@ -70,9 +69,7 @@ module ScreenRecognition =
     let chooseGoodNumber minLength (ss : string list) =
       ss 
       |> List.filter (fun (s : string) -> s <> null && s.Length >= minLength && not(s.Contains("?")))
-      |> List.map parseNumber
-      |> List.filter Option.isSome
-      |> List.map Option.get
+      |> List.choose parseNumber
       |> List.tryHead
 
     let blinds = recognizeBlinds (getPixel 308 7) 70 16  |> parseBlinds
@@ -95,8 +92,8 @@ module ScreenRecognition =
       |> Array.ofSeq      
 
     let button = 
-      if isButton (getPixel 159 314) 17 17 then Hero
-      else if isButton (getPixel 476 326) 17 17 then Villain else Unknown
+      if isGreenButton (getPixel 159 314) 17 17 then Hero
+      else if isGreenButton (getPixel 476 326) 17 17 then Villain else Unknown
 
     let hasFlop = isFlop (getPixel 212 178) 131 60
 
@@ -108,7 +105,7 @@ module ScreenRecognition =
     let heroHand = 
       match (dxo, dyo, isHeroSitout) with 
       | Some dx, Some dy, false ->
-        (recognizeCard (getPixel (79+dx) (274+dy)) 12 17) + (recognizeCard (getPixel (116+dx) (274+dy)) 12 17)
+        (recognizeCard ipokerPatterns (getPixel (79+dx) (274+dy)) 12 17) + (recognizeCard ipokerPatterns (getPixel (116+dx) (274+dy)) 12 17)
       | _, _, _ -> null
 
     let (dxo, dyo) = findCardStart (getPixel 223 185) 12 17
@@ -116,7 +113,7 @@ module ScreenRecognition =
       match (dxo, dyo) with 
       | Some dx, Some dy ->
         [223; 261; 298; 335; 373]
-        |> Seq.map (fun x -> recognizeCard (getPixel (x+dx) (185+dy)) 12 17)
+        |> Seq.map (fun x -> recognizeCard ipokerPatterns (getPixel (x+dx) (185+dy)) 12 17)
         |> String.concat ""
       | _, _ -> null
 

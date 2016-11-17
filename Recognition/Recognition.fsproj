@@ -59,6 +59,8 @@
     <Compile Include="HandRecognition.fs" />
     <Compile Include="ScreenRecognition.fs" />
     <Compile Include="ScreenRecognitionTests.fs" />
+    <Compile Include="WinamaxRecognition.fs" />
+    <Compile Include="WinamaxRecognitionTests.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

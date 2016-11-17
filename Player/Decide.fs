@@ -138,7 +138,7 @@ module Decide =
 
   let dump title msg =
     let filename = sprintf "%s_%s_%s_%s" title msg.TableName msg.Screen.HeroHand msg.Screen.Board
-    Dumper.SaveBitmap(msg.Bitmap, filename)
+    Dumper.SaveBitmap(msg.Bitmap, filename, true)
 
   let decisionActor xlFlopTurn xlHandStrength xlPostFlopOop xlTricky riverHistoryPatterns msg (state:DecisionState option) =
     let log (s: string) =

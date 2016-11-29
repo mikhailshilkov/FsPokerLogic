@@ -2,7 +2,7 @@
 
 open System
 open Microsoft.Office.Interop.Excel
-open Preflop
+open Preflop.Decide
 open System.Runtime.InteropServices
 open Excel.Import
 
@@ -668,3 +668,45 @@ let importHudData (xlWorkBook : Workbook) =
        LimpFold = Int32.Parse(vs.[4]) }
      )
   |> List.ofSeq
+
+let importRegs (xlWorkBook : Workbook) =
+  let xlWorkSheet = xlWorkBook.Worksheets.["regwar IP"] :?> Worksheet
+  getCellValues xlWorkSheet "A3" "A300"
+  |> List.ofArray
+  |> List.filter (String.IsNullOrEmpty >> not)
+
+let importRegWarIPRanges (xlWorkBook : Workbook) regIndex stack =
+  let xlWorkSheet = xlWorkBook.Worksheets.["regwar IP"] :?> Worksheet
+  let row = regIndex + 3 |> string
+  let column = excelColumns.[26 - stack]
+  let cellValue = getCellValue xlWorkSheet (column + row)
+  Ranges.parseRanges cellValue, "mfck beavers -> regwar IP -> " + column + row
+
+let private importRegWarOOPRanges statsColumnIndex shoveColumnIndex k (xlWorkBook : Workbook) regIndex stack =
+  let statsSheetName = sprintf "OOP %ibb stats" stack
+  let xlWorkSheet = xlWorkBook.Worksheets.[statsSheetName] :?> Worksheet
+  let row = regIndex + 5 |> string
+  let cellValues = getCellValues xlWorkSheet (excelColumns.[statsColumnIndex] + row) (excelColumns.[statsColumnIndex + 1] + row) |> Array.map parseDouble
+  let BorD = cellValues.[0]
+  let CorE = cellValues.[1]
+  let TTP = stack * 2 |> decimal
+  let threshold = (((-((((k+1m))*((100m-((100m*CorE)/BorD))/100m))))*(BorD/CorE)+((TTP/2m)-1m))*100m)/TTP
+  
+  let shoveSheetName = sprintf "OOP %ibb shove" stack
+  let xlWorkSheet = xlWorkBook.Worksheets.[shoveSheetName] :?> Worksheet
+  let column = excelColumns.[1 + regIndex * 2 + shoveColumnIndex]
+  let row = 3 + ((threshold - 26.5m) * 2m |> int)
+  let row = max 3 (min 39 row) |> string
+
+  let cellValue = getCellValue xlWorkSheet (column + row)
+  Ranges.parseRanges cellValue, "mfck beavers -> " + shoveSheetName + " -> " + column + row
+
+let importRegWarOOPLimpRanges xl regIndex stack = importRegWarOOPRanges 3 1 1m xl regIndex stack
+let importRegWarOOPRaiseRanges xl regIndex stack = importRegWarOOPRanges 1 0 2m xl regIndex stack
+
+let importRegWarOOPAIRanges (xlWorkBook : Workbook) regIndex stack =
+  let sheetName = sprintf "OOP %ibb stats" stack
+  let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let row = regIndex + 5 |> string
+  let cellValue = getCellValue xlWorkSheet ("H" + row)
+  Ranges.parseRanges cellValue, "mfck beavers -> " + sheetName + " -> H" + row

@@ -23,7 +23,7 @@ module Click =
   let ensureAmount window screen check repeat =
     // Check that amount is OK
     let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
-    let b = ScreenRecognition.recognizeBetSize(w.Bitmap)
+    let b = ScreenRecognition.recognizeBetSizeIpoker(w.Bitmap)
     if not (check b) then 
       let currentScreen = ScreenRecognition.recognizeScreen(w.Bitmap)
       if currentScreen = screen then

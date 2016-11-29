@@ -12,7 +12,7 @@ module Recognize =
   let recognize' b = ScreenRecognition.recognizeScreen b
 
   let recognizeMock _ =
-    { TotalPot = Some 825; HeroStack = Some 175; VillainStack = Some 0; HeroBet = Some 170; VillainBet = Some 385; HeroHand = "8s2s"; Board = "8d3h5d3dAs"; Blinds = Some { SB = 15; BB = 30 }; Button = Hero; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "Ctid80" }
+    { TotalPot = Some 625; HeroStack = Some 375; VillainStack = Some 0; HeroBet = Some 30; VillainBet = Some 595; HeroHand = "KcAc"; Board = null; Blinds = Some { SB = 15; BB = 30 }; Button = Villain; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "zdenek" }
 
   let recognizeActor (window : WindowInfo) =
     let result = recognize' window.Bitmap

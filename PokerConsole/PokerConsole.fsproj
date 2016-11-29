@@ -59,13 +59,14 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Preflop.fs" />
-    <Compile Include="PreflopTests.fs" />
+    <Compile Include="Decide.fs" />
+    <Compile Include="DecideTests.fs" />
     <Compile Include="Import.fs" />
     <Compile Include="ImportTests.fs" />
     <Compile Include="Actions.fs" />
     <Compile Include="ActionsTests.fs" />
-    <Compile Include="DecideTests.fs" />
+    <Compile Include="Facade.fs" />
+    <Compile Include="FacadeTests.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />

@@ -35,7 +35,7 @@ module WinamaxRecognition =
       |> List.choose parseNumber
       |> List.tryHead
     
-    let p11111 = parseStringPattern (getPixel 490 31) 5 9
+    let p11111 = parseStringPattern (getPixel 459 451) 4 10
     let p2 = parsePattern (getPixel 330 382) 6 13
 
     let blinds = recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds
@@ -55,13 +55,19 @@ module WinamaxRecognition =
       if isYellowButton (getPixel 255 324) 16 16 then Hero
       else if isYellowButton (getPixel 379 127) 16 16 then Villain else Unknown
 
+    let hasHand = isFlop (getPixel 325 330) 25 15
     let heroHand = 
+      if hasHand then
         (recognizeCard winamaxPatterns (getPixel 299 332) 9 15) + (recognizeCard winamaxPatterns (getPixel 315 332) 9 15)
+      else ""
 
-    let flop =
-      [197; 251; 305; 360; 413]
-      |> Seq.map (fun x -> recognizeCard winamaxPatterns (getPixel x 189) 9 15)
-      |> String.concat ""
+    let hasFlop = isFlop (getPixel 197 189) 150 70
+    let flop = 
+      if hasFlop then
+        [197; 251; 305; 360; 413]
+        |> Seq.map (fun x -> recognizeCard winamaxPatterns (getPixel x 189) 9 15)
+        |> String.concat ""
+      else ""
 
     let actions = 
       [("Fold", winamaxFold, 194, 424, 60, 15)
@@ -87,3 +93,10 @@ module WinamaxRecognition =
       Board = flop
       Sitout = Seat.Unknown
     }
+
+  let recognizeBetSizeWinamax (bitmap : Bitmap) =    
+    let getPixel offsetX offsetY x y = 
+      bitmap.GetPixel(offsetX + x, offsetY + y)
+
+    let p11111 = parseStringPattern (getPixel 453 451) 4 10
+    recognizeWinamaxBetSize (getPixel 445 450) 26 12

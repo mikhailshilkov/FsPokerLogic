@@ -2,7 +2,7 @@
 
 open Hands
 open Ranges
-open Preflop
+open Preflop.Decide
 open Import
 open Excel.Import
 

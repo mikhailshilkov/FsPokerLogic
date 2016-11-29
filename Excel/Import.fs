@@ -37,3 +37,5 @@ module Import =
   let excelRangeToArray (arr:_[,]) = 
     let byRows = Array2D.length1 arr = 1
     Array.init arr.Length (fun i -> if byRows then arr.[1, i+1] else arr.[i+1, 1])
+
+  let excelColumns = ["A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z";"AA";"AB";"AC";"AD";"AE";"AF";"AG";"AH";"AI";"AJ";"AK";"AL";"AM";"AN";"AO";"AP";"AQ";"AR";"AS";"AT";"AU";"AV";"AW";"AX";"AY";"AZ";"BA";"BB";"BC";"BD"]

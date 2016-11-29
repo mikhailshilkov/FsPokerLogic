@@ -221,6 +221,19 @@ module StringRecognition =
     { Char = '-'; Pattern = [[B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]] }
   |]
 
+  let winamaxNumberBetInputPatterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W]; [B;W;W;W;W;W;W;W;W;W]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;B;W;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;W;B;W]; [W;B;B;B;B;W;W;B;B;W]; [B;W;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;B;B;B;B;B;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;W]; [B;W;W;W;B;W;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B]] }
+    { Char = '5'; Pattern = [[B;B;B;B;B;B;B;B;B;B]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;B;B;W;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[B;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;W;W;W;B;B]; [B;W;W;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;W;W;W]] }
+    { Char = '8'; Pattern = [[B;B;W;B;B;B;W;W;W;B]; [W;B;B;B;W;W;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;W;W;B;W;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;W;B;B;B;B;B]; [W;B;B;B;B;W;B;B;B;W]; [W;B;B;B;B;W;B;B;B;W]; [B;W;W;W;W;W;W;W;W;B]] }
+  |]
+
   let winamaxFold = [[W;W;W;W;W;W;W;W;W]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;B;B]]
   let winamaxCheck = [[B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;W;B;B;B;B]; [B;B;B;B;W;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;W;W;B;B;B]; [B;B;W;W;W;W;B;B;B]; [W;W;W;B;B;W;W;W;B]; [W;B;B;B;B;B;B;W;W]]
   let winamaxCall = [[W;W;W;W;W]; [W;B;B;B;W]; [W;W;B;W;W]; [B;W;B;W;B]; [B;B;W;W;W]; [W;W;W;W;B]; [W;W;W;W;B]; [B;B;B;B;W]; [W;W;W;W;W]; [B;B;B;B;W]; [B;B;B;B;W]; [W;W;W;W;W]; [B;B;B;B;W]; [B;B;B;B;W]]
@@ -362,7 +375,7 @@ module StringRecognition =
     let b = recognizeString isWhite (getChar false buttonPatterns) 2 2 8 x y z
     if b <> "?" then b else null
 
-  let recognizeBlinds x y z =
+  let recognizeBlinds x y z =  
     let s = recognizeString isWhite (getChar false blindNumberPatterns) 3 3 8 x y z
     s.Replace("?", "")
 
@@ -390,3 +403,7 @@ module StringRecognition =
   let recognizeWinamaxBlinds x y z =
     let s = recognizeString isWhite (getCharApproximate false winamaxNumberBlindPatterns) 2 2 9 x y z
     s.Replace("?", "")
+
+  let recognizeWinamaxBetSize x y z =
+    let isWhite (c : Color) = if c.B > 127uy && c.G > 127uy && c.R > 127uy then W else B
+    recognizeString isWhite (getCharApproximate false winamaxNumberBetInputPatterns) 2 2 10 x y z

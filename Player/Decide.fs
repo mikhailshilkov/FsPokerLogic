@@ -6,7 +6,8 @@ open Click
 open Stats
 open Import
 open PostFlop.Import
-open Preflop
+open Preflop.Decide
+open Preflop.Facade
 open System.Drawing
 open Hands
 open Cards.HandValues
@@ -42,9 +43,6 @@ module Decide =
     Ranges.isHandInRanges ranges (toHand hand) |> not
   let rulesLow = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldLow; rulesOOP]
   let rulesBig = List.concat [rulesIP; rulesAdvancedOOP.Always; rulesAdvancedOOP.LimpFoldBig; rulesOOP]
-  let decidePre stack odds limpFold = 
-    if limpFold >= 65 then decideOnRules rulesBig stack odds
-    else decideOnRules rulesLow stack odds
 
   let understandHistory (screen: Screen) =
     let raise bet bb = 
@@ -65,20 +63,16 @@ module Decide =
     | Villain, Some {BB = bb}, Some vb, Some hb when hb > bb && vb > hb -> [raise (hb * 2 / 5) bb; raise 5 2; raise vb hb]
     | _ -> failwith "History is not clear"
 
-  let decide' log xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky riverHistoryPatterns (screen: Screen) history: MotivatedAction option =
+  let decide' log xlFlopTurn xlTurnDonkRiver xlPostFlopOop xlTricky xlBeavers regs riverHistoryPatterns (screen: Screen) history: MotivatedAction option =
     let decidePre (screen: Screen) =
       match screen.HeroStack, screen.HeroBet, screen.VillainStack, screen.VillainBet, screen.Blinds with
       | Some hs, Some hb, Some vs, Some vb, Some b -> 
         let stack = min (hs + hb) (vs + vb)
-        let effectiveStack = decimal stack / decimal b.BB
-        let callSize = min (vb - hb) hs
-        let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
-        let hudStats = hud hudData screen.VillainName
-        let openRaise = (if b.BB >= 20 then hudStats.OpenRaise20_25 else if b.BB >= 16 then hudStats.OpenRaise16_19 else hudStats.OpenRaise14_15) |> decimal
-        let fullHand = parseFullHand screen.HeroHand
+        let hand = parseFullHand screen.HeroHand |> normalize
+        let s = { BB = b.BB; HeroStack = hs; HeroBet = hb; HeroHand = hand; VillainStack = vs; VillainBet = vb; VillainName = screen.VillainName }
         let history = understandHistory screen
-        let actionPattern = decidePre effectiveStack potOdds hudStats.LimpFold openRaise history fullHand
-        Option.map (mapPatternToAction PreFlop vb stack) actionPattern  
+        let actionPattern = decidePre xlBeavers rulesBig rulesLow hudData regs s history
+        Option.map (mapPatternToAction PreFlop vb stack) actionPattern
       | _ -> None
     let decidePost (screen: Screen) =
       match screen.TotalPot, screen.HeroStack, screen.VillainStack, screen.Blinds with
@@ -140,7 +134,7 @@ module Decide =
     let filename = sprintf "%s_%s_%s_%s" title msg.TableName msg.Screen.HeroHand msg.Screen.Board
     Dumper.SaveBitmap(msg.Bitmap, filename, true)
 
-  let decisionActor xlFlopTurn xlHandStrength xlPostFlopOop xlTricky riverHistoryPatterns msg (state:DecisionState option) =
+  let decisionActor xlFlopTurn xlHandStrength xlPostFlopOop xlTricky xlBeavers regs riverHistoryPatterns msg (state:DecisionState option) =
     let log (s: string) =
       System.IO.File.AppendAllLines(sprintf "%s.log" msg.TableName, [s])
       System.Console.WriteLine(s)
@@ -175,7 +169,7 @@ module Decide =
       history |> List.iter (sprintf "History: %A" >> log)
 
       try
-        let decision = decide' log xlFlopTurn xlHandStrength xlPostFlopOop xlTricky riverHistoryPatterns screen history
+        let decision = decide' log xlFlopTurn xlHandStrength xlPostFlopOop xlTricky xlBeavers regs riverHistoryPatterns screen history
         let newState = Some { LastScreen = screen; PreviousActions = pushAction state decision isPre }
         match decision with
         | Some d ->

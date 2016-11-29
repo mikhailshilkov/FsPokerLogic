@@ -62,7 +62,7 @@ let ``recognize input bet size from predefined file`` () =
   let testFile (name : string) =
     let image = new Bitmap(name)
 
-    let result = recognizeBetSize image
+    let result = recognizeBetSizeIpoker image
     let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
     Assert.Equal(expected, result)
 

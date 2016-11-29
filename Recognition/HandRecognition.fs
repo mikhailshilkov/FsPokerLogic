@@ -412,7 +412,7 @@ module HandRecognition =
     hasSpecialColor isYellow x
 
   let isFlop x = 
-    let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
+    let isWhite (c : Color) = c.B > 200uy && c.G > 200uy && c.R > 200uy
     hasSpecialColor isWhite x
 
   let isVillainSitout x = 

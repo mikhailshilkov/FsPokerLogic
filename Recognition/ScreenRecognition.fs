@@ -95,8 +95,6 @@ module ScreenRecognition =
       if isGreenButton (getPixel 159 314) 17 17 then Hero
       else if isGreenButton (getPixel 476 326) 17 17 then Villain else Unknown
 
-    let hasFlop = isFlop (getPixel 212 178) 131 60
-
     let isVillainSitout = isVillainSitout (getPixel 570 319) 12 11
     let isHeroSitout = isHeroSitout (getPixel 489 469) 11 11
     let actionsWithCheckboxes = actions |> Array.append (if isHeroSitout then [|{ Name = "SitBack"; Region = (492, 472, 7, 5) }|] else [||])
@@ -130,7 +128,7 @@ module ScreenRecognition =
       Board = flop
       Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown }
 
-  let recognizeBetSize (bitmap : Bitmap) =    
+  let recognizeBetSizeIpoker (bitmap : Bitmap) =    
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
 

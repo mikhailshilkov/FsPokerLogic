@@ -26,9 +26,7 @@ module Import =
   }
 
   let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
-  let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }
-
-  let excelColumns = ["A";"B";"C";"D";"E";"F";"G";"H";"I";"J";"K";"L";"M";"N";"O";"P";"Q";"R";"S";"T";"U";"V";"W";"X";"Y";"Z";"AA";"AB";"AC";"AD";"AE";"AF";"AG";"AH";"AI";"AJ";"AK";"AL";"AM";"AN";"AO";"AP";"AQ";"AR";"AS";"AT";"AU";"AV";"AW";"AX";"AY";"AZ";"BA";"BB";"BC";"BD"]
+  let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }  
 
   let orElse b a = match a with | Some _ -> a | None -> b()
 

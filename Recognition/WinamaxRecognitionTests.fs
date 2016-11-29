@@ -37,7 +37,7 @@ let ``recognize board from predefined file`` () =
 
 [<Fact>]
 let ``recognize hand from predefined file`` () =
-  test (fun r -> r.HeroHand) "Hand"
+  test (fun r -> if r.HeroHand = null then "" else r.HeroHand) "Hand"
 
 [<Fact>]
 let ``recognize blinds from predefined file`` () =
@@ -53,3 +53,14 @@ let ``recognize actions from predefined file`` () =
     let names = a |> Array.map (fun x -> x.Name)
     System.String.Join("-", names)
   test (fun r -> r.Actions |> formatActions) "ActionsButtons"
+
+[<Fact>]
+let ``recognize input bet size from predefined file`` () =
+  let testFile (name : string) =
+    let image = new Bitmap(name)
+
+    let result = recognizeBetSizeWinamax image
+    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
+    Assert.Equal(expected, result)
+
+  Directory.GetFiles(@"..\..\TestCases\Winamax\BetSizes") |> Array.iter testFile

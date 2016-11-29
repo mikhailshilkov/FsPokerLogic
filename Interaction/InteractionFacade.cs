@@ -71,7 +71,7 @@ namespace Interaction
         {
             foreach (string searchString in searchStrings)
             {
-                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.Contains(searchString)))
+                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.StartsWith(searchString))) //TODO winamax
                 {
                     if (targetSize != window.Size)
                     {

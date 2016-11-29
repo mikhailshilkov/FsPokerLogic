@@ -26,6 +26,9 @@ let main argv =
   use xlPostFlopOop = useExcel fileNamePostFlopOop
   let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
   use xlTricky = useExcel fileNameTricky
+  let fileNameBeavers = System.IO.Directory.GetCurrentDirectory() + @"\mfck beavers.xlsx"
+  use xlBeavers = useExcel fileNameBeavers
+  let regs = Import.importRegs (xlBeavers.Workbook)
 
   let system = Configuration.defaultConfig() |> System.create "my-system"
   let spawnChild childActor (debug: string) name (mailbox : Actor<'a>) = 
@@ -35,7 +38,7 @@ let main argv =
   let clickerRef = actorOfSink click' |> spawn system "clicker-actor"
   let statsRef = actorOfSink stats' |> spawn system "stats-actor"
 
-  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlHandStrength.Workbook xlPostFlopOop.Workbook xlTricky.Workbook riverHistoryPatterns) None (clickerRef, statsRef)
+  let decider = actorOfStatefulConvert (decisionActor xlFlopTurn.Workbook xlHandStrength.Workbook xlPostFlopOop.Workbook xlTricky.Workbook xlBeavers.Workbook regs riverHistoryPatterns) None (clickerRef, statsRef)
 
   let recognizer = actorOfConvertToChild recognizeActor (spawnChild decider null "decider")
 

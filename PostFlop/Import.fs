@@ -501,7 +501,7 @@ module Import =
 
   let parseOopOptionWithSpecialBoard (strategy: string) isSpecialBoard (specialBoardStrategy:string) (specialRules: string) =
     if isSpecialBoard then
-      match parseOopOption specialBoardStrategy specialRules with
+      match parseOopOption specialBoardStrategy "" with
       | None -> parseOopOption strategy specialRules
       | x -> x
     else parseOopOption strategy specialRules
@@ -559,7 +559,7 @@ module Import =
     let isRiverOvercard = isLastBoardCardOvercard s.Board
     let areTurnAndRiverOverFlop = isTurnOvercard && isLastBoardCardOvercard (s.Board |> Array.except [turnCard])
     let isRiverMiddlecard = isLastBoardCardSecondCard s.Board
-    let isRiverUndercard = isLastBoardCardUndercard s.Board
+    let isRiverUndercard = isLastBoardCardUndercard 2 s.Board
     let riverDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = s.Board.[4].Face) |> Array.length = 1
     let turnDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = turnCard.Face) |> Array.length = 1
     let highKicker k = k = Ace || k = King || k = Queen || k = Jack
@@ -679,7 +679,7 @@ module Import =
       |> List.item <| excelColumns
 
     let cellValue = getCellValue xlWorkSheet (column + row)
-    let optionToParse = if relativeBet > 0 then "ch/" + cellValue else cellValue
+    let optionToParse = if relativeBet > 0 && cellValue <> "" then "ch/" + cellValue else cellValue
     parseOopOption optionToParse ""
     |> Option.add (fun _ -> sheetName + " -> " + column + row)
 
@@ -807,14 +807,14 @@ module Import =
       | _ -> (0, 3)
     let specialRules = if texture.Monoboard < 3 then cellValues.[1] else "" // monoboard rules are in the cell itself after @ sign
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
-    |> Option.add (fun _ -> sheetName + " -> " + excelColumns.[column + 10] + "/" + excelColumns.[specialColumn + 10] + row)
+    |> Option.add (fun _ -> sheetName + " -> " + (if sc then excelColumns.[specialColumn + 10] else excelColumns.[column + 10]) + row)
 
   let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture s =
     let defaultMapping () =
 
       let turnCard = s.Board.[3]
       let isRiverOvercard = isLastBoardCardOvercard s.Board
-      let isRiverUndercard = isLastBoardCardUndercard s.Board
+      let isRiverUndercard = isLastBoardCardUndercard 2 s.Board
       let isRiverMiddlecard = not(isRiverOvercard) && s.Board |> Array.except [turnCard] |> isLastBoardCardOvercard
 
       let turn = s.Board |> Array.take 4
@@ -1176,7 +1176,7 @@ module Import =
     let isRiverOvercard = isLastBoardCardOvercard s.Board
     let areTurnAndRiverOverFlop = isTurnOvercard && isLastBoardCardOvercard (s.Board |> Array.except [turnCard])
     let isRiverMiddlecard = isLastBoardCardSecondCard s.Board
-    let isRiverUndercard = isLastBoardCardUndercard s.Board
+    let isRiverUndercard = isLastBoardCardUndercard 2 s.Board
     let riverDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = s.Board.[4].Face) |> Array.length = 1
     let isTurnOrRiverAce = isTurnAce || isRiverAce
     let turnDoesNotPair = s.Board |> Array.filter (fun x -> x.Face = turnCard.Face) |> Array.length = 1

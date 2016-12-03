@@ -95,7 +95,8 @@ module HandValues =
   let sameSequence a b = Seq.compareWith Operators.compare a b = 0
 
   let isFullHouse (cards : SuitedCard[]) =
-    cards |> cardValueGroups |> Seq.truncate 2 |> sameSequence (seq [3; 2])
+    let twoGroups = cards |> cardValueGroups |> Seq.truncate 2 |> List.ofSeq
+    twoGroups.Length = 2 && twoGroups.[0] = 3 && twoGroups.[1] >= 2
 
   // If a better full house can be made with just 1 hole card
   let isWeakFullHouse hand board =
@@ -226,12 +227,14 @@ module HandValues =
       let values = remaining |> List.map (fun x -> faceValue x.Face) |> List.distinct |> List.sortDescending
       List.length values >= 2 && values.[0] > latestCardValue && values.[1] < latestCardValue
 
-  let isLastBoardCardUndercard (board: SuitedCard[]) =
+  let isLastBoardCardUndercard amountOfHigherCards (board: SuitedCard[]) =
     match Array.rev board |> List.ofArray with
     | [] | [_] -> false
     | last::remaining ->
       let latestCardValue = last.Face |> faceValue
-      List.forall (fun x -> faceValue x.Face > latestCardValue) remaining
+      remaining 
+      |> List.filter (fun x -> faceValue x.Face > latestCardValue)
+      |> List.length >= amountOfHigherCards
 
   let isLastBoardCardFlushy board = 
     let monoNow = monoboardLength board
@@ -260,7 +263,8 @@ module HandValues =
       board 
       |> Seq.map (fun x -> x.Face)
       |> Seq.sortByDescending faceValue
-    let boardHighestPair = boardFaces |> Seq.groupBy id |> Seq.filter (fun (_, c) -> Seq.length c >= 2) |> Seq.map (faceValue << fst) |> Seq.tryHead
+    let boardPairs = boardFaces |> Seq.groupBy id |> Seq.filter (fun (_, c) -> Seq.length c >= 2) |> Seq.map (faceValue << fst) |> List.ofSeq
+    let boardHighestPair = boardPairs |> List.tryHead
 
     let pairs = 
       boardFaces
@@ -272,6 +276,7 @@ module HandValues =
       |> Seq.distinct
       |> Seq.mapi (fun i x -> (x, i + 1))
       |> Seq.filter (fun (x, _) -> x = hand.Card1.Face || x = hand.Card2.Face)
+      |> Seq.filter (fun (x, _) -> match boardPairs with | [_; p] -> faceValue x > p | _ -> true)
       |> Seq.map snd
       |> Seq.tryHead
 

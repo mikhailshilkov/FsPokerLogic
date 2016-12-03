@@ -105,10 +105,7 @@ module Decision =
     if potOdds s <= threshold then Action.Call else Action.Fold
 
   let preventMicroRaises s d =
-    if match street s with | Turn | River -> true | _ -> false 
-      && s.VillainBet <= 3 * s.BB && s.VillainBet * 7 / 20 < s.Pot 
-    then 6 * s.VillainBet 
-    else if s.VillainBet = s.BB then 4 * s.VillainBet
+    if s.VillainBet = s.BB then 4 * s.VillainBet
     else d
 
   let orAllIn threshold s action =
@@ -117,7 +114,7 @@ module Decision =
     | _ -> action
 
   let stackOffDonkX x s = 
-    let raiseSize = s.VillainBet * x / 100 |> preventMicroRaises s
+    let raiseSize = s.VillainBet * x / 100 |> preventMicroRaises s |> roundTo5 
     Action.RaiseToAmount raiseSize |> orAllIn 100 s
 
   let callRaiseRiver s =

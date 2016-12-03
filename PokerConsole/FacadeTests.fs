@@ -27,7 +27,8 @@ let test s vb hb hand history openRange expected =
   let potOdds = (callSize |> decimal) * 100m / (vb + hb + callSize |> decimal) |> ceil |> int
   let fullHand = parseFullHand hand
   let result = decideOnRules rules effectiveStack potOdds openRange history fullHand
-  Assert.Equal(Some expected, result)
+  let actual = match result with | Some(a, _) -> a | _ -> failwith "None is no good"
+  Assert.Equal(expected, actual)
 
 let testVsPfr vb hand openRange = test 500 vb 20 hand [WasRaise(decimal(vb) / 20m)] openRange AllIn
 

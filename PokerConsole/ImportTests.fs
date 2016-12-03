@@ -33,12 +33,12 @@ let decideOnImportedWithOdds decide handString stack odds openRange history expe
   Assert.Equal (expected,
     (match actual with
       | None -> "-"
-      | Some MinRaise -> "Raise"
-      | Some(RaiseX 2.5m) -> "RaiseX2.5"
-      | Some(RaiseX 3m) -> "RaiseX3"
-      | Some(RaiseBluffX 2.5m) -> "RaiseBluffX2.5"
-      | Some(RaiseBluffX 3m) -> "RaiseBluffX3"
-      | Some x -> sprintf "%A" x))
+      | Some(MinRaise, _) -> "Raise"
+      | Some(RaiseX 2.5m, _) -> "RaiseX2.5"
+      | Some(RaiseX 3m, _) -> "RaiseX3"
+      | Some(RaiseBluffX 2.5m, _) -> "RaiseBluffX2.5"
+      | Some(RaiseBluffX 3m, _) -> "RaiseBluffX3"
+      | Some(x, _) -> sprintf "%A" x))
 
 let decideOnImported decide handString stack history expected =
   decideOnImportedWithOdds decide handString stack 0 0m history expected

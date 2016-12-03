@@ -130,7 +130,7 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 4 }
     let actual = importOopTurn xl.Workbook "limp and check" { Made = Flush(NotNut Queen); FD = NoFD; FD2 = NoFD; SD = NoSD } texture
-    let expected = ({ defaultOopOptions with First = Donk(75m); Then = Call }, "limp and check -> AA/AB21") |> Some
+    let expected = ({ defaultOopOptions with First = Donk(75m); Then = Call }, "limp and check -> AA21") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -138,21 +138,21 @@ module ImportTests =
     use xl = useExcel postflopOOPFileName
     let texture = { defaultTexture with Monoboard = 3; Streety = true }
     let actual = importOopTurn xl.Workbook "limp and check" { Made = TwoPair; FD = Draw(NotNut(King)); FD2 = NoFD; SD = NoSD } texture
-    let expected = ({ defaultOopOptions with Then = CallEQ 28 }, "limp and check -> S/T17") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 28 }, "limp and check -> T17") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = OpenEnded } defaultTexture
-    let expected = ({ defaultOopOptions with First = Donk 50m; Then = CallEQ 20; Scenario = "r8" }, "hero call raise pre -> K/N32") |> Some
+    let expected = ({ defaultOopOptions with First = Donk 50m; Then = CallEQ 20; Scenario = "r8" }, "hero call raise pre -> K32") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct special scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = GutShot } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 13; Special = [CheckCheckAndBoardOvercard (Donk 75M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K/N26") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 13; Special = [CheckCheckAndBoardOvercard (Donk 75M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K26") |> Some
     Assert.Equal(expected, actual)
 
   let testParseTurnDonk s d r =

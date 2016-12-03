@@ -92,14 +92,14 @@ let main argv =
           printAction result
 
           match result with
-          | Some(Call) -> 
+          | Some(Call, _) -> 
 
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 2) stack 
             let x = (raiseSize / bb) |> decimal
             let onRaise = decide effectiveStack 0 0m [WasLimp; WasRaise(x)] parsed
             printAction onRaise
 
-          | Some(MinRaise) ->
+          | Some(MinRaise, _) ->
             let raiseSize = enterNumber "Villain raises. What's the raise size" (bb * 3) stack 
             let x = (raiseSize |> decimal) / (bb |> decimal)
             let allActions = if raiseSize = stack then List.append previous [WasRaise(2m); WasRaiseAllIn] else List.append previous [WasRaise(2m); WasRaise(x)]

@@ -164,7 +164,7 @@ module Decide =
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
 //      let history = [
-//        {Action = Call; Motivation = None; VsVillainBet = 30; Street = PreFlop; Source = null;} 
+//           {Action = RaiseToAmount 60; Motivation = Some Bluff; VsVillainBet = 20; Street = PreFlop; Source = null;}
 //      ]
       history |> List.iter (sprintf "History: %A" >> log)
 

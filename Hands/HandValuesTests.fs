@@ -159,15 +159,18 @@ let ``isLastBoardCardSecondCard returns true for boards with last card being bet
   Assert.Equal(expected, actual)
 
 [<Theory>]
-[<InlineData("9c6c6sJc5c", true)>]
-[<InlineData("Ts5d3hQs2d", true)>]
-[<InlineData("Ts8cQc9c", false)>]
-[<InlineData("Ts8cQc8c", false)>]
-[<InlineData("", false)>]
-[<InlineData("Ks", false)>]
-let ``isLastBoardCardUndercard returns true for boards with last card being undercard for previous cards`` flopS expected =
+[<InlineData("9c6c6sJc5c", 4, true)>]
+[<InlineData("Ts5d3hQs2d", 4, true)>]
+[<InlineData("Ts8cQc9c", 3, false)>]
+[<InlineData("Ts8cQc8c", 3, false)>]
+[<InlineData("Ts8d5cKh6s", 2, true)>]
+[<InlineData("Qs5d2cKh9s", 2, true)>]
+[<InlineData("7s6d2cJh6s", 2, true)>]
+[<InlineData("", 1, false)>]
+[<InlineData("Ks", 1, false)>]
+let ``isLastBoardCardUndercard returns true for boards with last card being undercard for previous cards`` flopS amount expected =
   let board = parseBoard flopS
-  let actual = isLastBoardCardUndercard board
+  let actual = isLastBoardCardUndercard amount board
   Assert.Equal(expected, actual)
 
 [<Theory>]
@@ -241,6 +244,7 @@ let ``TwoOvercards`` handS flopS =
 [<Theory>]
 [<InlineData("7s2c", "AdKdJhTh8c")>]
 [<InlineData("AsKc", "7d2dJhTh8c")>]
+[<InlineData("4h7h", "8h9c9s7d8d")>]
 let ``Nothing`` handS flopS =
   Nothing |> test handS flopS
 
@@ -269,6 +273,7 @@ let ``Top pair`` handS flopS =
 [<InlineData("9s8c", "Kc9s8d6s6h", "A")>] 
 [<InlineData("Js8c", "KcJs9d9s8h", "8")>] 
 [<InlineData("8s7c", "KcKs8s7h", "7")>] 
+[<InlineData("8sAc", "KcKs8s7h7d", "A")>] 
 let ``Second pair`` handS flopS kicker =
   Pair(Second(parseFace kicker)) |> test handS flopS
 
@@ -353,6 +358,8 @@ let ``Flush Board`` handS flopS =
 [<InlineData("JdTd", "AdJhTs2sTc")>]
 [<InlineData("TdTh", "AdJhTs2sJc")>]
 [<InlineData("JsJc", "2h2c2s")>]
+[<InlineData("QcQh", "4hJcJhQsJs")>]
+[<InlineData("2d9c", "2h2s9dTs9h")>]
 let ``Full house normal`` handS flopS =
   FullHouse(Normal) |> test handS flopS
 
@@ -383,3 +390,10 @@ let ``Four of kind`` handS flopS =
 [<InlineData("KcTc", "Jc2cQc9c3h")>]
 let ``Straight flush`` handS flopS =
   StraightFlush |> test handS flopS
+
+[<Theory>]
+[<InlineData("8s7cTcJh", true)>]
+let ``Streety board`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isStreety 4 1 board
+  Assert.Equal(expected, actual)

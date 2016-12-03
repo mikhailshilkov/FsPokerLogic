@@ -33,7 +33,8 @@ module Decide =
     { StackRange : int * int
       Range : string
       History : RuleHistoryItem seq
-      Action : ActionPattern }
+      Action : ActionPattern
+      Source: string }
 
   type VillainStats =
     { VillainName: string
@@ -83,11 +84,10 @@ module Decide =
         && stack <= stackMaxF + 0.5m 
         && (isHistoryMatching rule.History history stack odds openingRange)
     let findMatching rs =
-      let a =
-        rs
-        |> Seq.filter (fun r -> isMatching r (normalize h))
-        |> Seq.tryHead 
-      a |> Option.map (fun x -> x.Action)
+      rs
+      |> Seq.filter (fun r -> isMatching r (normalize h))
+      |> Seq.tryHead 
+      |> Option.map (fun x -> x.Action, x.Source)
 
     let (nonFoldRules, foldRules) = rules |> List.partition (fun x -> x.Action <> Fold)
     let nonFold = findMatching nonFoldRules
@@ -112,5 +112,4 @@ module Decide =
     let hudStats = hud hudData s.VillainName
     let openRaise = (if s.BB >= 20 then hudStats.OpenRaise20_25 else if s.BB >= 16 then hudStats.OpenRaise16_19 else hudStats.OpenRaise14_15) |> decimal
     if hudStats.LimpFold >= 65 then decideOnRules rulesBig effectiveStack potOdds openRaise history s.HeroHand
-    else decideOnRules rulesLow effectiveStack potOdds openRaise history s.HeroHand 
-    |> Option.map (fun r -> r, null |> string) // source is null for now
+    else decideOnRules rulesLow effectiveStack potOdds openRaise history s.HeroHand     

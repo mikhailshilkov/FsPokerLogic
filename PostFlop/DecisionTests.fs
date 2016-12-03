@@ -255,7 +255,7 @@ module DecisionTests =
     let options = { defaultOptions with Donk = ForValueStackOff }
     let snapshot = { defaultTurn with HeroStack = 430; Pot = 140; VillainStack = 430; VillainBet = 40 }
     let actual = Decision.decide [] snapshot [] options
-    Assert.Equal(actual, Action.RaiseToAmount 240 |> Some)
+    Assert.Equal(actual, Action.RaiseToAmount 145 |> Some)
 
   [<Fact>]
   let ``Call on RaiseConditional when stack is low`` () =
@@ -376,13 +376,6 @@ module DecisionTests =
     let options = { defaultOptions with Donk = OnDonk.CallRaisePet }
     let actual = Decision.decide [] snapshot [] options
     Assert.Equal(Some Action.Call, actual)
-
-  [<Fact>]
-  let ``Raise micro donk on river`` () =
-    let snapshot = { defaultRiver with Pot = 230; VillainBet = 30; HeroStack = 320; VillainStack = 490 }
-    let options = { defaultOptions with Donk = OnDonk.CallRaisePet }
-    let actual = Decision.decide [] snapshot [] options
-    Assert.Equal(Action.RaiseToAmount 180 |> Some, actual)
 
   [<Fact>]
   let ``Raise small donk on river`` () =

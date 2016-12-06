@@ -125,7 +125,9 @@ module Decide =
       |> findButton
 
     match (action, button) with
-    | (Action.AllIn, Some b) when b.Name <> "AllIn" -> [|Click({ Region = (368, 389, 42, 7); Name = "Max" }); Click(b)|]
+    | (Action.AllIn, Some b) when b.Name <> "AllIn" -> 
+      let maxbutton = buttons |> Array.find (fun b -> b.Name = "Max")
+      [|Click(maxbutton); Click(b)|]
     | (Action.RaiseToAmount x, Some b) when x > minBet -> [| Amount(x); Click(b)|]
     | (_, Some b) -> [|Click(b)|]
     | (_, None) -> failwith "Could not find an appropriate button"

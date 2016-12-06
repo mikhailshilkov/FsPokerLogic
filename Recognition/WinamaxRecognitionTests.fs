@@ -33,7 +33,7 @@ let ``recognize stakes from predefined file`` () =
 
 [<Fact>]
 let ``recognize board from predefined file`` () =
-  test (fun r -> r.Board) "Flop"
+  test (fun r -> if r.Board = null then "" else r.Board) "Flop"
 
 [<Fact>]
 let ``recognize hand from predefined file`` () =
@@ -50,7 +50,7 @@ let ``recognize dealer (button) from predefined file`` () =
 [<Fact>]
 let ``recognize actions from predefined file`` () =
   let formatActions a =
-    let names = a |> Array.map (fun x -> x.Name)
+    let names = a |> Array.filter (fun a -> a.Name <> "Max") |> Array.map (fun x -> x.Name)
     System.String.Join("-", names)
   test (fun r -> r.Actions |> formatActions) "ActionsButtons"
 

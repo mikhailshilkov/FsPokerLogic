@@ -222,16 +222,16 @@ module StringRecognition =
   |]
 
   let winamaxNumberBetInputPatterns = [|  
-    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W]; [B;W;W;W;W;W;W;W;W;W]] }
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;W;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W]] }
     { Char = '1'; Pattern = [[B;W;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]] }
-    { Char = '2'; Pattern = [[B;B;W;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;W;B;W]; [W;B;B;B;B;W;W;B;B;W]; [B;W;W;W;W;B;B;B;B;W]] }
-    { Char = '3'; Pattern = [[B;W;B;B;B;B;B;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;W]; [B;W;W;W;B;W;W;W;W;B]] }
-    { Char = '4'; Pattern = [[B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;W;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B]] }
-    { Char = '5'; Pattern = [[B;B;B;B;B;B;B;B;B;B]; [W;B;B;B;W;B;B;B;B;W]; [W;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;W;W;W;W;B]] }
-    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;B;B;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;B;B;W;W;W;W;W;B]] }
-    { Char = '7'; Pattern = [[B;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;W;W;W;B;B]; [B;W;W;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;W;W;W]] }
-    { Char = '8'; Pattern = [[B;B;W;B;B;B;W;W;W;B]; [W;B;B;B;W;W;B;B;B;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;W;W;B;W;W;W;W;B]] }
-    { Char = '9'; Pattern = [[B;W;W;W;W;B;B;B;B;B]; [W;B;B;B;B;W;B;B;B;W]; [W;B;B;B;B;W;B;B;B;W]; [B;W;W;W;W;W;W;W;W;B]] }
+    { Char = '2'; Pattern = [[B;W;W;B;B;B;B;B;W;W]; [W;W;B;B;B;B;W;W;W;W]; [W;B;B;B;W;W;W;B;B;W]; [W;W;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;W;W;B;B;B;B;W;W;B]; [W;W;B;B;B;B;B;B;W;W]; [W;B;B;B;W;W;B;B;B;W]; [B;W;W;W;B;W;W;W;W;W]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;B;B;B]; [B;B;B;B;W;W;W;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;W;B;B;B]] }
+    { Char = '5'; Pattern = [[B;B;B;W;W;B;B;W;W;B]; [W;W;B;B;W;B;B;B;W;W]; [W;B;B;W;B;B;B;B;B;W]; [W;B;B;W;W;W;W;W;W;W]] }
+    { Char = '6'; Pattern = [[B;W;W;W;W;W;W;W;W;B]; [W;W;B;B;B;B;B;B;W;W]; [W;B;B;B;W;B;B;B;B;W]; [B;W;W;B;W;W;W;W;W;W]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;W;W;W]; [W;B;B;W;W;W;W;W;W;B]; [W;W;W;W;W;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;W;W;B;W;W;W;W;B]; [W;W;B;W;W;W;B;B;W;W]; [W;B;B;B;W;W;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '9'; Pattern = [[B;W;W;W;W;B;B;B;W;B]; [W;W;B;B;B;W;B;B;W;W]; [W;B;B;B;B;W;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W]] }
   |]
 
   let winamaxFold = [[W;W;W;W;W;W;W;W;W]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;W;B;B;B;B]; [W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W]; [W;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;B;B]]
@@ -380,10 +380,15 @@ module StringRecognition =
     s.Replace("?", "")
 
   let parseStringPattern getPixel width height =
+    let isWhite2 (c : Color) = 
+      if c.R > 150uy && c.G > 150uy && c.B > 150uy
+        || c.B > 180uy
+        || (c.R |> int) + (c.G |> int) + (c.B |> int) > 450
+      then B else W
     let a = 
       [0 .. width - 1]
       |> Seq.map (fun x -> 
-        let b = [0 .. height - 1] |> Seq.map (fun y -> if isWhite (getPixel x y) = B then "B" else "W") |> String.concat ";"
+        let b = [0 .. height - 1] |> Seq.map (fun y -> if isWhite2 (getPixel x y) = B then "B" else "W") |> String.concat ";"
         "[" + b + "]")
       |> String.concat "; "
     "{ Char = '?'; Pattern = [" + a + "] }\n"
@@ -405,5 +410,9 @@ module StringRecognition =
     s.Replace("?", "")
 
   let recognizeWinamaxBetSize x y z =
-    let isWhite (c : Color) = if c.B > 127uy && c.G > 127uy && c.R > 127uy then W else B
+    let isWhite (c : Color) = 
+      if c.R > 150uy && c.G > 150uy && c.B > 150uy
+        || c.B > 175uy
+        || (c.R |> int) + (c.G |> int) + (c.B |> int) > 450
+      then W else B
     recognizeString isWhite (getCharApproximate false winamaxNumberBetInputPatterns) 2 2 10 x y z

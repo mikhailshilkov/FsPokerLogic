@@ -35,9 +35,6 @@ module WinamaxRecognition =
       |> List.choose parseNumber
       |> List.tryHead
     
-    let p11111 = parseStringPattern (getPixel 459 451) 4 10
-    let p2 = parsePattern (getPixel 330 382) 6 13
-
     let blinds = recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds
     let totalPot = 
       chooseGoodNumber 2 [
@@ -67,7 +64,7 @@ module WinamaxRecognition =
         [197; 251; 305; 360; 413]
         |> Seq.map (fun x -> recognizeCard winamaxPatterns (getPixel x 189) 9 15)
         |> String.concat ""
-      else ""
+      else null
 
     let actions = 
       [("Fold", winamaxFold, 194, 424, 60, 15)
@@ -79,24 +76,26 @@ module WinamaxRecognition =
       |> Seq.filter (fun (m, _, _) -> m)
       |> Seq.map (fun (_, n, r) -> { Name = n; Region = r })
       |> Array.ofSeq      
+      |> Array.append ([|{ Name = "Max"; Region = (350, 469, 35, 8) }|])
 
-    { TotalPot = totalPot
+    { Room = Winamax
+      TotalPot = totalPot
       HeroStack = heroStack
       VillainStack = villainStack
       HeroBet = heroBet
       VillainBet = villainBet
-      VillainName = null
+      VillainName = "???"
       HeroHand = if heroHand = "" then null else heroHand
       Button = button
       Actions = actions
       Blinds = blinds
       Board = flop
       Sitout = Seat.Unknown
+      AmountInput = (440, 451, 30, 9)
     }
 
   let recognizeBetSizeWinamax (bitmap : Bitmap) =    
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
 
-    let p11111 = parseStringPattern (getPixel 453 451) 4 10
     recognizeWinamaxBetSize (getPixel 445 450) 26 12

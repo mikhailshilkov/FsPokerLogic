@@ -35,7 +35,9 @@ let ``recognize position and actions from predefined file`` () =
   let formatActions a =
     let names = a |> Array.map (fun x -> x.Name)
     System.String.Join("-", names)
-  test (fun r -> System.String.Format("{0}-{1}", r.Actions |> formatActions, match r.Button with | Hero -> "H" | Villain -> "V" | Unknown -> "?")) "ActionsButtons"
+  test (fun r -> System.String.Format("{0}-{1}", 
+    r.Actions |> Array.filter (fun a -> a.Name <> "Max") |> formatActions, 
+    match r.Button with | Hero -> "H" | Villain -> "V" | Unknown -> "?")) "ActionsButtons"
 
 [<Fact>]
 let ``recognize blinds from predefined file`` () =

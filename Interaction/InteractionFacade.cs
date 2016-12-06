@@ -10,11 +10,26 @@ namespace Interaction
     {
         public string Title { get; set; }
 
+        public string Room { get; set; }
+
         public string TableName { get; set; }
 
         public Size Size { get; set; }
 
         public Bitmap Bitmap { get; set; }
+    }
+
+    public class WindowExtractor
+    {
+        public WindowExtractor(string name, Func<string, string> extractor)
+        {
+            this.Name = name;
+            this.Extractor = extractor;
+        }
+
+        public string Name { get; }
+
+        public Func<string, string> Extractor { get; }
     }
 
     public static class InteractionFacade
@@ -67,35 +82,34 @@ namespace Interaction
             return HwndObject.GetWindows().Count(w => w.Title.StartsWith(searchString));
         }
 
-        public static IEnumerable<WindowInfo> GetWindowList(Size screenSize, Size targetSize, params string[] searchStrings)
+        public static IEnumerable<WindowInfo> GetWindowList(Size screenSize, Size targetSize, params WindowExtractor[] tableNameExtractors)
         {
-            foreach (string searchString in searchStrings)
+            foreach (var extractor in tableNameExtractors)
             {
-                foreach (HwndObject window in HwndObject.GetWindows().Where(w => w.Title.StartsWith(searchString))) //TODO winamax
+                var windows = HwndObject
+                    .GetWindows()
+                    .Select(w => new { Room = extractor.Name, Window = w, TableName = extractor.Extractor(w.Title) })
+                    .Where(w => !string.IsNullOrEmpty(w.TableName));                    
+                foreach (var window in windows)
                 {
-                    if (targetSize != window.Size)
+                    if (targetSize != window.Window.Size)
                     {
-                        HwndObject.GetWindowByTitle(window.Title).Size = targetSize;
+                        HwndObject.GetWindowByTitle(window.Window.Title).Size = targetSize;
                         continue;
-                    }
-
-                    var parts = window.Title.Split('-');
-                    if (parts.Length < 3)
-                    {
-                        continue;
-                    }
+                    }                    
 
                     Bitmap bitmap = new Bitmap(screenSize.Width, screenSize.Height);
                     Graphics memoryGraphics = Graphics.FromImage(bitmap);
                     IntPtr dc = memoryGraphics.GetHdc();
-                    bool success = Win32.PrintWindow(window.Hwnd, dc, 0);
+                    bool success = Win32.PrintWindow(window.Window.Hwnd, dc, 0);
                     memoryGraphics.ReleaseHdc(dc);
 
                     yield return new WindowInfo
                     {
-                        Title = window.Title,
-                        TableName = parts[2].Trim(),
-                        Size = window.Size,
+                        Room = window.Room,
+                        Title = window.Window.Title,
+                        TableName = window.TableName,
+                        Size = window.Window.Size,
                         Bitmap = bitmap
                     };
                 }

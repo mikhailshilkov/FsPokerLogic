@@ -16,10 +16,15 @@ module ScreenRecognition =
 
   type ActionButton = {
     Name: string
-    Region: (int * int * int * int)
+    Region: int * int * int * int
   }
 
+  type Room = 
+    | IPoker
+    | Winamax
+
   type Screen = {
+    Room: Room
     TotalPot: int option
     HeroStack: int option
     VillainStack: int option
@@ -32,6 +37,7 @@ module ScreenRecognition =
     Button: Seat
     Board: string
     Sitout: Seat
+    AmountInput: int * int * int * int
   }
 
   let print screen =
@@ -97,7 +103,10 @@ module ScreenRecognition =
 
     let isVillainSitout = isVillainSitout (getPixel 570 319) 12 11
     let isHeroSitout = isHeroSitout (getPixel 489 469) 11 11
-    let actionsWithCheckboxes = actions |> Array.append (if isHeroSitout then [|{ Name = "SitBack"; Region = (492, 472, 7, 5) }|] else [||])
+    let actionsWithCheckboxes = 
+      actions 
+      |> Array.append ([|{ Name = "Max"; Region = (368, 389, 42, 7) }|])
+      |> Array.append (if isHeroSitout then [|{ Name = "SitBack"; Region = (492, 472, 7, 5) }|] else [||])
 
     let (dxo, dyo) = findCardStart (getPixel 78 274) 12 17
     let heroHand = 
@@ -115,7 +124,8 @@ module ScreenRecognition =
         |> String.concat ""
       | _, _ -> null
 
-    { TotalPot = totalPot
+    { Room = IPoker
+      TotalPot = totalPot
       HeroStack = heroStack
       VillainStack = villainStack
       HeroBet = heroBet
@@ -126,7 +136,8 @@ module ScreenRecognition =
       Actions = actionsWithCheckboxes
       Blinds = blinds
       Board = flop
-      Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown }
+      Sitout = if isHeroSitout then Hero else if isVillainSitout then Villain else Unknown
+      AmountInput = (605, 407, 12, 9) }
 
   let recognizeBetSizeIpoker (bitmap : Bitmap) =    
     let getPixel offsetX offsetY x y = 

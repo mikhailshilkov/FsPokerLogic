@@ -23,9 +23,15 @@ module Click =
   let ensureAmount window screen check repeat =
     // Check that amount is OK
     let w = InteractionFacade.GetWindow(window, new System.Drawing.Size(650, 490))
-    let b = ScreenRecognition.recognizeBetSizeIpoker(w.Bitmap)
+    let b = 
+      match screen.Room with
+      | IPoker -> ScreenRecognition.recognizeBetSizeIpoker w.Bitmap
+      | Winamax -> WinamaxRecognition.recognizeBetSizeWinamax w.Bitmap
     if not (check b) then 
-      let currentScreen = ScreenRecognition.recognizeScreen(w.Bitmap)
+      let currentScreen = 
+        match screen.Room with
+        | IPoker -> ScreenRecognition.recognizeScreen w.Bitmap
+        | Winamax -> WinamaxRecognition.recognizeScreenWinamax w.Bitmap
       if currentScreen = screen then
         repeat()
 
@@ -49,7 +55,7 @@ module Click =
 
   let enterAmount window s i =
     let rec imp attempts =
-      executeClickAction window s { Region = (605, 407, 12, 9); Name = "AmountInput" }
+      executeClickAction window s { Region = s.AmountInput; Name = "AmountInput" }
       Clicker.backspace 3
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)

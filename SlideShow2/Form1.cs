@@ -18,7 +18,8 @@ namespace SlideShow2
         public Form1()
         {
             InitializeComponent();
-            this.Text = $"Heads Up - 10/20 - {Guid.NewGuid().ToString().Substring(0, 6)}";
+            //this.Text = $"Heads Up - 10/20 - {Guid.NewGuid().ToString().Substring(0, 6)}";
+            this.Text = $"My Heads-Up(2134)#0 - 10/20 - {Guid.NewGuid().ToString().Substring(0, 6)}";
             this.Load += (s, ea) =>
             {
                 var r = new Random();

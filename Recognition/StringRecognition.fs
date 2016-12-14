@@ -184,9 +184,10 @@ module StringRecognition =
     { Char = '9'; Pattern = [[B;W;W;W;B;B;B;W;B]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [W;B;B;B;W;B;B;B;W]; [B;W;W;W;W;W;W;W;B]] }
   |]
 
-  let winamaxNumberBetPatterns = [|  
+  let winamaxNumberStackPatterns = [|  
     { Char = '0'; Pattern = [[B;W;W;W;W;W;W;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;B;B;B;B;B;B;W;W]; [W;W;B;B;B;B;B;B;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;W;W;W;W;W;W;W;B]] }
     { Char = '1'; Pattern = [[B;W;W;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B;B;B;B;B;B;B]; [B;W;W;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]] }
     { Char = '2'; Pattern = [[B;B;W;W;B;B;B;B;B;B;B;W;W]; [B;W;W;W;B;B;B;B;B;W;W;W;W]; [W;W;B;B;B;B;B;B;W;W;W;W;W]; [W;W;B;B;B;B;W;W;W;B;B;W;W]; [W;W;W;W;W;W;W;W;B;B;B;W;W]; [B;W;W;W;W;W;B;B;B;B;B;W;W]] }
     { Char = '3'; Pattern = [[B;W;W;B;B;B;B;B;B;W;W;W;B]; [W;W;W;B;B;B;B;B;B;W;W;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;B;B;W;W;W;W;W;B]] }
     { Char = '4'; Pattern = [[B;B;B;B;B;B;B;B;W;W;B;B;B]; [B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;W;W;W;W;B;W;W;B;B;B]; [B;W;W;W;B;B;B;B;W;W;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;W;W;B;B;B]] }
@@ -293,6 +294,10 @@ module StringRecognition =
     if c.B < 100uy && c.G > 127uy && c.R > 160uy then W
     else B
 
+  let isShadeYellow (c : Color) =
+    if c.B < 50uy && c.G > 74uy && c.G < 90uy && c.R > 90uy && c.R < 105uy then W
+    else B
+
   let recognizeString isWhite (matchSymbol: BW list list -> char) upThreshold downThreshold minHeight getPixel width height =
     let isSeparator (e : list<BW>) = List.forall ((=) B) e
 
@@ -380,15 +385,10 @@ module StringRecognition =
     s.Replace("?", "")
 
   let parseStringPattern getPixel width height =
-    let isWhite2 (c : Color) = 
-      if c.R > 150uy && c.G > 150uy && c.B > 150uy
-        || c.B > 180uy
-        || (c.R |> int) + (c.G |> int) + (c.B |> int) > 450
-      then B else W
     let a = 
       [0 .. width - 1]
       |> Seq.map (fun x -> 
-        let b = [0 .. height - 1] |> Seq.map (fun y -> if isWhite2 (getPixel x y) = B then "B" else "W") |> String.concat ";"
+        let b = [0 .. height - 1] |> Seq.map (fun y -> if isYellow (getPixel x y) = B then "B" else "W") |> String.concat ";"
         "[" + b + "]")
       |> String.concat "; "
     "{ Char = '?'; Pattern = [" + a + "] }\n"
@@ -399,8 +399,11 @@ module StringRecognition =
   let recognizeWinamaxWhiteNumber x =
     recognizeString isWhite (getChar false winamaxNumberPatterns) 1 1 9 x
 
-  let recognizeWinamaxBetNumber x =
-    recognizeString isYellow (getCharApproximate false winamaxNumberBetPatterns) 1 1 13 x
+  let recognizeWinamaxStackNumber x =
+    recognizeString isYellow (getCharApproximate false winamaxNumberStackPatterns) 1 1 13 x
+
+  let recognizeWinamaxStackSitoutNumber x =
+    recognizeString isShadeYellow (getCharApproximate false winamaxNumberStackPatterns) 1 1 13 x
 
   let recognizeWinamaxPotNumber x =
     recognizeString isYellow (getCharApproximate false winamaxNumberPotPatterns) 1 1 10 x

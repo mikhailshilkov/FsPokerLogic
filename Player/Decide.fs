@@ -109,13 +109,20 @@ module Decide =
     PreviousActions: MotivatedAction list
   }
 
-  let mapAction action minBet buttons : ClickAction[] =
+  let mapAction action screen : ClickAction[] =
     let findButton names =
       names 
-      |> List.choose (fun x -> Seq.tryFind (fun y -> x = y.Name) buttons)
+      |> List.choose (fun x -> Seq.tryFind (fun y -> x = y.Name) screen.Actions)
       |> List.tryHead
-    let button =
+
+    let effectiveAction =
       match action with
+      | Action.AllIn | Action.RaiseToAmount _ 
+        when defaultArg screen.VillainStack 0 = 0 -> Action.Call
+      | _ -> action
+
+    let button =
+      match effectiveAction with
       | Action.Fold -> ["Check"; "Fold"]
       | Action.Check -> ["Check"]
       | Action.Call -> ["Call"; "AllIn"]
@@ -124,9 +131,16 @@ module Decide =
       | Action.SitBack -> ["SitBack"]
       |> findButton
 
+    let minBet = 
+      screen.Blinds
+      |> Option.map (fun x -> x.SB)
+      |> defaultArg <| 0
+      |> defaultArg screen.VillainBet
+      |> (*) 2
+
     match (action, button) with
     | (Action.AllIn, Some b) when b.Name <> "AllIn" -> 
-      let maxbutton = buttons |> Array.find (fun b -> b.Name = "Max")
+      let maxbutton = screen.Actions |> Array.find (fun b -> b.Name = "Max")
       [|Click(maxbutton); Click(b)|]
     | (Action.RaiseToAmount x, Some b) when x > minBet -> [| Amount(x); Click(b)|]
     | (_, Some b) -> [|Click(b)|]
@@ -166,7 +180,7 @@ module Decide =
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
 //      let history = [
-//           {Action = RaiseToAmount 60; Motivation = Some Bluff; VsVillainBet = 20; Street = PreFlop; Source = null;}
+//           {Action = RaiseToAmount 60; Motivation = None; VsVillainBet = 30; Street = PreFlop; Source = "IPInput -> 13BB -> F12";}
 //      ]
       history |> List.iter (sprintf "History: %A" >> log)
 
@@ -176,13 +190,7 @@ module Decide =
         match decision with
         | Some d ->
           sprintf "Decision is: %A" d |> log
-          let minBet = 
-            screen.Blinds
-            |> Option.map (fun x -> x.SB)
-            |> defaultArg <| 0
-            |> defaultArg screen.VillainBet
-            |> (*) 2
-          let action = mapAction d.Action minBet screen.Actions
+          let action = mapAction d.Action screen
           sprintf "Action is: %A" action |> log
           if (d.Action = SitBack) then
             dump "SitBack" msg

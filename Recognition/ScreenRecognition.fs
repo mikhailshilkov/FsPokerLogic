@@ -40,6 +40,12 @@ module ScreenRecognition =
     AmountInput: int * int * int * int
   }
 
+  let parseNumber (s : string) = 
+    if not(String.IsNullOrEmpty s) then
+      let (s, r) = Int32.TryParse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
+      if s then Some r else None
+    else None
+
   let print screen =
     [sprintf "Villain: %s %s" screen.VillainName (if screen.Sitout = Villain then "(sitout)" else "");
      sprintf "Total pot: %A" (Option.toNullable screen.TotalPot);
@@ -54,12 +60,6 @@ module ScreenRecognition =
     
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
-
-    let parseNumber (s : string) = 
-      if not(String.IsNullOrEmpty s) then
-        let (s, r) = Int32.TryParse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
-        if s then Some r else None
-      else None
 
     let parseBlinds (s : string) =
       if not(String.IsNullOrEmpty s) then
@@ -146,8 +146,8 @@ module ScreenRecognition =
     let (dxo, dyo) = findCardStart (getPixel 575 403) 8 8
     match (dxo, dyo) with 
     | Some dx, Some dy ->
-      recognizeBetSize (getPixel (574 + dx) (402 + dy)) 40 14
-    | _ -> null
+      recognizeBetSize (getPixel (574 + dx) (402 + dy)) 40 14 |> parseNumber
+    | _ -> None
 
   let isHeroSitout (bitmap : Bitmap) =    
     let getPixel offsetX offsetY x y = 

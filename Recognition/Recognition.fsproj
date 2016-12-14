@@ -55,6 +55,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Library.fs" />
     <Compile Include="StringRecognition.fs" />
     <Compile Include="HandRecognition.fs" />
     <Compile Include="ScreenRecognition.fs" />

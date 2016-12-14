@@ -4,19 +4,14 @@ module WinamaxRecognition =
   open System
   open System.Drawing
   open System.Globalization
+  open Microsoft.FSharp.Core
   open StringRecognition
   open HandRecognition
   open Recognition.ScreenRecognition
 
-  let recognizeScreenWinamax (bitmap : Bitmap) =
+  let recognizeScreenWinamax (bitmap : Bitmap) (title: string) =
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
-
-    let parseNumber (s : string) = 
-      if not(String.IsNullOrEmpty s) then
-        let (s, r) = Int32.TryParse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
-        if s then Some r else None
-      else None
 
     let parseBlinds (s : string) =
       if not(String.IsNullOrEmpty s) then
@@ -34,8 +29,24 @@ module WinamaxRecognition =
       |> List.filter (fun (s : string) -> s <> null && s.Length >= minLength && not(s.Contains("?")))
       |> List.choose parseNumber
       |> List.tryHead
+
+    let isAllIn x = 
+      let isRed (c : Color) = c.B < 50uy && c.G < 50uy && c.R > 100uy
+      hasSpecialColor isRed x
+
+    let getTitleBlinds (title: string) =
+      let parts = title.Split([|" / "; " NL "|], StringSplitOptions.RemoveEmptyEntries)
+      let blinds = if parts.Length > 2 then Some(parts.[1]) else None
+      blinds |> Option.bind parseBlinds
+
+    let chooseBlinds titleBlinds cornerBlinds (hasFlop, heroBet, villainBet) =
+      match titleBlinds, cornerBlinds, heroBet, villainBet with
+      | Some tb, Some cb, Some hb, Some vb -> 
+        if (not hasFlop) && (hb = cb.BB || vb = cb.BB) then cornerBlinds
+        else titleBlinds
+      | Some tb, None, _, _ -> titleBlinds
+      | _ -> cornerBlinds
     
-    let blinds = recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds
     let totalPot = 
       chooseGoodNumber 2 [
         recognizeWinamaxWhiteNumber (getPixel 341 276) 20 13
@@ -43,10 +54,15 @@ module WinamaxRecognition =
         recognizeWinamaxPotNumber (getPixel 334 274) 40 14] 
     
     let heroBet = recognizeWinamaxNumber (getPixel 310 315) 30 13 |> parseNumber
-    let heroStack = recognizeWinamaxBetNumber (getPixel 310 381) 30 15 |> parseNumber
+    let heroStack = recognizeWinamaxStackNumber (getPixel 310 381) 30 15 |> parseNumber
+
+    let s = parseStringPattern (getPixel 315 382) 4 13
 
     let villainBet = recognizeWinamaxNumber (getPixel 310 159) 30 13 |> parseNumber
-    let villainStack = recognizeWinamaxBetNumber (getPixel 310 109) 30 15 |> parseNumber
+    let villainStackSitout = recognizeWinamaxStackSitoutNumber (getPixel 310 109) 30 15 |> parseNumber
+    let villainStack = 
+      if isAllIn (getPixel 306 111) 38 11 then Some 0
+      else Option.choose villainStackSitout (recognizeWinamaxStackNumber (getPixel 310 109) 30 15 |> parseNumber)
 
     let button = 
       if isYellowButton (getPixel 255 324) 16 16 then Hero
@@ -65,6 +81,12 @@ module WinamaxRecognition =
         |> Seq.map (fun x -> recognizeCard winamaxPatterns (getPixel x 189) 9 15)
         |> String.concat ""
       else null
+
+    let blinds = 
+      chooseBlinds
+        (getTitleBlinds title) 
+        (recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds)
+        (hasFlop, heroBet, villainBet)
 
     let actions = 
       [("Fold", winamaxFold, 194, 424, 60, 15)
@@ -90,12 +112,12 @@ module WinamaxRecognition =
       Actions = actions
       Blinds = blinds
       Board = flop
-      Sitout = Seat.Unknown
-      AmountInput = (440, 451, 30, 9)
+      Sitout = if villainStackSitout.IsSome then Seat.Villain else Seat.Unknown
+      AmountInput = (490, 451, 60, 9)
     }
 
   let recognizeBetSizeWinamax (bitmap : Bitmap) =    
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
 
-    recognizeWinamaxBetSize (getPixel 445 450) 26 12
+    recognizeWinamaxBetSize (getPixel 445 450) 26 12 |> parseNumber

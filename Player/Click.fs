@@ -6,6 +6,7 @@ open Interaction
 open Akka.FSharp
 open Recognition
 open Recognition.ScreenRecognition
+open Rooms
 
 module Click =
 
@@ -31,7 +32,7 @@ module Click =
       let currentScreen = 
         match screen.Room with
         | IPoker -> ScreenRecognition.recognizeScreen w.Bitmap
-        | Winamax -> WinamaxRecognition.recognizeScreenWinamax w.Bitmap
+        | Winamax -> WinamaxRecognition.recognizeScreenWinamax w.Bitmap w.Title
       if currentScreen = screen then
         repeat()
 
@@ -50,7 +51,9 @@ module Click =
         Thread.Sleep(100)
         if attempts > 1 then
           if b.Name = "Max" && s.HeroStack.IsSome then
-            ensureAmount window s (fun b -> b <> null && int(b) >= s.HeroStack.Value) (fun () -> imp (attempts-1))
+            ensureAmount window s 
+              (fun bet -> match bet with | Some b -> b >= s.HeroStack.Value | _ -> true) 
+              (fun () -> imp (attempts-1))
       imp 3
 
   let enterAmount window s i =
@@ -60,7 +63,9 @@ module Click =
       Clicker.enterText <| i.ToString()
       Thread.Sleep(100)
       if attempts > 1 then        
-        ensureAmount window s (fun b -> b = i.ToString()) (fun () -> imp (attempts-1))
+        ensureAmount window s 
+          (fun bet -> match bet with | Some b -> b = i | None -> true) 
+          (fun () -> imp (attempts-1))
     imp 3
 
   let executeAction window s action =
@@ -79,7 +84,7 @@ module Click =
         if s = msg.Screen then imp (attempts-1)
     if not msg.IsInstant then 
       let dmin, dmax =
-        match InteractionFacade.GetWindowCount("Heads Up ") with
+        match InteractionFacade.GetWindowCount(ipoker, winamax) with
         | 1 -> (1000, 2400)
         | 2 -> (600, 1900)
         | _ -> (200, 1000)

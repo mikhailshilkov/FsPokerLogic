@@ -6,11 +6,11 @@ open Recognition.WinamaxRecognition
 open System.Drawing
 open System.IO
 
-let test actual folderName =
+let testWithTitle title actual folderName =
   let testFile (name : string) =
     let image = new Bitmap(name)
 
-    let result = recognizeScreenWinamax image
+    let result = recognizeScreenWinamax image title
     let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
     if expected <> "null" then
       Assert.Equal(expected, actual result)
@@ -18,6 +18,8 @@ let test actual folderName =
       Assert.Null(actual result)
 
   Directory.GetFiles(@"..\..\TestCases\Winamax\" + folderName) |> Array.iter testFile
+
+let test actual folderName = testWithTitle "Unknown" actual folderName
 
 [<Fact>]
 let ``recognize bet sizes from predefined file`` () =
@@ -44,6 +46,13 @@ let ``recognize blinds from predefined file`` () =
   test (fun r -> sprintf "%A-%A" r.Blinds.Value.SB r.Blinds.Value.BB) "Blinds"
 
 [<Fact>]
+let ``recognize blinds from window title`` () =
+  testWithTitle 
+    "Delingos Heads-Up(123456789)#0 / 10-20 NL Holdem / Buy-in: 0.50" 
+    (fun r -> sprintf "%A-%A" r.Blinds.Value.SB r.Blinds.Value.BB) 
+    "BlindsFromTitle"
+
+[<Fact>]
 let ``recognize dealer (button) from predefined file`` () =
   test (fun r -> match r.Button with | Hero -> "H" | Villain -> "V" | _ -> "U") "Dealer"
 
@@ -55,12 +64,20 @@ let ``recognize actions from predefined file`` () =
   test (fun r -> r.Actions |> formatActions) "ActionsButtons"
 
 [<Fact>]
+let ``recognize sitout from predefined file`` () =
+  test (fun r -> 
+    match r.Sitout with 
+    | Hero -> "Hero" + r.HeroHand
+    | Villain -> "Villain" 
+    | _ -> "Nobody") "Sitout"
+
+[<Fact>]
 let ``recognize input bet size from predefined file`` () =
   let testFile (name : string) =
     let image = new Bitmap(name)
 
     let result = recognizeBetSizeWinamax image
-    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
+    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "") |> int |> Some
     Assert.Equal(expected, result)
 
   Directory.GetFiles(@"..\..\TestCases\Winamax\BetSizes") |> Array.iter testFile

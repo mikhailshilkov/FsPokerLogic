@@ -77,9 +77,14 @@ namespace Interaction
             }
         }
 
-        public static int GetWindowCount(string searchString)
+        public static int GetWindowCount(params WindowExtractor[] tableNameExtractors)
         {
-            return HwndObject.GetWindows().Count(w => w.Title.StartsWith(searchString));
+            return tableNameExtractors
+                .SelectMany(extractor => HwndObject
+                    .GetWindows()
+                    .Select(w => extractor.Extractor(w.Title))
+                    .Where(n => !string.IsNullOrEmpty(n)))
+                .Count();
         }
 
         public static IEnumerable<WindowInfo> GetWindowList(Size screenSize, Size targetSize, params WindowExtractor[] tableNameExtractors)

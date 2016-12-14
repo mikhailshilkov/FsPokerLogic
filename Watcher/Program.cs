@@ -37,7 +37,7 @@ namespace Watcher
 
                     try
                     {
-                        var result = WinamaxRecognition.recognizeScreenWinamax(window.Bitmap);
+                        var result = WinamaxRecognition.recognizeScreenWinamax(window.Bitmap, window.Title);
                         foreach (var s in ScreenRecognition.print(result))
                             Console.WriteLine(s);
                         var result2 = WinamaxRecognition.recognizeBetSizeWinamax(window.Bitmap);

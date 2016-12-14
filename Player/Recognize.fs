@@ -9,21 +9,18 @@ open Decide
 
 module Recognize =
 
-  let recognize' room bitmap = 
+  let recognize' room bitmap title = 
     match room with
     | "ipoker" -> ScreenRecognition.recognizeScreen bitmap
-    | "winamax" -> WinamaxRecognition.recognizeScreenWinamax bitmap
+    | "winamax" -> WinamaxRecognition.recognizeScreenWinamax bitmap title
     | _ -> failwith ("Unknown room " + room)
 
-  let recognizeMock _ _ =
-//    { TotalPot = Some 240; HeroStack = Some 380; VillainStack = Some 380; HeroBet = None; VillainBet = None; HeroHand = "6s5s"; Board = "8s7cTcJh"; 
-//      Button = Villain; Blinds = Some { SB = 10; BB = 20 }; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname" }
-
-    { TotalPot = Some 60; HeroStack = Some 520; VillainStack = Some 420; HeroBet = Some 20; VillainBet = Some 40; HeroHand = "3h5h"; Board = null; 
-      Button = Villain; Blinds = Some { SB = 10; BB = 20 }; Actions = [|{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="Raise"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname"; AmountInput = (13,14,15,16); Room = IPoker }
+  let recognizeMock _ _ _ =
+    { TotalPot = Some 310; HeroStack = Some 690; VillainStack = Some 0; HeroBet = Some 60; VillainBet = Some 250; HeroHand = "9d7d"; Board = null; 
+      Button = Hero; Blinds = Some { SB = 15; BB = 30 }; Actions = [|{Name="Max"; Region = (11,21,31,41)};{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="RaiseTo"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname"; AmountInput = (13,14,15,16); Room = Winamax }
 
   let recognizeActor (window : WindowInfo) =
-    let result = recognize' window.Room window.Bitmap
+    let result = recognize' window.Room window.Bitmap window.Title
     let heroBet = defaultArg result.HeroBet 0
     let villainBet = defaultArg result.VillainBet 0
     let bb = defaultArg (result.Blinds |> Option.map (fun b -> b.BB)) 0

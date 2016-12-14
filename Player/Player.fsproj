@@ -57,6 +57,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="ActorPatterns.fs" />
+    <Compile Include="Rooms.fs" />
     <Compile Include="Click.fs" />
     <Compile Include="Stats.fs" />
     <Compile Include="Decide.fs" />

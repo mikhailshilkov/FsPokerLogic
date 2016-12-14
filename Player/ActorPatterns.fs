@@ -4,8 +4,7 @@ module ActorPatterns =
   open Akka.FSharp
   open Akka.Actor
 
-  let actorOfSink f =
-    actorOf2 (fun _ msg -> f msg)
+  let actorOfSink f = actorOf f
 
   let actorOfStatefulSink f initialState (mailbox : Actor<'a>) =
 

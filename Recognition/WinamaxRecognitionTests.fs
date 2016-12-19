@@ -77,7 +77,8 @@ let ``recognize input bet size from predefined file`` () =
     let image = new Bitmap(name)
 
     let result = recognizeBetSizeWinamax image
-    let expected = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "") |> int |> Some
+    let expectedString = name.Substring(name.LastIndexOf('\\') + 1).Replace(".bmp", "").Replace("_", "")
+    let expected = if expectedString = "" then None else expectedString |> int |> Some
     Assert.Equal(expected, result)
 
   Directory.GetFiles(@"..\..\TestCases\Winamax\BetSizes") |> Array.iter testFile

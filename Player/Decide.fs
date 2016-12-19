@@ -179,9 +179,11 @@ module Decide =
       print screen |> List.iter (sprintf "%s: %s" "Hand" >> log)
       let isPre = System.String.IsNullOrEmpty screen.Board
       let history = if isPre then [] else Option.map (fun s -> s.PreviousActions) state |> defaultArg <| []
-//      let history = [
-//           {Action = RaiseToAmount 60; Motivation = None; VsVillainBet = 30; Street = PreFlop; Source = "IPInput -> 13BB -> F12";}
-//      ]
+      //let history = [
+//           {Action = RaiseToAmount 40; Motivation = None; VsVillainBet = 20; Street = PreFlop; Source = "IPInput -> 18BB -> F12";}
+//           {Action = Call; Motivation = None; VsVillainBet = 20; Street = Flop; Source = "PostflopIP";}
+//           {Action = Call; Motivation = None; VsVillainBet = 120; Street = Turn; Source = "HandStrength -> vill xc F + dbT or dbF + dbT -> F39";}
+      //]
       history |> List.iter (sprintf "History: %A" >> log)
 
       try

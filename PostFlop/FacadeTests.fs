@@ -98,7 +98,7 @@ let testPostFlopMotivatedExt h s mono test =
   use xlOop = useExcel fileNameOop
   let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
   use xlTricky = useExcel fileNameTricky
-  let actual = decidePostFlopOop h s v t xlOop.Workbook xlTricky.Workbook bluffy ((fun _ -> false), (fun _ -> false)) riverBetSizing
+  let actual = decidePostFlopOop h s v t xlOop.Workbook xlTricky.Workbook bluffy ((fun _ -> false), (fun _ -> true)) riverBetSizing
   test actual
 
 let testPostFlopMotivated h s mono expected =

@@ -251,7 +251,7 @@ module HandRecognition =
       B;B;W;W;W;W;B;B;W;W;W;W;B;B;B;
       B;B;B;W;W;B;B;B;B;W;W;W;B;B;B;
       B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;
-      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W|] } 
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W|] }
     { Card = "9"; Pattern = [|
       W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;
       W;B;B;B;B;B;B;B;W;W;W;B;B;B;W;

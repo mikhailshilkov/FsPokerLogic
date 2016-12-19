@@ -56,7 +56,7 @@ module SpecialRules =
       && monoboardAtFlop < 3
       && s.BB <= 30
       && effectiveStackPre s >= 12
-      && (value.Made <> Nothing || value.SD = OpenEnded || overtakyHand s.Hand)
+      && overtakyHand s.Hand
     then 
       if street s = Turn 
          && List.tryLast h = Some Action.Check then { o with First = Donk 75m }

@@ -574,7 +574,7 @@ module Import =
         else if isFlopAce && not isTurnAce && not isRiverAce then 5
         elif isAceTurnOnly then 6
         elif isTurnOvercard && isRiverAce && not isTurnAce then 9
-        elif isRiverAce && not isFlopAce && not isRiverAce then 7
+        elif isRiverAce && not isFlopAce && not isTurnAce then 7
         elif isTurnOvercard && isRiverOvercard then 8
         elif isTurnOvercard && isRiverMiddlecard then 10
         elif isRiverOvercard && turnDoesNotPair then 11
@@ -730,7 +730,7 @@ module Import =
     let (column, specialRulesColumn) = 
       match texture.Monoboard, handValue.FD with
       | 3, NoFD -> (2, 4)
-      | 3, Draw(Nut) | 3, Draw(NotNut(King)) | 3, Draw(NotNut(Queen)) | 3, Draw(NotNut(Jack)) -> (5, 4)
+      | 3, Draw(Nut) | 3, Draw(NotNut(King)) | 3, Draw(NotNut(Queen)) | 3, Draw(NotNut(Jack)) -> (5, 6)
       | 3, Draw(_) -> (3, 4)
       | _ -> (0, 1)
     parseOopOption cellValues.[column] cellValues.[specialRulesColumn]

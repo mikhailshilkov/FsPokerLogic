@@ -16,8 +16,10 @@ module Recognize =
     | _ -> failwith ("Unknown room " + room)
 
   let recognizeMock _ _ _ =
-    { TotalPot = Some 310; HeroStack = Some 690; VillainStack = Some 0; HeroBet = Some 60; VillainBet = Some 250; HeroHand = "9d7d"; Board = null; 
-      Button = Hero; Blinds = Some { SB = 15; BB = 30 }; Actions = [|{Name="Max"; Region = (11,21,31,41)};{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="RaiseTo"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname"; AmountInput = (13,14,15,16); Room = Winamax }
+//    { TotalPot = Some 540; HeroStack = Some 450; VillainStack = Some 10; HeroBet = None; VillainBet = Some 180; HeroHand = "5sQs"; Board = "7s8d5c5dKs"; 
+//      Button = Hero; Blinds = Some { SB = 10; BB = 20 }; Actions = [|{Name="Max"; Region = (11,21,31,41)};{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="RaiseTo"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname"; AmountInput = (13,14,15,16); Room = Winamax }
+    { TotalPot = Some 440; HeroStack = Some 480; VillainStack = Some 80; HeroBet = None; VillainBet = Some 120; HeroHand = "9cTh"; Board = "Jh3dTd2cTc"; 
+      Button = Hero; Blinds = Some { SB = 10; BB = 20 }; Actions = [|{Name="Max"; Region = (11,21,31,41)};{Name="Fold"; Region = (1,2,3,4)};{Name="Check"; Region = (5,6,7,8)};{Name="RaiseTo"; Region = (9,10,11,12)}|]; Sitout = Unknown; VillainName = "noname"; AmountInput = (13,14,15,16); Room = Winamax }
 
   let recognizeActor (window : WindowInfo) =
     let result = recognize' window.Room window.Bitmap window.Title

@@ -36,12 +36,13 @@ module Facade =
       |> List.tryLast 
       |> Option.bind (fun x -> Option.ofString x.Source) 
       |> Option.exists (fun x -> x.Contains("cbet mix up"))
-    match street s, value.FD, s.VillainBet with
-      | Flop, NoFD, 0 ->
+    match street s, value.Made, value.FD, s.VillainBet with
+      | _, Flush(x), _, _ -> None
+      | Flop, _, NoFD, 0 ->
         importFlopCbetMixup xlHandStrength s history
         |> Option.mapFst (fun o -> decide [] s history o)
         |> Option.bind (toNotMotivated s)
-      | Flop, NoFD, x when x > 0 && mixupedBefore ->
+      | Flop, _, NoFD, x when x > 0 && mixupedBefore ->
         let (o, source) = importCbetMixupCheckRaise xlHandStrength s value
         decide [] s history o
         |> Option.map (fun action -> { Action = action; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = source })

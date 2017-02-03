@@ -68,12 +68,12 @@ module WinamaxRecognition =
       if isYellowButton (getPixel 255 324) 16 16 then Hero
       else if isYellowButton (getPixel 379 127) 16 16 then Villain else Unknown
 
-    let a = parsePattern (getPixel 315 332) 9 15
+    let a = parsePattern (getPixel 299 332) 9 15
 
     let hasHand = isFlop (getPixel 325 330) 25 15
     let heroHand = 
       if hasHand then
-        (recognizeCard winamaxPatterns (getPixel 299 332) 9 15) + (recognizeCard winamaxPatterns (getPixel 314 332) 9 15)
+        (recognizeCard winamaxPatterns (getPixel 298 332) 9 15) + (recognizeCard winamaxPatterns (getPixel 314 332) 9 15)
       else ""
 
     let hasFlop = isFlop (getPixel 197 189) 150 70

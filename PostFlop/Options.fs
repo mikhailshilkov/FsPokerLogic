@@ -69,6 +69,7 @@ module Options =
     | CheckCheckAndBoardOvercard of OopDonk * OopOnCBet
     | KHighOnPaired
     | CheckRaiseOvercardBluff of OopOnCBet
+    | SlowPlayedBefore of OopOnCBet
     | NotUsed
 
   type OptionsOop = {

@@ -405,6 +405,12 @@ let ``Turn IP: uses proper non-donk cell of tricky float after check raise`` () 
   testIPSource s history Action.Fold "tricky -> float IP -> P14"
 
 [<Fact>]
+let ``Turn IP: checks back with strong hand and not dangerous board choco`` () =
+  let s = { Hand = parseSuitedHand "ThTd"; Board = parseBoard "Ks5dTc4c"; Pot = 240; VillainStack = 380; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let history = [notMotivated PreFlop 20 (Action.RaiseToAmount 50); notMotivated Flop 0 (Action.RaiseToAmount 70)]
+  testIPSource s history Action.Check "HandStrength -> choco -> B14"
+
+[<Fact>]
 let ``River IP: float raise donk`` () =
   let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c7c7h"; Pot = 240; VillainStack = 330; HeroStack = 410; VillainBet = 80; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call; floatValue Flop 20; floatValue Turn 40]
@@ -452,5 +458,14 @@ let ``River IP bet is made based on turn scenario`` () =
     notMotivated Flop 40 Action.Call
     scenario Turn 0 (Action.RaiseToAmount 40) "r8"]
   testIPSource s history (Action.RaiseToAmount 95) "river - villain check -> L10"
+
+[<Fact>]
+let ``River IP pick decision based on slowplay on turn - choco`` () =
+  let s = { Hand = parseSuitedHand "KhJc"; Board = parseBoard "7d2sKsJh9d"; Pot = 310; VillainStack = 310; HeroStack = 380; VillainBet = 70; HeroBet = 0; BB = 20 }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 50);
+    notMotivated Flop 0 (Action.RaiseToAmount 70)
+    slowPlay Turn]
+  testIPSource s history (Action.RaiseToAmount 220) "river - villain donkbet to 30% -> L48"
 
 adxl.Dispose()

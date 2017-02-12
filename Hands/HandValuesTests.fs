@@ -207,7 +207,20 @@ let ``pairIndeces returns indeces of pairs between hand and board`` handS flopS 
   let board = parseBoard flopS
   let actual = pairIndeces hand board |> List.ofSeq
   let expected = [for e in [expected1; expected2] do if e > 0 then yield e]
-  Assert.Equal<int list>(expected, actual)  
+  Assert.Equal<int list>(expected, actual)
+
+[<Theory>]
+[<InlineData("2s5dJs9c", true)>]
+[<InlineData("7h7dTsKh", true)>]
+[<InlineData("7h7dThKh", false)>]
+[<InlineData("2s5sJs9s", false)>]
+[<InlineData("2s5cJs9c", false)>]
+[<InlineData("2sAd4s9c", false)>]
+[<InlineData("JsJdQs8c", false)>]
+let ``isSafeBoard returns true when board has no 3 or 4 to flush, no 2 suits and no SD`` flopS expected =
+  let board = parseBoard flopS
+  let actual = isSafeBoard board
+  Assert.Equal(expected, actual)
 
 [<Theory>]
 [<InlineData("As5c", "6s7d8c9c", "Weak")>]

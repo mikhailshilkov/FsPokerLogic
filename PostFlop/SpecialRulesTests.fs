@@ -251,6 +251,23 @@ let ``specialRulesOop does no change based on CheckRaiseOvercardBluff when stack
   Assert.Equal(options, actual)
 
 [<Fact>]
+let ``specialRulesOop returns based on SlowPlayedBefore if there was a slow play before`` () =
+  let options = { defaultOptions with Special = [SlowPlayedBefore(OopOnCBet.CallEQ 30)] }
+  let expected = { options with Then = OopOnCBet.CallEQ 30 }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 40)
+    notMotivated Flop 0 (Action.RaiseToAmount 40)
+    slowPlay Turn]
+  let actual = specialRulesOop defaultRiver history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on SlowPlayedBefore when there was no slowplay`` () =
+  let options = { defaultOptions with Special = [SlowPlayedBefore(OopOnCBet.CallEQ 30)] }
+  let actual = specialRulesOop defaultRiver [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
 let ``specialRulesOop applies not-first rule from the list too`` () =
   let options = { defaultOptions with Special = [BoardAce(OopDonk.AllIn, AllIn); BoardOvercard(Check,Fold); PairedBoard (Check, CallEQ 22)] }
   let expected = { options with First = Check; Then = CallEQ 22 }

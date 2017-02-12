@@ -456,6 +456,12 @@ module ImportTests =
   let ``parseOopSpecialRules Xoxo#ch/25 works`` () = testParseOopSpecialRules "Xoxo#ch/25" (CheckCheck(OopDonk.Check, CallEQ 25))
 
   [<Fact>]
+  let ``parseOopSpecialRules choco#30 works`` () = testParseOopSpecialRules "choco#30" (SlowPlayedBefore(CallEQ 30))
+
+  [<Fact>]
+  let ``parseOopSpecialRules choco#rModx2,5/so works`` () = testParseOopSpecialRules "choco#rModx2,5/so" (SlowPlayedBefore(OopOnCBet.Raise(2.5m, StackOff)))  
+
+  [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
     let actual = parseOopSpecialRules "AI#15, A, 61"
     let expected = [CallEQPlusXvsAI 15; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 60m, CallEQ 25)]
@@ -748,3 +754,11 @@ module ImportTests =
     let actual = importCbetMixupCheckRaise xl.Workbook s (handValueWithDraws s.Hand s.Board)
     let expected = ({ defaultIpOptions with CheckRaise = OnCheckRaise.CallEQ 16 }, "HandStrength -> flop hand strength -> B12")
     Assert.Equal(expected, actual)
+
+  [<Fact>]
+  let ``importTurnChoco imports correct options for a sample cell`` () =
+    let expected = ( { defaultOopOptions with First = Donk 50M; Then = StackOff }, "HandStrength -> choco -> C11")
+    use xl = useExcel handStrengthFileName
+    let s = { defaultFlop with VillainStack = 340; Hand = parseSuitedHand "8s7c"; Board = parseBoard "Kd8c7s3h" }
+    let actual = importTurnChoco xl.Workbook (handValueWithDraws s.Hand s.Board) defaultTexture s
+    Assert.Equal(expected |> Some, actual)

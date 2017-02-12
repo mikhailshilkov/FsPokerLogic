@@ -460,6 +460,7 @@ module Import =
         | "60" -> KHighOnPaired
         | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
         | "1" -> NotUsed
+        | StartsWith "choco#" ts -> SlowPlayedBefore(parseOopCbet ts) 
         | _ -> failwith ("Failed parsing special rules (1)" + s)
       elif parts.Length = 2 then
         match parts.[0], parts.[1] with
@@ -468,9 +469,10 @@ module Import =
         | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
         | "chrovb", Int c -> CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ c))
         | StartsWith "xoxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "choco#" fs, ts -> SlowPlayedBefore(parseOopCbet (fs + "/" + ts)) 
         | _ -> failwith ("Failed parsing special rules (2)" + s)
       else failwith ("Failed parsing special rules (3)" + s)
-    specialRules.Split ','
+    specialRules.Split ';'
     |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
     |> List.ofArray 
     |> List.map parseOopSpecialRule
@@ -1328,6 +1330,56 @@ module Import =
     let cellValue = getCellValue xlWorkSheet (column + row)
     parseOopOption cellValue ""
     |> Option.addValue ("HandStrength -> postflop IP turn booster -> " + column + row)
+
+  let importTurnChoco (xlWorkBook : Workbook) value texture s =
+    let xlWorkSheet = xlWorkBook.Worksheets.["choco"] :?> Worksheet
+    let isPairedBoard = isPaired s.Board
+    let highKicker k = k = Ace || k = King || k = Queen || k = Jack
+    let row = 
+      match value.Made with
+      | Pair(Over) -> Some (if isPairedBoard then 4 else 3)
+      | Pair(Top _) when isPairedBoard -> Some 7
+      | Pair(Top k) when highKicker k -> Some 5
+      | Pair(Top _) -> Some 6
+      | TwoPair -> 
+        let pairIndeces = pairIndeces s.Hand s.Board
+        let topPair = pairIndeces |> Seq.head = 1
+        let topTwoPairs = pairIndeces |> Seq.truncate 2 |> List.ofSeq = [1; 2]
+        let bottomTwoPairs = pairIndeces |> Seq.truncate 2 |> List.ofSeq = [3; 4]
+
+        if topTwoPairs && not isPairedBoard then 8
+        elif topPair && not isPairedBoard then 9
+        elif bottomTwoPairs && not isPairedBoard then 10
+        elif topPair && bottomPaired s.Board then 12
+        else 11
+        |> Some
+      | ThreeOfKind -> (if s.Hand.Card1.Face = s.Hand.Card2.Face then 14 else 13) |> Some
+      | FullHouse(x) ->
+        match tripsFace s.Board with
+        | Some(k) -> 
+          let kicker = concat s.Hand s.Board |> anyPairFace |> Option.get
+          if highKicker kicker then 18 else 17
+        | None -> if texture.DoublePaired then 16 else 15
+        |> Some
+      | FourOfKind -> Some 19
+      | StraightFlush -> Some 20
+      | _ -> None
+    let column = 
+      match effectiveStackPre s with
+      | x when x <= 9 -> "H"
+      | 10 | 11 -> "G"
+      | 12 | 13 -> "F"
+      | 14 | 15 -> "E"
+      | 16 | 17 -> "D"
+      | 18 | 19 -> "C"
+      | _ -> "B"
+    row
+    |> Option.bind (fun r ->
+      let rowString = r |> string
+      let cellValue = getCellValue xlWorkSheet (column + rowString)
+      parseOopOption cellValue "" 
+      |> Option.add (fun _ -> "HandStrength -> choco -> " + column + rowString)
+    )
     
   let importFlopCbetMixup (xlWorkBook : Workbook) s h =
     let xlWorkSheet = xlWorkBook.Worksheets.["cbet mix up"] :?> Worksheet

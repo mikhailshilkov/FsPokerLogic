@@ -44,6 +44,9 @@ module SpecialRules =
           && (villainBet = 0 || villainBet >= 35 && villainBet <= 56) 
           && stackIfCall s >= s.BB * 8
         then { o with First = Check; Then = t; Scenario = o.SpecialScenario } else imp rem
+      | SlowPlayedBefore(t)::rem -> 
+        if history |> List.exists (fun h -> h.Motivation = Some SlowPlay)
+        then { o with Then = t; Scenario = o.SpecialScenario } else imp rem
       | NotUsed::rem -> imp rem
       | [] -> o
     imp o.Special

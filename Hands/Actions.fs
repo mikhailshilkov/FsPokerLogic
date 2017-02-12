@@ -18,6 +18,7 @@ module Actions =
     | Bluff
     | Scenario of string
     | Float of FloatType
+    | SlowPlay
 
   type MotivatedAction = {
     Action: Action
@@ -34,3 +35,4 @@ module Actions =
   let floatValue street vb = { Action = Call; Motivation = Some(Float ValueFloat); VsVillainBet = vb; Street = street; Source = null }
   let floatContinuation street vb action s = { Action = action; Motivation = Some(Float(WithContinuation s)); VsVillainBet = vb; Street = street; Source = null }
   let floatBluffCheck street = { Action = Check; Motivation = Some(Float BluffFloat); VsVillainBet = 0; Street = street; Source = null }
+  let slowPlay street = { Action = Check; Motivation = Some(SlowPlay); VsVillainBet = 0; Street = street; Source = null }

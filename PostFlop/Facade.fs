@@ -92,10 +92,22 @@ module Facade =
       | _ -> None
     | _ -> None
 
+  let decidePostFlopTurnChoco history s value texture xl riverBetSizes () =
+    match street s, history with
+    | Turn, [ { Action = Action.RaiseToAmount _ }; { Action = Action.RaiseToAmount _ }]
+      when s.VillainBet = 0 
+        && value.FD = NoFD
+        && isSafeBoard s.Board -> 
+        importTurnChoco xl value texture s
+        |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, Some SlowPlay, source)
+        |> Option.bind (toMotivated s)
+    | _ -> None
+
   let decidePostFlopRiver h s value texture xlHandStrength riverBetSizes patterns () =
     match street s with
     | River -> 
       importRiverIP xlHandStrength patterns value s h texture
+      |> Option.mapFst (specialRulesOop s h)
       |> Option.mapFst (scenarioRulesOop s h)
       |> Option.map (fun (o, source) -> decideOop riverBetSizes s o, None, source)
       |> Option.bind (toMotivated s)
@@ -141,6 +153,7 @@ module Facade =
       decideFlopCbetMixup xlHandStrength history s value;
       decidePostFlopFloatOnDonk (riverBetSizes |> Tuple.thrd3) history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
+      decidePostFlopTurnChoco history s value texture xlHandStrength riverBetSizes;
       decidePostFlopTurnBooster history s value texture xlHandStrength riverBetSizes eo;
       decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 

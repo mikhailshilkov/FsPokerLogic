@@ -119,8 +119,11 @@ module HandValues =
 
   let flushSuit cards = flushSuitFlex 5 7 cards
 
+  let suitStructure (cards : SuitedCard[]) =
+    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.sortDescending
+
   let isFlush (cards : SuitedCard[]) =
-    cards |> Seq.countBy (fun x -> x.Suit) |> Seq.map snd |> Seq.exists (fun x -> x >= 5)
+    suitStructure cards |> Seq.exists (fun x -> x >= 5)
 
   let flushValueFlex min max hand board =
     let combined = concat hand board
@@ -255,6 +258,13 @@ module HandValues =
     |> Seq.mapi (fun i x -> (x, i + 1))
     |> Seq.filter (fun (x, _) -> x = hand.Card1.Face || x = hand.Card2.Face)
     |> Seq.map snd
+
+  let isSafeBoard board =
+    let suits = suitStructure board |> List.ofSeq
+    match suits with
+    | n :: _ when n >= 3 -> false
+    | 2 :: 2 :: _ -> false
+    | _ -> isStreety 3 2 board |> not
 
   let handValue hand board =
     let combined = concat hand board

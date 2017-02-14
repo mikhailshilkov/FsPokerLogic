@@ -59,6 +59,28 @@ let ``specialRulesOop does no change based on BoardOvercard when not an overcard
   Assert.Equal(options, actual)
 
 [<Fact>]
+let ``specialRulesOop returns check/call based on BoardOvercardNotAce`` () =
+  let options = { defaultOptions with Then = CallEQ 22; Special = [BoardOvercardNotAce(Check,Call)] }
+  let expected = { options with First = Check; Then = Call }
+  let s = { defaultFlop with Board = Array.append defaultFlop.Board [|{Face = King; Suit = Hearts}|] }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on BoardOvercardNotAce when not an overcard`` () =
+  let options = { defaultOptions with Then = CallEQ 22; Special = [BoardOvercardNotAce(Check,Call)] }
+  let s = { defaultFlop with Board = Array.append defaultFlop.Board [|{Face = Jack; Suit = Hearts}|] }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on BoardOvercardNotAce when ace`` () =
+  let options = { defaultOptions with Then = CallEQ 22; Special = [BoardOvercardNotAce(Check,Call)] }
+  let s = { defaultFlop with Board = Array.append defaultFlop.Board [|{Face = Ace; Suit = Hearts}|] }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
 let ``specialRulesOop returns AI based on AllInBoardAce`` () =
   let options = { defaultOptions with Special = [BoardAce(OopDonk.AllIn, AllIn)] }
   let expected = { options with First = OopDonk.AllIn; Then = AllIn }
@@ -176,6 +198,37 @@ let ``specialRulesOop does no change based on CheckCheckAndBoardOvercard when no
   Assert.Equal(options, actual)
 
 [<Fact>]
+let ``specialRulesOop returns Stack Off based on CheckCheckChechCheck`` () =
+  let options = { defaultOptions with Special = [CheckCheckCheckCheck (Donk 75m, StackOff)] }
+  let expected = { options with First = Donk 75m; Then = StackOff }
+  let history = [
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 0 Action.Check
+    notMotivated Turn 0 Action.Check]
+  let actual = specialRulesOop defaultRiver history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on CheckCheckCheckCheck when turn action is not check`` () =
+  let options = { defaultOptions with Special = [CheckCheckCheckCheck (Donk 75m, StackOff)] }
+  let history = [
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 0 Action.Check
+    notMotivated Turn 40 Action.Call]
+  let actual = specialRulesOop defaultFlop history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on CheckCheckCheckCheck when flop action is not check`` () =
+  let options = { defaultOptions with Special = [CheckCheckCheckCheck (Donk 75m, StackOff)] }
+  let history = [
+    notMotivated PreFlop 40 Action.Call 
+    notMotivated Flop 40 Action.Call
+    notMotivated Turn 0 Action.Check]
+  let actual = specialRulesOop defaultFlop history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
 let ``specialRulesOop returns based on KHighOnPaired on 1st blind level`` () =
   let options = { defaultOptions with Special = [KHighOnPaired] }
   let s = { defaultFlop with Board = parseBoard "5h7d7s"; Hand = parseSuitedHand "KsJd" }
@@ -265,6 +318,90 @@ let ``specialRulesOop returns based on SlowPlayedBefore if there was a slow play
 let ``specialRulesOop does no change based on SlowPlayedBefore when there was no slowplay`` () =
   let options = { defaultOptions with Special = [SlowPlayedBefore(OopOnCBet.CallEQ 30)] }
   let actual = specialRulesOop defaultRiver [] options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop returns based on BarrelX3 if there were 3 barrels`` () =
+  let options = { defaultOptions with Special = [BarrelX3(OopOnCBet.CallEQ 30)] }
+  let expected = { options with Then = OopOnCBet.CallEQ 30 }
+  let history = [
+    notMotivated PreFlop 40 Action.Call
+    notMotivated Flop 0 Action.Check
+    notMotivated Flop 40 Action.Call
+    notMotivated Turn 0 Action.Check
+    notMotivated Turn 90 Action.Call
+    notMotivated River 0 Action.Check]
+  let s = { defaultRiver with VillainBet = 200; Pot = 540 }
+  let actual = specialRulesOop s history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on BarrelX3 when there were 2 gaybets`` () =
+  let options = { defaultOptions with Special = [BarrelX3(OopOnCBet.CallEQ 30)] }
+  let history = [
+    notMotivated PreFlop 40 Action.Call
+    notMotivated Flop 0 Action.Check
+    notMotivated Flop 20 Action.Call
+    notMotivated Turn 0 Action.Check
+    notMotivated Turn 30 Action.Call
+    notMotivated River 0 Action.Check]
+  let s = { defaultRiver with VillainBet = 100; Pot = 280 }
+  let actual = specialRulesOop s history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop returns Call EQ based on VillainRaised when villain raised last street`` () =
+  let options = { defaultOptions with Special = [VillainRaised (Check, CallEQ 30)] }
+  let expected = { options with Then = CallEQ 30 }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 40)
+    notMotivated Flop 0 (Action.RaiseToAmount 50)
+    notMotivated Flop 150 Action.Call]
+  let actual = specialRulesOop defaultTurn history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on VillainRaised when villain just bet`` () =
+  let options = { defaultOptions with Special = [VillainRaised(Check, CallEQ 30)] }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 40)
+    notMotivated Flop 0 Action.Check
+    notMotivated Flop 50 Action.Call]
+  let actual = specialRulesOop defaultTurn history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop returns Stack Off based on HeroRaised when hero raised last street`` () =
+  let options = { defaultOptions with Special = [HeroRaised (Donk 75m, StackOff)] }
+  let expected = { options with First = Donk 75m; Then = StackOff }
+  let history = [
+    notMotivated PreFlop 40 Action.Call
+    notMotivated Flop 50 (Action.RaiseToAmount 150)]
+  let actual = specialRulesOop defaultTurn history options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on HeroRaised when hero just bet`` () =
+  let options = { defaultOptions with Special = [HeroRaised(Donk 75m, StackOff)] }
+  let history = [
+    notMotivated PreFlop 20 (Action.RaiseToAmount 40)
+    notMotivated Flop 0 (Action.RaiseToAmount 40)]
+  let actual = specialRulesOop defaultTurn history options
+  Assert.Equal(options, actual)
+
+[<Fact>]
+let ``specialRulesOop returns AllIn based on StackPotRatioLessThan when SPR is low`` () =
+  let options = { defaultOptions with Special = [StackPotRatioLessThan (1.25m, OopDonk.AllIn, OopOnCBet.AllIn)] }
+  let expected = { options with First = OopDonk.AllIn; Then = OopOnCBet.AllIn }
+  let s = { defaultTurn with HeroStack = 220; VillainStack = 200; Pot = 160 }
+  let actual = specialRulesOop s [] options
+  Assert.Equal(expected, actual)
+
+[<Fact>]
+let ``specialRulesOop does no change based on StackPotRatioLessThan when SPR is high`` () =
+  let options = { defaultOptions with Special = [StackPotRatioLessThan (1.25m, OopDonk.AllIn, OopOnCBet.AllIn)] }
+  let s = { defaultTurn with HeroStack = 220; VillainStack = 210; Pot = 160 }
+  let actual = specialRulesOop s [] options
   Assert.Equal(options, actual)
 
 [<Fact>]

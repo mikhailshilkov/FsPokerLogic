@@ -215,29 +215,32 @@ module HandValues =
     | y::rem when y = xValue && rem |> List.forall ((>) xValue) -> true
     | _ -> false
 
-  let isLastBoardCardOvercard (board: SuitedCard[]) =
+  let isLastCard predicate (board: SuitedCard[]) =
     match Array.rev board |> List.ofArray with
     | [] | [_] -> false
-    | last::remaining ->
-      let latestCardValue = last.Face |> faceValue
-      List.forall (fun x -> faceValue x.Face < latestCardValue) remaining
+    | last::_ -> predicate last.Face
 
-  let isLastBoardCardSecondCard (board: SuitedCard[]) =
+  let isLastCardValue predicate (board: SuitedCard[]) =
     match Array.rev board |> List.ofArray with
     | [] | [_] -> false
     | last::remaining ->
       let latestCardValue = last.Face |> faceValue
+      predicate latestCardValue remaining
+
+  let isLastBoardCardOvercard =
+    isLastCardValue (fun latestCardValue remaining ->
+      List.forall (fun x -> faceValue x.Face < latestCardValue) remaining)
+
+  let isLastBoardCardSecondCard =
+    isLastCardValue (fun latestCardValue remaining ->
       let values = remaining |> List.map (fun x -> faceValue x.Face) |> List.distinct |> List.sortDescending
-      List.length values >= 2 && values.[0] > latestCardValue && values.[1] < latestCardValue
+      List.length values >= 2 && values.[0] > latestCardValue && values.[1] < latestCardValue)
 
-  let isLastBoardCardUndercard amountOfHigherCards (board: SuitedCard[]) =
-    match Array.rev board |> List.ofArray with
-    | [] | [_] -> false
-    | last::remaining ->
-      let latestCardValue = last.Face |> faceValue
+  let isLastBoardCardUndercard amountOfHigherCards =
+    isLastCardValue (fun latestCardValue remaining ->
       remaining 
       |> List.filter (fun x -> faceValue x.Face > latestCardValue)
-      |> List.length >= amountOfHigherCards
+      |> List.length >= amountOfHigherCards)
 
   let isLastBoardCardFlushy board = 
     let monoNow = monoboardLength board

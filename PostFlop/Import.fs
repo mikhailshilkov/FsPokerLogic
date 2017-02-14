@@ -455,21 +455,30 @@ module Import =
         | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
         | "aso" -> BoardAce(Donk 67m, StackOff)
         | "5" -> CheckCheck (Donk 75m, OopOnCBet.Call)
-        | "7" -> CheckCheck (Donk 75m, StackOff)
         | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
         | "60" -> KHighOnPaired
         | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
         | "1" -> NotUsed
         | StartsWith "choco#" ts -> SlowPlayedBefore(parseOopCbet ts) 
+        | StartsWith "bbb#" ts -> BarrelX3(parseOopCbet ts) 
+        | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, "ai")) -> 
+          StackPotRatioLessThan(spr, OopDonk.AllIn, OopOnCBet.AllIn) 
         | _ -> failwith ("Failed parsing special rules (1)" + s)
       elif parts.Length = 2 then
         match parts.[0], parts.[1] with
         | "a", "f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
         | StartsWith "bov#" fs, ts -> BoardOvercard(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "bova#" fs, ts -> BoardOvercardNotAce(parseOopDonk fs, parseOopCbet ts) 
         | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
         | "chrovb", Int c -> CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ c))
         | StartsWith "xoxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "floxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "xxoxxo#" fs, ts -> CheckCheckCheckCheck(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "roxo#" fs, ts -> VillainRaised(parseOopDonk fs, parseOopCbet ts) 
+        | StartsWith "hroxo#" fs, ts -> HeroRaised(parseOopDonk fs, parseOopCbet ts) 
         | StartsWith "choco#" fs, ts -> SlowPlayedBefore(parseOopCbet (fs + "/" + ts)) 
+        | StartsWith "bbb#" fs, ts -> BarrelX3(parseOopCbet (fs + "/" + ts)) 
+        | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, fs)), ts -> StackPotRatioLessThan(spr, parseOopDonk fs, parseOopCbet ts) 
         | _ -> failwith ("Failed parsing special rules (2)" + s)
       else failwith ("Failed parsing special rules (3)" + s)
     specialRules.Split ';'

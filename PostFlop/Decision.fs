@@ -67,6 +67,10 @@ module Decision =
   let callSize s = min (s.VillainBet - s.HeroBet) s.HeroStack
   let stackIfCall s = min (s.HeroStack - (callSize s)) s.VillainStack
   let potOdds s = (callSize s |> decimal) * 100m / (pot s + (callSize s) |> decimal) |> ceil |> int
+  let stackPotRatio s =
+    let stack = effectiveStackOnCurrentStreet s |> decimal
+    let pot = pot s |> decimal
+    stack / pot
   let times i d = ((i |> decimal) * d) |> int
   let wasRaisedPre s = betPre s > s.BB
   let relativeBet s = s.VillainBet * 100 / (s.Pot - s.VillainBet)

@@ -13,6 +13,17 @@ module SpecialRules =
       match previousStreetHistory s history |> List.map (fun h -> h.Action) with
       | [Action.Check] -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
       | _ -> other
+    let villainRaiseMatch f t other =       
+      match previousStreetHistory s history |> List.map (fun h -> h.Action) with
+      | [Action.RaiseToAmount _; Action.Call] 
+      | [Action.Check; Action.RaiseToAmount _; Action.Call] 
+          -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+      | _ -> other
+    let heroRaiseMatch f t other =       
+      match previousStreetHistory s history |> List.tryLast with
+      | Some { Action = Action.RaiseToAmount _; VsVillainBet = b } when b > 0      
+          -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+      | _ -> other
 
     let rec imp remaining =
       match remaining with
@@ -25,7 +36,13 @@ module SpecialRules =
       | PairedBoard(f, t)::rem ->
         if isPaired s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem
       | BoardOvercard(f, t)::rem -> 
-        if isLastBoardCardOvercard s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem
+        if isLastBoardCardOvercard s.Board 
+        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        else imp rem
+      | BoardOvercardNotAce(f, t)::rem -> 
+        if isLastBoardCardOvercard s.Board && isLastCard ((<>) Ace) s.Board
+        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        else imp rem
       | BoardAce(f,t)::rem ->
         if (Array.last s.Board).Face = Ace 
           && s.Board |> Array.filter (fun x -> x.Face = Ace) |> Array.length = 1 then 
@@ -34,6 +51,10 @@ module SpecialRules =
       | CheckCheck(f, t)::rem -> checkCheckMatch f t (imp rem)
       | CheckCheckAndBoardOvercard(f, t)::rem -> 
         if isLastBoardCardOvercard s.Board then checkCheckMatch f t (imp rem) else imp rem
+      | CheckCheckCheckCheck(f, t)::rem ->
+        match history |> List.map (fun h -> h.Action) with
+        | [_; Action.Check; Action.Check] -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        | _ -> imp rem
       | KHighOnPaired::rem ->
         if o.Then = Fold && isPaired s.Board && isXHigh King s.Hand && s.BB <= 30 then 
           { o with Then = CallEQ (if s.BB = 20 then 30 else 25); Scenario = o.SpecialScenario } 
@@ -47,6 +68,24 @@ module SpecialRules =
       | SlowPlayedBefore(t)::rem -> 
         if history |> List.exists (fun h -> h.Motivation = Some SlowPlay)
         then { o with Then = t; Scenario = o.SpecialScenario } else imp rem
+      | BarrelX3(t)::rem -> 
+        match history, s.VillainBet with
+        | [_
+           { Action = Action.Check }
+           { Action = Action.Call; VsVillainBet = fb }
+           { Action = Action.Check }
+           { Action = Action.Call; VsVillainBet = tb }
+           { Action = Action.Check }],
+          rb when rb > 0
+             && (tb > (s.Pot - rb - 2 * tb) / 4 || fb > (s.Pot - rb - 2 * tb - 2 * fb) / 4)
+            -> { o with Then = t; Scenario = o.SpecialScenario } 
+        | _ -> imp rem
+      | VillainRaised(f, t)::rem -> villainRaiseMatch f t (imp rem)
+      | HeroRaised(f, t)::rem -> heroRaiseMatch f t (imp rem)
+      | StackPotRatioLessThan(spr, f, t)::rem -> 
+        if stackPotRatio s <= spr 
+        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        else imp rem
       | NotUsed::rem -> imp rem
       | [] -> o
     imp o.Special

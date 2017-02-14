@@ -144,15 +144,15 @@ module ImportTests =
   [<Fact>]
   let ``importOopTurn returns correct scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
-    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = OpenEnded } defaultTexture
-    let expected = ({ defaultOopOptions with First = Donk 50m; Then = CallEQ 20; Scenario = "r8" }, "hero call raise pre -> K32") |> Some
+    let actual = importOopTurn xl.Workbook "hero call raise pre" { Made = TwoOvercards; SD = OpenEnded; FD2 = NoFD; FD = NoFD } defaultTexture
+    let expected = ({ defaultOopOptions with First = Donk 75m; Then = CallEQ 30; Scenario = "r8" }, "hero call raise pre -> K33") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct special scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
-    let actual = importOopTurn xl.Workbook "hero call raise pre" { defaultMade with SD = GutShot } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 13; Special = [CheckCheckAndBoardOvercard (Donk 75M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K26") |> Some
+    let actual = importOopTurn xl.Workbook "hero call raise pre" { Made = Pair(Third); SD = GutShot; FD = NoFD; FD2 = NoFD } defaultTexture
+    let expected = ({ defaultOopOptions with Then = CallEQ 18; Special = [BoardOvercard (Donk 62M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K30") |> Some
     Assert.Equal(expected, actual)
 
   let testParseTurnDonk s d r =
@@ -417,9 +417,6 @@ module ImportTests =
   let ``parseOopSpecialRules 5 works`` () = testParseOopSpecialRules "5" (CheckCheck (Donk 75m, Call))
 
   [<Fact>]
-  let ``parseOopSpecialRules 7 works`` () = testParseOopSpecialRules "7" (CheckCheck (Donk 75m, StackOff))
-
-  [<Fact>]
   let ``parseOopSpecialRules ov ch ch works`` () = testParseOopSpecialRules "ov ch ch" (CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22))
 
   [<Fact>]
@@ -433,6 +430,9 @@ module ImportTests =
 
   [<Fact>]
   let ``parseOopSpecialRules Bov#55%/f works`` () = testParseOopSpecialRules "Bov#55%/f" (BoardOvercard(Donk 55m, OopOnCBet.Fold))
+
+  [<Fact>]
+  let ``parseOopSpecialRules Bova#55%/f works`` () = testParseOopSpecialRules "Bova#55%/f" (BoardOvercardNotAce(Donk 55m, OopOnCBet.Fold))
 
   [<Fact>]
   let ``parseOopSpecialRules Bovso#50% works`` () = testParseOopSpecialRules "Bovso#50%" (BoardOvercard(Donk 50m, StackOff))
@@ -456,14 +456,38 @@ module ImportTests =
   let ``parseOopSpecialRules Xoxo#ch/25 works`` () = testParseOopSpecialRules "Xoxo#ch/25" (CheckCheck(OopDonk.Check, CallEQ 25))
 
   [<Fact>]
+  let ``parseOopSpecialRules floxo#ch/28 works`` () = testParseOopSpecialRules "floxo#ch/28" (CheckCheck(OopDonk.Check, CallEQ 28))
+
+  [<Fact>]
+  let ``parseOopSpecialRules xxoxxo#RBS/so works`` () = testParseOopSpecialRules "xxoxxo#RBS/so" (CheckCheckCheckCheck(RiverBetSizing, StackOff))
+
+  [<Fact>]
+  let ``parseOopSpecialRules roxo#RBS/so works`` () = testParseOopSpecialRules "roxo#RBS/so" (VillainRaised(RiverBetSizing, StackOff))
+
+  [<Fact>]
+  let ``parseOopSpecialRules hroxo#RBS/so works`` () = testParseOopSpecialRules "hroxo#RBS/so" (HeroRaised(RiverBetSizing, StackOff))
+
+  [<Fact>]
   let ``parseOopSpecialRules choco#30 works`` () = testParseOopSpecialRules "choco#30" (SlowPlayedBefore(CallEQ 30))
 
   [<Fact>]
   let ``parseOopSpecialRules choco#rModx2,5/so works`` () = testParseOopSpecialRules "choco#rModx2,5/so" (SlowPlayedBefore(OopOnCBet.Raise(2.5m, StackOff)))  
 
   [<Fact>]
+  let ``parseOopSpecialRules bbb#8 works`` () = testParseOopSpecialRules "bbb#8" (BarrelX3(OopOnCBet.CallEQ 8))  
+
+  [<Fact>]
+  let ``parseOopSpecialRules bbb#rModx2,5/so works`` () = testParseOopSpecialRules "bbb#rModx2,5/so" (BarrelX3(OopOnCBet.Raise(2.5m, StackOff))) 
+
+  [<Fact>]
+  let ``parseOopSpecialRules spr<1,25#AI works`` () = testParseOopSpecialRules "spr<1,25#AI" (StackPotRatioLessThan(1.25m, OopDonk.AllIn, OopOnCBet.AllIn))  
+
+  [<Fact>]
+  let ``parseOopSpecialRules spr<1,18#75%/so works`` () = testParseOopSpecialRules "spr<1,18#75%/so" (StackPotRatioLessThan(1.18m, OopDonk.Donk 75m, OopOnCBet.StackOff))  
+
+  [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
-    let actual = parseOopSpecialRules "AI#15, A, 61"
+    let actual = parseOopSpecialRules "AI#15; A; 61"
     let expected = [CallEQPlusXvsAI 15; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 60m, CallEQ 25)]
     Assert.Equal<System.Collections.Generic.IEnumerable<OopSpecialCondition>>(expected, actual)
 
@@ -746,6 +770,7 @@ module ImportTests =
     let h = [ notMotivated PreFlop 70 Action.Call ]
     let expected = ({ defaultIpOptions with CbetFactor = Always 60m }, "HandStrength -> cbet mix up -> H10")
     testCbetMixup "Jd8d" "2cTh2h" h expected
+    // Note: last time I had to fill HandStrength -> cbet mix up -> H459 to 60 to fix this test
 
   [<Fact>]
   let ``importCbetMixupCheckRaise imports correct options for a sample cell`` () =

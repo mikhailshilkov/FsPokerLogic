@@ -153,12 +153,6 @@ let ``decidePostFlop 61 special rule on turn 2`` () =
   testPostFlop [Action.Check; Action.Check; Action.Call] s 0 (Action.RaiseToAmount 50)
 
 [<Fact>]
-let ``decidePostFlop 7 special rule on turn`` () =
-  let s = { Hand = parseSuitedHand "8d9h"; Board = parseBoard "9cQd8s6h"; Pot = 100; VillainStack = 450; HeroStack = 450; VillainBet = 0; HeroBet = 0; BB = 20 }
-  let h = [ notMotivated PreFlop 40 Action.Call; notMotivated Flop 0 Action.Check]
-  testPostFlopMotivated h s 0 (Action.RaiseToAmount 75)
-
-[<Fact>]
 let ``decidePostFlop 5 special rule on turn`` () =
   let s = { Hand = parseSuitedHand "QsKh"; Board = parseBoard "TdQc9d5h"; Pot = 100; VillainStack = 380; HeroStack = 520; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Call; Action.Check] s 0 (Action.RaiseToAmount 75)
@@ -204,7 +198,7 @@ let ``decidePostFlop cbet flop after bluffy 3bet pf`` () =
 
 [<Fact>]
 let ``decidePostFlop does not bluffy overtake turn after wrong flop`` () =
-  let s = { Hand = parseSuitedHand "5c8c"; Board = parseBoard "7d4s3hTs"; Pot = 200; VillainStack = 610; HeroStack = 290; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "5c8c"; Board = parseBoard "7d4s3hAs"; Pot = 200; VillainStack = 610; HeroStack = 290; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlop [Action.Call; Action.Check] s 0 Action.Check
 
 [<Fact>]
@@ -252,10 +246,11 @@ let ``14`` () =
 
 [<Fact>]
 let ``Turn OOP bet returns appropriate scenario name`` () =
-  let s = { Hand = parseSuitedHand "4h5c"; Board = parseBoard "7d2s6dKs"; Pot = 80; VillainStack = 320; HeroStack = 580; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "8h9c"; Board = parseBoard "7d2s6d3s"; Pot = 80; VillainStack = 320; HeroStack = 580; VillainBet = 0; HeroBet = 0; BB = 20 }
   testPostFlopMotivatedExt [
     notMotivated PreFlop 40 Action.Call 
     notMotivated Flop 0 Action.Check] s 0 (fun actual -> Assert.Equal(Some(Scenario "r8"), actual.Value.Motivation))
+  // HandStrength -> hero call raise pre -> K33
 
 [<Fact>]
 let ``River OOP bet is made based on turn scenario`` () =
@@ -366,9 +361,10 @@ let ``decidePostFlopIP call 4bet on flop with stackoff`` () =
 
 [<Fact>]
 let ``Flop IP: float call`` () =
-  let s = { Hand = parseSuitedHand "7d2d"; Board = parseBoard "2h3h4c"; Pot = 60; VillainStack = 450; HeroStack = 470; VillainBet = 20; HeroBet = 0; BB = 20 }
+  let s = { Hand = parseSuitedHand "6d4d"; Board = parseBoard "2h3h4c"; Pot = 60; VillainStack = 450; HeroStack = 470; VillainBet = 20; HeroBet = 0; BB = 20 }
   let history = [notMotivated PreFlop 20 Action.Call]
   testIPm s history Action.Call (Float(BluffFloat))
+  // tricky -> float IP -> F19
 
 [<Fact>]
 let ``Turn IP: float call donk`` () =

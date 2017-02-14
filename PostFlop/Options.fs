@@ -64,12 +64,18 @@ module Options =
     | CallEQPlusXvsAI of int 
     | PairedBoard of OopDonk * OopOnCBet
     | BoardOvercard of OopDonk * OopOnCBet
+    | BoardOvercardNotAce of OopDonk * OopOnCBet
     | BoardAce of OopDonk * OopOnCBet
     | CheckCheck of OopDonk * OopOnCBet
     | CheckCheckAndBoardOvercard of OopDonk * OopOnCBet
+    | CheckCheckCheckCheck of OopDonk * OopOnCBet
     | KHighOnPaired
     | CheckRaiseOvercardBluff of OopOnCBet
     | SlowPlayedBefore of OopOnCBet
+    | BarrelX3 of OopOnCBet
+    | VillainRaised of OopDonk * OopOnCBet
+    | HeroRaised of OopDonk * OopOnCBet
+    | StackPotRatioLessThan of decimal * OopDonk * OopOnCBet
     | NotUsed
 
   type OptionsOop = {

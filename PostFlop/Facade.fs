@@ -30,6 +30,11 @@ module Facade =
 
   let canFloatFlop s value texture = s.HeroBet = 0 && value.FD2 = NoFD && texture.Monoboard < 3
 
+  let decideNutStraightOnBoard history s value texture () =
+    nutStraightOnBoard s value texture
+    |> Option.bind (fun o -> decideOop ([],[],[]) s o)
+    |> Option.map (fun a -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = "Nut Str8 on board" })
+
   let decideFlopCbetMixup xlHandStrength history s value () = 
     let mixupedBefore = 
       history 
@@ -150,6 +155,7 @@ module Facade =
       | _ -> None
 
     let rules = [
+      decideNutStraightOnBoard history s value texture;
       decideFlopCbetMixup xlHandStrength history s value;
       decidePostFlopFloatOnDonk (riverBetSizes |> Tuple.thrd3) history s value texture xlTricky;
       decidePostFlopFloatOnCheck history s value texture xlTricky riverBetSizes;
@@ -201,7 +207,7 @@ module Facade =
       | _ -> failwith "Unkown street at decidePostFlopOop"
       |> Option.mapFst (specialRulesOop s history)
       |> Option.mapFst (scenarioRulesOop s history)
-      |> Option.mapFst (strategicRulesOop s value history bluffyFlops bluffyHand)
+      |> Option.mapFst (strategicRulesOop s value history texture bluffyFlops bluffyHand)
       |> Option.map (fun ((a, b), c) -> a, b, "PostflopOOP -> " + c)
 
     float

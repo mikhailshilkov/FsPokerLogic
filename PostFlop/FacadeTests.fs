@@ -464,4 +464,15 @@ let ``River IP pick decision based on slowplay on turn - choco`` () =
     slowPlay Turn]
   testIPSource s history (Action.RaiseToAmount 220) "river - villain donkbet to 30% -> L48"
 
+[<Fact>]
+let ``River IP All In if nut str8 on board`` () =
+  let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "AcKhQdJsTh"; Pot = 100; VillainStack = 390; HeroStack = 610; VillainBet = 0; HeroBet = 0; BB = 20 }
+  testIPSource s [] Action.AllIn "Nut Str8 on board"
+
+[<Fact>]
+let ``River IP Call if nut str8 on 3-spade board`` () =
+  let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "AhKhQdJsTh"; Pot = 140; VillainStack = 390; HeroStack = 610; VillainBet = 40; HeroBet = 0; BB = 20 }
+  testIPSource s [] Action.Call "Nut Str8 on board"
+
+
 adxl.Dispose()

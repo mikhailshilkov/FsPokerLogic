@@ -26,7 +26,7 @@ module Import =
   }
 
   let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
-  let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null; SpecialScenario = null }  
+  let defaultOopOptions = { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = []; Scenario = null }  
 
   let orElse b a = match a with | Some _ -> a | None -> b()
 
@@ -137,17 +137,23 @@ module Import =
     let parts = canonic.Split([|'/'|], 2)
     if System.String.IsNullOrEmpty(strategy) then (OnDonk.Undefined, OnDonkRaise.Undefined)
     else if parts.Length = 1 then
-      match parts.[0] with 
-      | "c" | "call" -> (OnDonk.Call, OnDonkRaise.Undefined)
-      | StartsWith "call^" s -> 
-        match s with 
-        | Decimal x -> (OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = x }, OnDonkRaise.StackOff)
-        | _ -> failwith ("Failed parsing Turn Donk (c^)" + s)
-      | "f" -> (OnDonk.Fold, OnDonkRaise.Undefined)
-      | "ai" -> (OnDonk.AllIn, OnDonkRaise.Undefined)
-      | "so" -> (OnDonk.ForValueStackOff, OnDonkRaise.StackOff)
-      | Int n -> (OnDonk.CallEQ n, OnDonkRaise.Undefined)
-      | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)      
+      let callAllInParts = parts.[0].Split([|"@ai#"|], StringSplitOptions.RemoveEmptyEntries)
+      if callAllInParts.Length = 2 then
+        match callAllInParts with
+        | [| Int c1; Int c2|] -> OnDonk.CallEQvsAI (c1, c2), OnDonkRaise.Undefined
+        | _ -> failwith ("Failed parsing Turn Donk (@AI#)" + strategy)   
+      else
+        match parts.[0] with 
+        | "c" | "call" -> (OnDonk.Call, OnDonkRaise.Undefined)
+        | StartsWith "call^" s -> 
+          match s with 
+          | Decimal x -> (OnDonk.RaiseConditional { Size = 2.2m; MinStackPotRatio = x }, OnDonkRaise.StackOff)
+          | _ -> failwith ("Failed parsing Turn Donk (c^)" + s)
+        | "f" -> (OnDonk.Fold, OnDonkRaise.Undefined)
+        | "ai" -> (OnDonk.AllIn, OnDonkRaise.Undefined)
+        | "so" -> (OnDonk.ForValueStackOff, OnDonkRaise.StackOff)
+        | Int n -> (OnDonk.CallEQ n, OnDonkRaise.Undefined)
+        | _ -> failwith ("Failed parsing Turn Donk (1)" + strategy)      
     elif parts.Length = 2 then
       let donk = 
         match parts.[0] with 
@@ -159,12 +165,18 @@ module Import =
         | StartsWith "rtv" s -> parseFormulaRaiseDonk s |> OnDonk.RaiseThinValue
         | StartsWith "rmodx" s -> match s with | Decimal x -> OnDonk.RaiseX (x * 100m |> int) | _ -> failwith ("Failed parsing Turn Donk (5)" + strategy)
         | _ -> failwith ("Failed parsing Turn Donk (2)" + strategy)
+      let callAllInParts = parts.[1].Split([|"@ai#"|], StringSplitOptions.RemoveEmptyEntries)
       let raise =
-        match parts.[1] with 
-        | "so" | "sot" -> OnDonkRaise.StackOff
-        | "c" -> OnDonkRaise.Call
-        | Int n -> OnDonkRaise.CallEQ n
-        | _ -> failwith ("Failed parsing TurnDonk (3)"  + strategy)
+        if callAllInParts.Length = 2 then
+          match callAllInParts with
+          | [| Int c1; Int c2|] -> OnDonkRaise.CallEQvsAI (c1, c2)
+          | _ -> failwith ("Failed parsing TurnDonk (@AI#/2)" + strategy)   
+        else
+          match parts.[1] with 
+          | "so" | "sot" -> OnDonkRaise.StackOff
+          | "c" -> OnDonkRaise.Call
+          | Int n -> OnDonkRaise.CallEQ n
+          | _ -> failwith ("Failed parsing TurnDonk (3)"  + strategy)
       (donk, raise)
     else failwith ("Failed parsing TurnDonk (4)" + strategy)
 
@@ -436,51 +448,57 @@ module Import =
   let parseOopSpecialRules (specialRules: string) = 
     let parseOopSpecialRule (s: string) =
       let canonic = s.Trim().ToLowerInvariant()
-      let parts = canonic.Split([|'/'|], 2)
-      if parts.Length = 1 then
-        match parts.[0] with
-        | StartsWith "ai#" i -> match i with | Int x -> CallEQPlusXvsAI x | _ -> failwith ("Failed parsing special rules (ai)" + s)
-        | "bp gs" -> PairedBoard (OopDonk.Check, CallEQ 14)
-        | "bp fd" -> PairedBoard (OopDonk.Check, CallEQ 22)
-        | "22" -> PairedBoard (Donk 50m, CallEQ 20)
-        | "tpp" -> PairedBoard (OopDonk.AllIn, OopOnCBet.AllIn)
-        | "6" -> BoardOvercard(OopDonk.Check, OopOnCBet.Call)
-        | "ov" -> BoardOvercard(OopDonk.AllIn, OopOnCBet.AllIn)
-        | "ov ai" -> BoardOvercard(OopDonk.Check, OopOnCBet.AllIn)
-        | "ovso" -> BoardOvercard(Donk 67m, StackOff)
-        | "61" -> BoardOvercard(Donk 60m, CallEQ 25)
-        | "4" -> BoardOvercard(OopDonk.Check, StackOff)
-        | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
-        | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith ("Failed parsing special rules (bovso)" + s)
-        | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
-        | "aso" -> BoardAce(Donk 67m, StackOff)
-        | "5" -> CheckCheck (Donk 75m, OopOnCBet.Call)
-        | "ov ch ch" -> CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22)
-        | "60" -> KHighOnPaired
-        | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
-        | "1" -> NotUsed
-        | StartsWith "choco#" ts -> SlowPlayedBefore(parseOopCbet ts) 
-        | StartsWith "bbb#" ts -> BarrelX3(parseOopCbet ts) 
-        | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, "ai")) -> 
-          StackPotRatioLessThan(spr, OopDonk.AllIn, OopOnCBet.AllIn) 
-        | _ -> failwith ("Failed parsing special rules (1)" + s)
-      elif parts.Length = 2 then
-        match parts.[0], parts.[1] with
-        | "a", "f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
-        | StartsWith "bov#" fs, ts -> BoardOvercard(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "bova#" fs, ts -> BoardOvercardNotAce(parseOopDonk fs, parseOopCbet ts) 
-        | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
-        | "chrovb", Int c -> CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ c))
-        | StartsWith "xoxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "floxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "xxoxxo#" fs, ts -> CheckCheckCheckCheck(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "roxo#" fs, ts -> VillainRaised(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "hroxo#" fs, ts -> HeroRaised(parseOopDonk fs, parseOopCbet ts) 
-        | StartsWith "choco#" fs, ts -> SlowPlayedBefore(parseOopCbet (fs + "/" + ts)) 
-        | StartsWith "bbb#" fs, ts -> BarrelX3(parseOopCbet (fs + "/" + ts)) 
-        | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, fs)), ts -> StackPotRatioLessThan(spr, parseOopDonk fs, parseOopCbet ts) 
-        | _ -> failwith ("Failed parsing special rules (2)" + s)
-      else failwith ("Failed parsing special rules (3)" + s)
+      let scenarioParts = canonic.Split([|'*'|], 2)
+      let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
+      let parts = scenarioParts.[0].Split([|'/'|], 2)
+      let condition =
+        if parts.Length = 1 then
+          match parts.[0] with
+          | StartsWith "ai#" i -> match i with | Int x -> CallEQPlusXvsAI x | _ -> failwith ("Failed parsing special rules (ai)" + s)
+          | "bp gs" -> NotUsed
+          | "bp fd" -> PairedBoard (OopDonk.Check, CallEQ 22)
+          | "22" -> PairedBoard (Donk 50m, CallEQ 20)
+          | "tpp" -> PairedBoard (OopDonk.AllIn, OopOnCBet.AllIn)
+          | "6" -> BoardOvercard(OopDonk.Check, OopOnCBet.Call)
+          | "ov" -> BoardOvercard(OopDonk.AllIn, OopOnCBet.AllIn)
+          | "ov ai" -> NotUsed
+          | "ovso" -> BoardOvercard(Donk 67m, StackOff)
+          | "61" -> BoardOvercard(Donk 60m, CallEQ 25)
+          | "4" -> NotUsed
+          | "44" -> BoardOvercard(Donk 62.5m, CallEQ 20)
+          | StartsWith "bovso#" d -> match d with | DecimalPerc x -> BoardOvercard(Donk x, StackOff) | _ -> failwith ("Failed parsing special rules (bovso)" + s)
+          | "a" -> BoardAce (OopDonk.AllIn, OopOnCBet.AllIn)
+          | "aso" -> BoardAce(Donk 67m, StackOff)
+          | "5" -> NotUsed
+          | "ov ch ch" -> NotUsed
+          | "60" -> KHighOnPaired
+          | "chrovso" -> BoardOvercard(OopDonk.Check, StackOffGay)
+          | "1" -> NotUsed
+          | StartsWith "choco#" ts -> SlowPlayedBefore(parseOopCbet ts) 
+          | StartsWith "bbb#" ts -> BarrelX3(parseOopCbet ts) 
+          | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, "ai")) -> 
+            StackPotRatioLessThan(spr, OopDonk.AllIn, OopOnCBet.AllIn) 
+          | "smrty" -> SmartyAllIn
+          | _ -> failwith ("Failed parsing special rules (1)" + s)
+        elif parts.Length = 2 then
+          match parts.[0], parts.[1] with
+          | "a", "f" -> BoardAce(Donk 67m, OopOnCBet.Fold)
+          | StartsWith "bov#" fs, ts -> BoardOvercard(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "bova#" fs, ts -> BoardOvercardNotAce(parseOopDonk fs, parseOopCbet ts) 
+          | "chrov", Int c -> BoardOvercard(OopDonk.Check, RaiseGayCallEQ c)
+          | "chrovb", Int c -> CheckRaiseOvercardBluff(Raise(2.75m, OopOnCBet.CallEQ c))
+          | StartsWith "xoxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "floxo#" fs, ts -> CheckCheck(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "xxoxxo#" fs, ts -> CheckCheckCheckCheck(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "roxo#" fs, ts -> VillainRaised(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "hroxo#" fs, ts -> HeroRaised(parseOopDonk fs, parseOopCbet ts) 
+          | StartsWith "choco#" fs, ts -> SlowPlayedBefore(parseOopCbet (fs + "/" + ts)) 
+          | StartsWith "bbb#" fs, ts -> BarrelX3(parseOopCbet (fs + "/" + ts)) 
+          | StartsWith "spr<" (SplittedTuple '#' (Decimal spr, fs)), ts -> StackPotRatioLessThan(spr, parseOopDonk fs, parseOopCbet ts) 
+          | _ -> failwith ("Failed parsing special rules (2)" + s)
+        else failwith ("Failed parsing special rules (3)" + s)
+      (condition, scenario)
+
     specialRules.Split ';'
     |> Array.filter (fun x -> not(String.IsNullOrEmpty(x)))
     |> List.ofArray 
@@ -490,8 +508,6 @@ module Import =
     let canonic = strategy.Trim().ToLowerInvariant().Replace("!air", "")
     let scenarioParts = canonic.Split([|'*'|], 2)
     let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
-    let specialScenarioParts = specialRules.Split([|'*'|], 2)
-    let specialScenario = if specialScenarioParts.Length > 1 then specialScenarioParts.[1] else null
     let specialParts = scenarioParts.[0].Split([|'@'|], 2)
     if specialParts.Length = 2 then parseOopOption specialParts.[0] specialParts.[1]
     else
@@ -499,15 +515,15 @@ module Import =
     if System.String.IsNullOrEmpty(strategy) then None
     else if parts.Length = 1 then
       match parts.[0] with 
-      | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
-      | "ch" | "f" -> Some { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
-      | Int i -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ i; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
+      | "ai" -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Special = parseOopSpecialRules specialRules; Scenario = scenario  }
+      | "ch" | "f" -> Some { First = OopDonk.Check; Then = OopOnCBet.Fold; Special = parseOopSpecialRules specialRules; Scenario = scenario }
+      | Int i -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ i; Special = parseOopSpecialRules specialRules; Scenario = scenario }
       | "x" -> None
       | _ -> failwith ("Failed parsing Flop Oop (1)" + strategy)
     else if parts.Length = 2 then
       let donk = parseOopDonk parts.[0]
       let cbet = parseOopCbet parts.[1]
-      Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialScenarioParts.[0]; Scenario = scenario; SpecialScenario = specialScenario }
+      Some { First = donk; Then = cbet; Special = parseOopSpecialRules specialRules; Scenario = scenario }
     else failwith "Failed parsing Flop Oop (2)"
 
   let parseOopOptionWithSpecialBoard (strategy: string) isSpecialBoard (specialBoardStrategy:string) (specialRules: string) =
@@ -737,7 +753,7 @@ module Import =
         | NoFD, GutShot -> 23
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + row) ("G" + row)
+    let cellValues = getCellValues xlWorkSheet ("B" + row) ("H" + row)
     let (column, specialRulesColumn) = 
       match texture.Monoboard, handValue.FD with
       | 3, NoFD -> (2, 4)
@@ -1395,6 +1411,7 @@ module Import =
     let row = rowIndex s.Board + 2 |> string
     let isInRanged r = toHand s.Hand |> Ranges.isHandInRanges r
     let noCbet r = if isInRanged r then Some defaultIpOptions else None
+    let isMonoboard = monoboardLength s.Board >= 3
     let bettingRange column r = 
       if isInRanged r then 
         getCellValue xlWorkSheet (column + "459")
@@ -1402,10 +1419,14 @@ module Import =
         |> Option.map (fun d -> { defaultIpOptions with CbetFactor = Always d })
       else Some defaultIpOptions
     match h with
-    | [{Action = RaiseToAmount _}] -> Some ("E", noCbet)
-    | [{Action = Action.Call; VsVillainBet = x}] when x = s.BB -> Some ("F", noCbet)
-    | [{Action = Action.Call; VsVillainBet = x}] when x >= s.BB * 4 -> Some ("G", bettingRange "G")
-    | [{Action = Action.Call}] -> Some ("H", bettingRange "H")
+    | [{Action = RaiseToAmount _}] when not isMonoboard -> 
+      Some ("E", noCbet)
+    | [{Action = Action.Call; VsVillainBet = x}] when x = s.BB && not isMonoboard -> 
+      Some ("F", noCbet)
+    | [{Action = Action.Call; VsVillainBet = x}] when x >= s.BB * 4 -> 
+      Some ("G", bettingRange "G")
+    | [{Action = Action.Call}] -> 
+      Some ("H", bettingRange "H")
     | _ -> None
     |> Option.mapFst (fun c -> c + row)
     |> Option.map (fun (cell, f) -> (cell, getCellValue xlWorkSheet cell, f))

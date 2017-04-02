@@ -15,7 +15,7 @@ module ImportTests =
   open Excel.Import
 
   let defaultTexture = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = 2 }
-  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
+  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null }
   let defaultIpOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined }  
   let defaultFlop = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c"; Pot = 80; VillainStack = 440; HeroStack = 480; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = parseSuitedHand "7s2c"; Board = parseBoard "KdJs6c2d"; Pot = 280; VillainStack = 340; HeroStack = 380; VillainBet = 100; HeroBet = 0; BB = 20 }
@@ -85,8 +85,8 @@ module ImportTests =
     use xl = useExcel handStrengthFileName
     let special = { defaultTexture with Monoboard = 4 }
     let (fst, snd, _, source) = importTurnDonk xl.Workbook { Made = Flush(NotNut Jack); FD = NoFD; FD2 = NoFD; SD = NoSD } special defaultTurn defaultHistory
-    Assert.Equal(OnDonk.RaiseX 260, fst)
-    Assert.Equal(OnDonkRaise.CallEQ 10, snd)
+    Assert.Equal(OnDonk.CallEQvsAI (25, 12), fst)
+    Assert.Equal(OnDonkRaise.Undefined, snd)
     Assert.Equal("HandStrength -> vill xc F + dbT or dbF + dbT -> AG9", source)
 
   [<Fact>]
@@ -122,7 +122,7 @@ module ImportTests =
   let ``importOopFlop returns AI special option`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopFlop xl.Workbook "hero call raise pre" { Made = Pair(Second Ten); FD = NoFD; FD2 = NoFD; SD = NoSD } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 5] }, "hero call raise pre -> B/C13") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 34; Special = [CallEQPlusXvsAI 5, null] }, "hero call raise pre -> B/C13") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -145,14 +145,15 @@ module ImportTests =
   let ``importOopTurn returns correct scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { Made = TwoOvercards; SD = OpenEnded; FD2 = NoFD; FD = NoFD } defaultTexture
-    let expected = ({ defaultOopOptions with First = Donk 75m; Then = CallEQ 30; Scenario = "r8" }, "hero call raise pre -> K33") |> Some
+    let special = [VillainRaised(OopDonk.Check, OopOnCBet.CallEQ 28), null; CheckCheck(OopDonk.Donk 45m, OopOnCBet.CallEQ 16), "r8"; CallEQPlusXvsAI 7, null]
+    let expected = ({ First = Donk 75m; Then = CallEQ 30; Scenario = "r8"; Special = special }, "hero call raise pre -> K33") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``importOopTurn returns correct special scenario for a sample cell`` () =
     use xl = useExcel postflopOOPFileName
     let actual = importOopTurn xl.Workbook "hero call raise pre" { Made = Pair(Third); SD = GutShot; FD = NoFD; FD2 = NoFD } defaultTexture
-    let expected = ({ defaultOopOptions with Then = CallEQ 18; Special = [BoardOvercard (Donk 62M, CallEQ 22)]; SpecialScenario = "r9" }, "hero call raise pre -> K30") |> Some
+    let expected = ({ defaultOopOptions with Then = CallEQ 18; Special = [BoardOvercard (Donk 62M, CallEQ 22), "r9"] }, "hero call raise pre -> K30") |> Some
     Assert.Equal(expected, actual)
 
   let testParseTurnDonk s d r =
@@ -192,6 +193,67 @@ module ImportTests =
 
   [<Fact>]
   let ``parseTurnDonk RTV"c/c works`` () = testParseTurnDonk "RTV\"c/c" (OnDonk.RaiseThinValue(OnDonk.Call)) OnDonkRaise.Call
+
+  [<Fact>]
+  let ``parseTurnDonk 25atAI#12 works`` () = testParseTurnDonk "25@AI#12" (OnDonk.CallEQvsAI (25, 12)) OnDonkRaise.Undefined
+
+  [<Fact>]
+  let ``parseTurnDonk rTg/15atAI#5*r8 works`` () = testParseTurnDonk "rTg/15@AI#5" OnDonk.RaiseGay (OnDonkRaise.CallEQvsAI(15, 5))
+
+  [<Fact>]
+  let ``Validate all cells in PostflopOOP - limp and check`` () =
+    use xl = useExcel postflopOOPFileName
+    let xlWorkSheet = xl.Workbook.Worksheets.["limp and check"] :?> Worksheet
+
+    // Flop
+    for r in 6..38 do
+      let row = string r
+      let cellValues = getCellValues xlWorkSheet ("B" + row) ("H" + row)
+      for (column, specialRulesColumn) in [(2,4); (5, 6); (3,4); (0,1)] do
+        parseOopOption cellValues.[column] cellValues.[specialRulesColumn] |> ignore
+
+    // Turn
+    for r in 6..44 do
+      let row = string r
+      let cellValues = getCellValues xlWorkSheet ("K" + row) ("AB" + row)
+      for sc in [true; false] do
+        for (column, specialColumn) in [(16, 17); (14, 15); (11, 12); (4, 5); (8, 9); (6, 7); (0, 3)] do
+          for specialRules in [cellValues.[1]; ""] do
+            parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules |> ignore
+
+    // River mono < 3
+    for r in 6..42 do
+      let row = string r
+      let cellValues = getCellValues xlWorkSheet ("AE" + row) ("AL" + row)
+
+      let (specialConditionsColumn, specialColumn, specialRulesColumn) = Some 3, 4, Some 2
+      for sc in [true; false] do
+        let sr = defaultArg (Option.map (fun src -> cellValues.[src]) specialRulesColumn) ""
+        for column in [0; 1] do
+          parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr |> ignore
+
+    // River mono 4
+    for r in 48..49 do
+      let row = string r
+      let cellValues = getCellValues xlWorkSheet ("AE" + row) ("AL" + row)
+
+      let (specialConditionsColumn, specialColumn, specialRulesColumn) = Some 7, 6, None
+      for sc in [true; false] do
+        let sr = defaultArg (Option.map (fun src -> cellValues.[src]) specialRulesColumn) ""
+        for column in [0; 2; 4; 5] do
+          parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr |> ignore
+
+    // River mono 5
+    for r in 54..55 do
+      let row = string r
+      let cellValues = getCellValues xlWorkSheet ("AE" + row) ("AL" + row)
+
+      let (specialConditionsColumn, specialColumn, specialRulesColumn) = None, 0, None
+      for sc in [true; false] do
+        let sr = defaultArg (Option.map (fun src -> cellValues.[src]) specialRulesColumn) ""
+        for column in [0; 2; 3; 5] do
+          parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr |> ignore
+
 
   [<Fact>]
   let ``importOopRiver returns correct options for a sample cell`` () =
@@ -324,13 +386,13 @@ module ImportTests =
   [<Fact>]
   let ``parseOopOption ch/25/ovso works`` () = 
     let actual = parseOopOption "ch/25@ovso" ""
-    let expected = { defaultOopOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff)] } |> Some
+    let expected = { defaultOopOptions with First = Check; Then = CallEQ 25; Special = [BoardOvercard(Donk 67m, StackOff), null] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
   let ``parseOopOption 62,5%/so*r9 and Ovso*r8 works`` () = 
     let actual = parseOopOption "62,5%/so*r9" "Ovso*r8"
-    let expected = { First = Donk 62.5m; Then = StackOff; Scenario = "r9"; Special = [BoardOvercard(Donk 67m, StackOff)]; SpecialScenario = "r8" } |> Some
+    let expected = { First = Donk 62.5m; Then = StackOff; Scenario = "r9"; Special = [BoardOvercard(Donk 67m, StackOff), "r8"] } |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -365,7 +427,7 @@ module ImportTests =
     Assert.Equal(expected, actual)
 
   let testParseOopSpecialRules s e =
-    let actual = parseOopSpecialRules s |> List.head
+    let actual = parseOopSpecialRules s |> List.head |> fst
     Assert.Equal(e, actual)
 
   [<Fact>]
@@ -378,16 +440,10 @@ module ImportTests =
   let ``parseOopSpecialRules Ov works`` () = testParseOopSpecialRules "Ov" (BoardOvercard(OopDonk.AllIn, AllIn))
 
   [<Fact>]
-  let ``parseOopSpecialRules ov AI works`` () = testParseOopSpecialRules "ov AI" (BoardOvercard(Check, AllIn))
-
-  [<Fact>]
   let ``parseOopSpecialRules ovso works`` () = testParseOopSpecialRules "ovso" (BoardOvercard(Donk 67m, StackOff))
 
   [<Fact>]
   let ``parseOopSpecialRules 61 works`` () = testParseOopSpecialRules "61" (BoardOvercard(Donk 60m, CallEQ 25))
-
-  [<Fact>]
-  let ``parseOopSpecialRules 4 works`` () = testParseOopSpecialRules "4" (BoardOvercard(Check, StackOff))
 
   [<Fact>]
   let ``parseOopSpecialRules 44 works`` () = testParseOopSpecialRules "44" (BoardOvercard(Donk 62.5m, CallEQ 20))
@@ -402,9 +458,6 @@ module ImportTests =
   let ``parseOopSpecialRules Aso works`` () = testParseOopSpecialRules "Aso" (BoardAce(Donk 67m, StackOff))
 
   [<Fact>]
-  let ``parseOopSpecialRules Bp GS works`` () = testParseOopSpecialRules "Bp GS" (PairedBoard (Check, CallEQ 14))
-
-  [<Fact>]
   let ``parseOopSpecialRules Bp FD works`` () = testParseOopSpecialRules "Bp FD" (PairedBoard (Check, CallEQ 22))
 
   [<Fact>]
@@ -412,12 +465,6 @@ module ImportTests =
 
   [<Fact>]
   let ``parseOopSpecialRules Tpp works`` () = testParseOopSpecialRules "Tpp" (PairedBoard (OopDonk.AllIn, AllIn))
-
-  [<Fact>]
-  let ``parseOopSpecialRules 5 works`` () = testParseOopSpecialRules "5" (CheckCheck (Donk 75m, Call))
-
-  [<Fact>]
-  let ``parseOopSpecialRules ov ch ch works`` () = testParseOopSpecialRules "ov ch ch" (CheckCheckAndBoardOvercard (Donk 75m, CallEQ 22))
 
   [<Fact>]
   let ``parseOopSpecialRules 60 works`` () = testParseOopSpecialRules "60" KHighOnPaired
@@ -483,13 +530,22 @@ module ImportTests =
   let ``parseOopSpecialRules spr<1,25#AI works`` () = testParseOopSpecialRules "spr<1,25#AI" (StackPotRatioLessThan(1.25m, OopDonk.AllIn, OopOnCBet.AllIn))  
 
   [<Fact>]
+  let ``parseOopSpecialRules smrty works`` () = testParseOopSpecialRules "smrty" SmartyAllIn
+
+  [<Fact>]
   let ``parseOopSpecialRules spr<1,18#75%/so works`` () = testParseOopSpecialRules "spr<1,18#75%/so" (StackPotRatioLessThan(1.18m, OopDonk.Donk 75m, OopOnCBet.StackOff))  
 
   [<Fact>]
+  let ``parseOopSpecialRules Scenario parsing works`` () = 
+    let actual = parseOopSpecialRules "6*r8;60*r9"
+    let expected = [BoardOvercard(Check, Call), "r8"; KHighOnPaired, "r9"]
+    Assert.Equal<(OopSpecialCondition * string) list>(expected, actual)
+
+  [<Fact>]
   let ``parseOopSpecialRules parses multiple rules`` () =
-    let actual = parseOopSpecialRules "AI#15; A; 61"
+    let actual = parseOopSpecialRules "AI#15; A; 61" |> List.map fst
     let expected = [CallEQPlusXvsAI 15; BoardAce (OopDonk.AllIn, AllIn); BoardOvercard(Donk 60m, CallEQ 25)]
-    Assert.Equal<System.Collections.Generic.IEnumerable<OopSpecialCondition>>(expected, actual)
+    Assert.Equal<OopSpecialCondition list>(expected, actual)
 
   [<Fact>]
   let ``importFlopList imports list of boards`` () =
@@ -551,7 +607,7 @@ module ImportTests =
     let s = { defaultRiver with Board = parseBoard "2s2cJsQdKc"; Hand = parseSuitedHand "5s3s" }
     let history = [notMotivated PreFlop 20 Action.Call; notMotivated Flop 30 Action.Call; floatBluffCheck Turn]
     let actual = importFloatRiverOopOptions xl.Workbook (handValue s.Hand s.Board) defaultTexture s history
-    let expected = ({ defaultOopOptions with Special = [CheckCheck(RiverBetSizing, CallEQIfRaised(8, 5))]; Scenario = "r8/5" }, "tricky -> float OOP -> AX8") |> Some
+    let expected = ({ defaultOopOptions with Special = [CheckCheck(RiverBetSizing, CallEQIfRaised(8, 5)), null]; Scenario = "r8/5" }, "tricky -> float OOP -> AX8") |> Some
     Assert.Equal(expected, actual)
 
   [<Fact>]
@@ -768,7 +824,7 @@ module ImportTests =
   [<Fact>]
   let ``importFlopCbetMixup bets a sample hand after limp-call`` () =
     let h = [ notMotivated PreFlop 70 Action.Call ]
-    let expected = ({ defaultIpOptions with CbetFactor = Always 60m }, "HandStrength -> cbet mix up -> H10")
+    let expected = ({ defaultIpOptions with CbetFactor = Always 50m }, "HandStrength -> cbet mix up -> H10")
     testCbetMixup "Jd8d" "2cTh2h" h expected
     // Note: last time I had to fill HandStrength -> cbet mix up -> H459 to 60 to fix this test
 

@@ -17,6 +17,7 @@ module Options =
     | ForValueStackOffX of int 
     | CallRaisePet 
     | CallEQ of int 
+    | CallEQvsAI of int * int
     | RaiseConditional of DonkConditionalRaise
     | RaisePreDonkX of int
     | RaiseX of int 
@@ -33,6 +34,7 @@ module Options =
     | AllIn
     | Call
     | CallEQ of int 
+    | CallEQvsAI of int * int
     | Undefined
 
   type Options = {
@@ -76,14 +78,14 @@ module Options =
     | VillainRaised of OopDonk * OopOnCBet
     | HeroRaised of OopDonk * OopOnCBet
     | StackPotRatioLessThan of decimal * OopDonk * OopOnCBet
+    | SmartyAllIn
     | NotUsed
 
   type OptionsOop = {
     First: OopDonk
     Then: OopOnCBet
-    Special: OopSpecialCondition list
     Scenario: string
-    SpecialScenario: string
+    Special: (OopSpecialCondition * string) list
   }
 
   type RBSEntry = {

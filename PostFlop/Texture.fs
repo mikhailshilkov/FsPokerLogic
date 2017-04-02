@@ -3,8 +3,10 @@
 module Texture =
   open Hands
   open Cards.HandValues
+  open Cards.Actions
   open Options
   open Import
+  open PostFlop.Decision
 
   let toFlopOptions isFlushDraw isFlopFlushDraw eo =
     let onDonkRaise = function 
@@ -34,3 +36,15 @@ module Texture =
       { Options.CbetFactor = eo.TurnFBCbetFactor; CheckRaise = OnCheckRaise.Fold; Donk = onDonk; DonkRaise = onDonkRaise }, "O"
     else
       { Options.CbetFactor = CBet.Never; CheckRaise = OnCheckRaise.Undefined; Donk = onDonk; DonkRaise = onDonkRaise }, "-"
+
+  let nutStraightOnBoard s value texture =
+    match street s, value.Made with
+      | River, Straight(OnBoard) -> 
+        let boardStraight = streety 5 0 s.Board
+        if boardStraight = Some(14) then
+          match texture.Monoboard with
+          | 4 -> None
+          | 3 -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ 32; Scenario = null; Special = [] }
+          | _ -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Scenario = null; Special = [] }
+        else None
+      | _ -> None

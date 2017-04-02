@@ -9,10 +9,11 @@ module DecisionTests =
   open Xunit
 
   let defaultOptions = { CbetFactor = Never; CheckRaise = OnCheckRaise.Call; Donk = OnDonk.Fold; DonkRaise = OnDonkRaise.Undefined  }
-  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null; SpecialScenario = null }
+  let defaultOopOptions = { First = Check; Then = Fold; Special = []; Scenario = null }
   let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultTurn = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}|]; Pot = 180; VillainStack = 440; HeroStack = 380; VillainBet = 0; HeroBet = 0; BB = 20 }
   let defaultRiver = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}; {Face = Two; Suit = Clubs}; {Face = King; Suit = Clubs}|]; Pot = 380; VillainStack = 340; HeroStack = 280; VillainBet = 0; HeroBet = 0; BB = 20 }
+  let donkAction = { Action = Action.RaiseToAmount 90; Motivation = None; VsVillainBet = 90; Street = Turn; Source = null }
 
   [<Theory>]
   [<InlineData(80, 50, 40)>]
@@ -188,10 +189,17 @@ module DecisionTests =
     Assert.Equal(actual, Some Action.Call)
 
   [<Fact>]
-  let ``Call all-in donk based on equity with EQ >= 26`` () =
-    let options = { defaultOptions with Donk = OnDonk.CallEQ 26 }
-    let snapshot = { defaultFlop with Pot = 290; VillainStack = 0; VillainBet = 200 }
+  let ``Call all-in donk based on equity with AI equity adjustment`` () =
+    let options = { defaultOptions with Donk = OnDonk.CallEQvsAI (15, 13) }
+    let snapshot = { defaultFlop with Pot = 400; VillainStack = 0; VillainBet = 150 }
     let actual = Decision.decide [] snapshot [] options
+    Assert.Equal(actual, Some Action.Call)
+
+  [<Fact>]
+  let ``Call all-in raise of donk based on equity with AI equity adjustment`` () =
+    let options = { defaultOptions with DonkRaise = OnDonkRaise.CallEQvsAI (15, 13) }
+    let snapshot = { defaultTurn with Pot = 400; VillainStack = 0; HeroBet = 50; VillainBet = 200 }
+    let actual = Decision.decide [] snapshot [donkAction] options
     Assert.Equal(actual, Some Action.Call)
 
   [<Fact>]
@@ -333,7 +341,6 @@ module DecisionTests =
     let actual = Decision.decide [] snapshot [] options
     Assert.Equal(Some Action.AllIn, actual)
 
-  let donkAction = { Action = Action.RaiseToAmount 90; Motivation = None; VsVillainBet = 90; Street = Turn; Source = null }
 
   [<Fact>]
   let ``Stack-off after donk-raise on turn`` () =
@@ -625,7 +632,7 @@ module DecisionTests =
 
   [<Fact>]
   let ``River Bet Size Donk OOP bets in stack is deep`` () =
-    riverBetSizeTest RiverBetSizing 190 (Action.RaiseToAmount 120)
+    riverBetSizeTest RiverBetSizing 200 (Action.RaiseToAmount 120)
 
   [<Fact>]
   let ``River Bet Value AI if stack is high but not enough chips will be behind`` () =

@@ -6,69 +6,76 @@ open Hands
 open Options
 open Decision
 open PostFlop.Parsing
+open PostFlop.Texture
 
 module SpecialRules = 
   let specialRulesOop s history o = 
-    let checkCheckMatch f t other =       
+    let checkCheckMatch f t scenario other =       
       match previousStreetHistory s history |> List.map (fun h -> h.Action) with
-      | [Action.Check] -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+      | [Action.Check] -> { o with First = f; Then = t; Scenario = scenario } 
       | _ -> other
-    let villainRaiseMatch f t other =       
+    let villainRaiseMatch f t scenario other =
       match previousStreetHistory s history |> List.map (fun h -> h.Action) with
       | [Action.RaiseToAmount _; Action.Call] 
       | [Action.Check; Action.RaiseToAmount _; Action.Call] 
-          -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+          -> { o with First = f; Then = t; Scenario = scenario } 
       | _ -> other
-    let heroRaiseMatch f t other =       
+    let heroRaiseMatch f t scenario other =
       match previousStreetHistory s history |> List.tryLast with
       | Some { Action = Action.RaiseToAmount _; VsVillainBet = b } when b > 0      
-          -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+          -> { o with First = f; Then = t; Scenario = scenario } 
       | _ -> other
+    let smartyAllIn s = function
+       | { First = OopDonk.Check; Then = OopOnCBet.Call } -> true
+       | { First = OopDonk.Check; Then = OopOnCBet.CallEQ eq } -> 
+         let snapshotIfVillainShoves = { s with VillainBet = s.VillainStack; VillainStack = 0; Pot = s.Pot + s.VillainStack }
+         potOdds snapshotIfVillainShoves <= eq
+       | _ -> false
 
     let rec imp remaining =
       match remaining with
-      | CallEQPlusXvsAI dx::rem ->
+      | (CallEQPlusXvsAI dx, scenario)::rem ->
         match o.Then, s.VillainStack with
-        | CallEQ x, 0 -> { o with Then = CallEQ (x + dx); Scenario = o.SpecialScenario }
-        | CallEQIfRaised(r, nr), 0 -> { o with Then = CallEQIfRaised(r + dx, nr + dx); Scenario = o.SpecialScenario }
-        | Raise(r, CallEQ x), 0 -> { o with Then = Raise(r, CallEQ(x + dx)); Scenario = o.SpecialScenario }
+        | CallEQ x, 0 -> { o with Then = CallEQ (x + dx); Scenario = scenario }
+        | CallEQIfRaised(r, nr), 0 -> { o with Then = CallEQIfRaised(r + dx, nr + dx); Scenario = scenario }
+        | Raise(r, CallEQ x), 0 -> { o with Then = Raise(r, CallEQ(x + dx)); Scenario = scenario }
         |_ -> imp rem
-      | PairedBoard(f, t)::rem ->
-        if isPaired s.Board then { o with First = f; Then = t; Scenario = o.SpecialScenario } else imp rem
-      | BoardOvercard(f, t)::rem -> 
+      | (PairedBoard(f, t), scenario)::rem ->
+        if isPaired s.Board then { o with First = f; Then = t; Scenario = scenario } else imp rem
+      | (BoardOvercard(f, t), scenario)::rem -> 
         if isLastBoardCardOvercard s.Board 
-        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        then { o with First = f; Then = t; Scenario = scenario } 
         else imp rem
-      | BoardOvercardNotAce(f, t)::rem -> 
+      | (BoardOvercardNotAce(f, t), scenario)::rem -> 
         if isLastBoardCardOvercard s.Board && isLastCard ((<>) Ace) s.Board
-        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        then { o with First = f; Then = t; Scenario = scenario } 
         else imp rem
-      | BoardAce(f,t)::rem ->
+      | (BoardAce(f,t), scenario)::rem ->
         if (Array.last s.Board).Face = Ace 
           && s.Board |> Array.filter (fun x -> x.Face = Ace) |> Array.length = 1 then 
-          { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+          { o with First = f; Then = t; Scenario = scenario } 
         else imp rem
-      | CheckCheck(f, t)::rem -> checkCheckMatch f t (imp rem)
-      | CheckCheckAndBoardOvercard(f, t)::rem -> 
-        if isLastBoardCardOvercard s.Board then checkCheckMatch f t (imp rem) else imp rem
-      | CheckCheckCheckCheck(f, t)::rem ->
+      | (CheckCheck(f, t), scenario)::rem -> checkCheckMatch f t scenario (imp rem)
+      | (CheckCheckAndBoardOvercard(f, t), scenario)::rem -> 
+        if isLastBoardCardOvercard s.Board then checkCheckMatch f t scenario (imp rem) else imp rem
+      | (CheckCheckCheckCheck(f, t), scenario)::rem ->
         match history |> List.map (fun h -> h.Action) with
-        | [_; Action.Check; Action.Check] -> { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        | [_; Action.Check; Action.Check] -> { o with First = f; Then = t; Scenario = scenario } 
         | _ -> imp rem
-      | KHighOnPaired::rem ->
+      | (KHighOnPaired, scenario)::rem ->
         if o.Then = Fold && isPaired s.Board && isXHigh King s.Hand && s.BB <= 30 then 
-          { o with Then = CallEQ (if s.BB = 20 then 30 else 25); Scenario = o.SpecialScenario } 
+          { o with Then = CallEQ (if s.BB = 20 then 30 else 25); Scenario = scenario } 
         else imp rem
-      | CheckRaiseOvercardBluff(t)::rem ->
+      | (CheckRaiseOvercardBluff(t), scenario)::rem ->
         let villainBet = relativeBet s
         if isLastBoardCardOvercard s.Board 
           && (villainBet = 0 || villainBet >= 35 && villainBet <= 56) 
           && stackIfCall s >= s.BB * 8
-        then { o with First = Check; Then = t; Scenario = o.SpecialScenario } else imp rem
-      | SlowPlayedBefore(t)::rem -> 
+        then { o with First = Check; Then = t; Scenario = scenario } else imp rem
+      | (SlowPlayedBefore(t), scenario)::rem -> 
         if history |> List.exists (fun h -> h.Motivation = Some SlowPlay)
-        then { o with Then = t; Scenario = o.SpecialScenario } else imp rem
-      | BarrelX3(t)::rem -> 
+        then { o with Then = t; Scenario = scenario } else imp rem
+      | (BarrelX3(t), scenario)::rem -> 
         match history, s.VillainBet with
         | [_
            { Action = Action.Check }
@@ -78,15 +85,19 @@ module SpecialRules =
            { Action = Action.Check }],
           rb when rb > 0
              && (tb > (s.Pot - rb - 2 * tb) / 4 || fb > (s.Pot - rb - 2 * tb - 2 * fb) / 4)
-            -> { o with Then = t; Scenario = o.SpecialScenario } 
+            -> { o with Then = t; Scenario = scenario } 
         | _ -> imp rem
-      | VillainRaised(f, t)::rem -> villainRaiseMatch f t (imp rem)
-      | HeroRaised(f, t)::rem -> heroRaiseMatch f t (imp rem)
-      | StackPotRatioLessThan(spr, f, t)::rem -> 
+      | (VillainRaised(f, t), scenario)::rem -> villainRaiseMatch f t scenario (imp rem)
+      | (HeroRaised(f, t), scenario)::rem -> heroRaiseMatch f t scenario (imp rem)
+      | (StackPotRatioLessThan(spr, f, t), scenario)::rem -> 
         if stackPotRatio s <= spr 
-        then { o with First = f; Then = t; Scenario = o.SpecialScenario } 
+        then { o with First = f; Then = t; Scenario = scenario } 
         else imp rem
-      | NotUsed::rem -> imp rem
+      | (SmartyAllIn, scenario)::rem -> 
+        if smartyAllIn s o
+        then { o with First = OopDonk.AllIn; Scenario = scenario }
+        else imp rem
+      | (NotUsed, _)::rem -> imp rem
       | [] -> o
     imp o.Special
 
@@ -153,7 +164,10 @@ module SpecialRules =
   let bluffyCheckRaiseInRaisedPot bluffyHand flops s value history o =
     match street s, s.BB, s.Pot, s.VillainBet with
     | Flop, 20, 120, 40
-      when effectiveStackPre s >= 18 && flopMatches s flops && (bluffyHand s.Hand || value.Made = TwoOvercards || value.SD = GutShot)
+      when effectiveStackPre s >= 18 
+        && flopMatches s flops 
+        && (bluffyHand s.Hand || value.Made = TwoOvercards || value.SD = GutShot)
+        && monoboardLength s.Board < 3
       -> { o with Then = Raise(2.75m, OopOnCBet.Fold) }
     | Turn, 20, 300, 0
       when stack s >= 210 && flopMatches s flops
@@ -183,10 +197,23 @@ module SpecialRules =
       -> { o with First = OopDonk.Donk 62.5m }
     | _ -> o
 
-  let strategicRulesOop s value history (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (bluffyHand, overtakyHand) o =
+  let nutStraightOnBoard s value texture =
+    match street s, value.Made with
+      | River, Straight(OnBoard) -> 
+        let boardStraight = streety 5 0 s.Board
+        if boardStraight = Some(14) then
+          match texture.Monoboard with
+          | 4 -> None
+          | 3 -> Some { First = OopDonk.Check; Then = OopOnCBet.CallEQ 32; Scenario = null; Special = [] }
+          | _ -> Some { First = OopDonk.AllIn; Then = OopOnCBet.AllIn; Scenario = null; Special = [] }
+        else None
+      | _ -> None
+
+  let strategicRulesOop s value history texture (bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking) (bluffyHand, overtakyHand) o =
     let historySimple = List.map (fun x -> x.Action) history
     let motivationSeed = if o.Scenario <> null then Some(Scenario(o.Scenario)) else None
     let rules = [
+      (defaultArg (nutStraightOnBoard s value texture), None);
       (overtakeLimpedPot overtakyHand s value historySimple, None);
       (allInTurnAfterCheckRaiseInLimpedPot s historySimple, None);
       (checkCallPairedTurnAfterCallWithSecondPairOnFlop s value.Made historySimple, None);

@@ -15,8 +15,8 @@ namespace Interaction
         [return: MarshalAs(UnmanagedType.Bool)]
         public static extern bool PrintWindow(IntPtr hwnd, IntPtr hDC, uint nFlags);
 
-        [DllImport("user32.dll")]
-        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        [DllImport("User32.dll")]
+        public static extern bool GetWindowRect(IntPtr hWnd, ref RECT lpRect);
     }
 
     [StructLayout(LayoutKind.Sequential)]

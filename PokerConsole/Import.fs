@@ -4,6 +4,7 @@ open System
 open Microsoft.Office.Interop.Excel
 open Preflop.Decide
 open System.Runtime.InteropServices
+open Excel
 open Excel.Import
 
 let fullRange = "22+,A2s+,K2s+,Q2s+,J2s+,T2s+,92s+,82s+,72s+,62s+,52s+,42s+,32s,A2o+,K2o+,Q2o+,J2o+,T2o+,92o+,82o+,72o+,62o+,52o+,42o+,32o"
@@ -24,12 +25,12 @@ let getCellValues (sheet : Worksheet) (name1 : string) (name2 : string) =
     |> Seq.map (fun x -> if x = null then "" else x.ToString())
     |> Array.ofSeq
 
-let importRulesIP (xlWorkBook : Workbook) bb =
+let importRulesIP (xlWorkBook : IWorkbook) bb =
   let sheetName = bb.ToString() + "BB"
-  let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
   let sheetName = "IPInput -> " + sheetName + " -> "
-  let cValues = getCellValues xlWorkSheet "C1" "C3"
-  let fValues = getCellValues xlWorkSheet "F1" "F37"
+  let cValues = xlWorkSheet.GetCellValues "C1" "C3"
+  let fValues = xlWorkSheet.GetCellValues "F1" "F37"
   let getCellValueBB (name : string)= 
     let index = name.Substring(1) |> Int32.Parse
     if name.[0] = 'C' then cValues.[index - 1] else fValues.[index - 1]
@@ -166,11 +167,11 @@ let importRulesIP (xlWorkBook : Workbook) bb =
       Source = sheetName + "F35" } 
     |]
 
-let importRulesOOP (xlWorkBook : Workbook) bb =
+let importRulesOOP (xlWorkBook : IWorkbook) bb =
   let sheetName = bb.ToString() + "BB"
-  let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
   let sheetName = "OOPInput -> " + sheetName + " -> "
-  let gValues = getCellValues xlWorkSheet "G1" "G27"
+  let gValues = xlWorkSheet.GetCellValues "G1" "G27"
   let getCellValueBB (name : string)= 
     let index = name.Substring(1) |> Int32.Parse
     gValues.[index - 1]
@@ -560,20 +561,20 @@ type OopAdvancedRules = {
   LimpFoldBig: DecisionRule list
 }
 
-let importOopAdvanced (xlWorkBook : Workbook) =
-  let xlWorkSheetLimpLow = xlWorkBook.Worksheets.["limp fold low"] :?> Worksheet
-  let cellValuesLimpLow = getCellValues xlWorkSheetLimpLow "B3" "B16"
+let importOopAdvanced (xlWorkBook : IWorkbook) =
+  let xlWorkSheetLimpLow = xlWorkBook.GetWorksheet "limp fold low"
+  let cellValuesLimpLow = xlWorkSheetLimpLow.GetCellValues "B3" "B16"
   let rangeLimp = (16, 25)
 
-  let xlWorkSheetLimpBig = xlWorkBook.Worksheets.["limp fold big"] :?> Worksheet
-  let cellValuesLimpBig = getCellValues xlWorkSheetLimpBig "B3" "B27"
+  let xlWorkSheetLimpBig = xlWorkBook.GetWorksheet "limp fold big"
+  let cellValuesLimpBig = xlWorkSheetLimpBig.GetCellValues "B3" "B27"
 
-  let xlWorkSheetRaise = xlWorkBook.Worksheets.["preflop ranges vs minr"] :?> Worksheet
-  let cellValuesRaise = getCellValues xlWorkSheetRaise "B1" "B3"
+  let xlWorkSheetRaise = xlWorkBook.GetWorksheet "preflop ranges vs minr"
+  let cellValuesRaise = xlWorkSheetRaise.GetCellValues "B1" "B3"
   let rangeRaise = (15, 25)
 
-  let xlWorkSheetCallingRange = xlWorkBook.Worksheets.["EQ 3b shove - default, formula"] :?> Worksheet
-  let cellValuesCallingRange = getCellValues xlWorkSheetCallingRange "B12" "B16"
+  let xlWorkSheetCallingRange = xlWorkBook.GetWorksheet "EQ 3b shove - default, formula"
+  let cellValuesCallingRange = xlWorkSheetCallingRange.GetCellValues "B12" "B16"
 
   { Always = Array.concat
               [|
@@ -581,9 +582,9 @@ let importOopAdvanced (xlWorkBook : Workbook) =
                 |> Seq.map (fun i -> 
                   let r = [(23, 25); (20, 22); (18, 19); (16, 17); (14, 15)].[i]
                   let sheetName = sprintf "%i - %i bb" (snd r) (fst r)
-                  let sheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-                  let cellValuesBbThresholds = getCellValues sheet "A1" "A37"
-                  let cellValuesBbRanges = getCellValues sheet "B1" "B37"
+                  let sheet = xlWorkBook.GetWorksheet sheetName
+                  let cellValuesBbThresholds = sheet.GetCellValues "A1" "A37"
+                  let cellValuesBbRanges = sheet.GetCellValues "B1" "B37"
                   [0..36]
                   |> Seq.map (fun row ->
                     { StackRange = r
@@ -796,10 +797,10 @@ let importOopAdvanced (xlWorkBook : Workbook) =
               ]
   }
 
-let importHudData (xlWorkBook : Workbook) =
-  let xlWorkSheet = xlWorkBook.Worksheets.["Hud"] :?> Worksheet
+let importHudData (xlWorkBook : IWorkbook) =
+  let xlWorkSheet = xlWorkBook.GetWorksheet "Hud"
   [3..10000]
-  |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("E" + row.ToString()))
+  |> Seq.map (fun row -> xlWorkSheet.GetCellValues ("A" + row.ToString()) ("E" + row.ToString()))
   |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
   |> Seq.map (fun vs ->  
      { VillainName = vs.[0] 
@@ -810,44 +811,44 @@ let importHudData (xlWorkBook : Workbook) =
      )
   |> List.ofSeq
 
-let importRegs (xlWorkBook : Workbook) =
-  let xlWorkSheet = xlWorkBook.Worksheets.["regwar IP"] :?> Worksheet
-  getCellValues xlWorkSheet "A3" "A300"
+let importRegs (xlWorkBook : IWorkbook) =
+  let xlWorkSheet = xlWorkBook.GetWorksheet "regwar IP"
+  xlWorkSheet.GetCellValues "A3" "A300"
   |> List.ofArray
   |> List.filter (String.IsNullOrEmpty >> not)
 
-let importRegWarIPRanges (xlWorkBook : Workbook) regIndex stack =
-  let xlWorkSheet = xlWorkBook.Worksheets.["regwar IP"] :?> Worksheet
+let importRegWarIPRanges (xlWorkBook : IWorkbook) regIndex stack =
+  let xlWorkSheet = xlWorkBook.GetWorksheet "regwar IP"
   let row = regIndex + 3 |> string
   let column = excelColumns.[26 - stack]
-  let cellValue = getCellValue xlWorkSheet (column + row)
+  let cellValue = xlWorkSheet.GetCellValue (column + row)
   Ranges.parseRanges cellValue, "mfck beavers -> regwar IP -> " + column + row
 
-let private importRegWarOOPRanges statsColumnIndex shoveColumnIndex k (xlWorkBook : Workbook) regIndex stack =
+let private importRegWarOOPRanges statsColumnIndex shoveColumnIndex k (xlWorkBook : IWorkbook) regIndex stack =
   let statsSheetName = sprintf "OOP %ibb stats" stack
-  let xlWorkSheet = xlWorkBook.Worksheets.[statsSheetName] :?> Worksheet
+  let xlWorkSheet = xlWorkBook.GetWorksheet statsSheetName
   let row = regIndex + 5 |> string
-  let cellValues = getCellValues xlWorkSheet (excelColumns.[statsColumnIndex] + row) (excelColumns.[statsColumnIndex + 1] + row) |> Array.map parseDouble
+  let cellValues = xlWorkSheet.GetCellValues (excelColumns.[statsColumnIndex] + row) (excelColumns.[statsColumnIndex + 1] + row) |> Array.map parseDouble
   let BorD = cellValues.[0]
   let CorE = cellValues.[1]
   let TTP = stack * 2 |> decimal
   let threshold = (((-((((k+1m))*((100m-((100m*CorE)/BorD))/100m))))*(BorD/CorE)+((TTP/2m)-1m))*100m)/TTP
   
   let shoveSheetName = sprintf "OOP %ibb shove" stack
-  let xlWorkSheet = xlWorkBook.Worksheets.[shoveSheetName] :?> Worksheet
+  let xlWorkSheet = xlWorkBook.GetWorksheet shoveSheetName
   let column = excelColumns.[1 + regIndex * 2 + shoveColumnIndex]
   let row = 3 + ((threshold - 26.5m) * 2m |> int)
   let row = max 3 (min 39 row) |> string
 
-  let cellValue = getCellValue xlWorkSheet (column + row)
+  let cellValue = xlWorkSheet.GetCellValue (column + row)
   Ranges.parseRanges cellValue, "mfck beavers -> " + shoveSheetName + " -> " + column + row
 
 let importRegWarOOPLimpRanges xl regIndex stack = importRegWarOOPRanges 3 1 1m xl regIndex stack
 let importRegWarOOPRaiseRanges xl regIndex stack = importRegWarOOPRanges 1 0 2m xl regIndex stack
 
-let importRegWarOOPAIRanges (xlWorkBook : Workbook) regIndex stack =
+let importRegWarOOPAIRanges (xlWorkBook : IWorkbook) regIndex stack =
   let sheetName = sprintf "OOP %ibb stats" stack
-  let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
   let row = regIndex + 5 |> string
-  let cellValue = getCellValue xlWorkSheet ("H" + row)
+  let cellValue = xlWorkSheet.GetCellValue ("H" + row)
   Ranges.parseRanges cellValue, "mfck beavers -> " + sheetName + " -> H" + row

@@ -33,12 +33,5 @@ let main argv =
     let texture = boardTexture board
     printfn "Special conditions: %A" texture
 
-    let snapshot = { Hand = suitedHand; Board = board; Pot = 270; VillainStack = 350; HeroStack = 380; VillainBet = 90; HeroBet = 0; BB = 20 }
-    let history = [
-      notMotivated PreFlop 20 (Action.RaiseToAmount 40); 
-      notMotivated Flop 0 (Action.RaiseToAmount 50)]
-
-    let turnDonkOption = importTurnDonk xl.Workbook value texture snapshot history
-    printf "Turn donk action is: %A.\nPress any key to continue or 'q' to exit:" turnDonkOption
     k <- Console.ReadKey().KeyChar
   0 // return an integer exit code

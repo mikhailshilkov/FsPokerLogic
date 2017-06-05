@@ -15,40 +15,40 @@ namespace Watcher
 
             //var screenSize = new Size(650, 490);
             //var targetSize = new Size(433, 328);
-            var screenSize = new Size(650, 490);
-            var targetSize = new Size(650, 490);
+            var screenSize = new Size(816, 577);
+            var targetSize = new Size(816, 577);
             Console.Write("Press any key to get the list of open tables...");
             Console.ReadKey();
 
-            var winamax = new WindowExtractor("Winamax", title =>
+            var party = new WindowExtractor("Party", title =>
             {
-                var startIndex = title.IndexOf("Heads-Up(") + 9;
-                var endIndex = title.IndexOf(")#");
-                return startIndex > 10 && endIndex > startIndex ? title.Substring(startIndex, endIndex - startIndex) : null;
+                var startIndex = title.IndexOf("Heads Up Hyper Turbo (") + 22;
+                var endIndex = title.IndexOf(") Table");
+                return startIndex > 0 && endIndex > startIndex ? title.Substring(startIndex, endIndex - startIndex) : null;
             });
 
             while (true)
             {
-                var windows = InteractionFacade.GetWindowList(screenSize, targetSize, winamax).ToArray();
+                var windows = InteractionFacade.GetWindowList(screenSize, targetSize, party).ToArray();
                 foreach (WindowInfo window in windows)
                 {
                     var tableNumber = window.TableName;
                     Console.WriteLine($"\n{tableNumber} ({window.Size.Width}x{window.Size.Height})");
 
-                    try
-                    {
-                        var result = WinamaxRecognition.recognizeScreenWinamax(window.Bitmap, window.Title);
-                        foreach (var s in ScreenRecognition.print(result))
-                            Console.WriteLine(s);
-                        var result2 = WinamaxRecognition.recognizeBetSizeWinamax(window.Bitmap);
-                        Console.WriteLine($"Hero entered bet size: {result2}");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine(ex.Message);
-                        Console.WriteLine(ex.StackTrace);
-                        Dumper.SaveBitmap(window.Bitmap, tableNumber, false);
-                    }
+                    //try
+                    //{
+                    //    var result = WinamaxRecognition.recognizeScreenWinamax(window.Bitmap, window.Title);
+                    //    foreach (var s in ScreenRecognition.print(result))
+                    //        Console.WriteLine(s);
+                    //    var result2 = WinamaxRecognition.recognizeBetSizeWinamax(window.Bitmap);
+                    //    Console.WriteLine($"Hero entered bet size: {result2}");
+                    //}
+                    //catch (Exception ex)
+                    //{
+                    //    Console.WriteLine(ex.Message);
+                    //    Console.WriteLine(ex.StackTrace);
+                    //    Dumper.SaveBitmap(window.Bitmap, tableNumber, false);
+                    //}
                 }
                 Console.Write("\n\n");
                 Console.Write("Press S to save images or any key to get the list of open tables...");
@@ -57,9 +57,7 @@ namespace Watcher
                 {
                     foreach (WindowInfo window in windows)
                     {
-                        var parts = window.Title.Split(' ').Select(s => s.Trim()).ToArray();
-                        if (parts.Length >= 2)
-                            Dumper.SaveBitmap(window.Bitmap, parts[0] + Guid.NewGuid().ToString().Substring(0, 6), false);
+                        Dumper.SaveBitmap(window.Bitmap, window.TableName + Guid.NewGuid().ToString().Substring(0, 6), false);
                     }
                 }
             }

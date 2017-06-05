@@ -1,5 +1,6 @@
 ﻿module FacadeTests
 
+open Excel
 open Excel.Import
 open Xunit
 open Cards.Actions
@@ -13,6 +14,8 @@ open PostFlop.Import
 
 let defaultFlop = { Hand = { Card1 = {Face = Ace; Suit = Hearts}; Card2 = {Face = Five; Suit = Hearts} }; Board = [|{Face = Queen; Suit = Spades}; {Face = Ten; Suit = Clubs}; {Face = Six; Suit = Spades}|]; Pot = 80; VillainStack = 490; HeroStack = 430; VillainBet = 0; HeroBet = 0; BB = 20 }
 let defaultValue = { Made = Nothing; FD = NoFD; FD2 = NoFD; SD = NoSD }
+
+let excel = new MemoryWorkstore(Serialization.loadRules())
 
 let nml l = l |> List.map (fun nm -> (nm, None))
 
@@ -78,12 +81,11 @@ let ``pickOopSheet falls back to call for empty history and bigger pot`` () =
   Assert.Equal(Some "hero call raise pre", fst actual)
   Assert.Equal(true, snd actual)
 
-let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let adxl = useExcel fileNameAdvancedOOP
+let adxl = excel.GetWorkbook "PostflopPART2.xlsx"
 let bluffy = 
-  (importFlopList "bluffy hero ch-r flop vs limp" adxl.Workbook,
-    importFlopList "bluffy hero ch-r flop vs minr" adxl.Workbook,
-    importFlopList "bluffy overtaking, vill ch b fl" adxl.Workbook)
+  (importFlopList "bluffy hero ch-r flop vs limp" adxl,
+    importFlopList "bluffy hero ch-r flop vs minr" adxl,
+    importFlopList "bluffy overtaking, vill ch b fl" adxl)
 
 let riverBetSizing = 
   ([{ MinPotSize = 0; MaxPotSize = 500; MinAllInPercentage = 40; MaxAllInPercentage = 70; MinChipsLeft = 50; BetSize = 60 }]
@@ -94,11 +96,9 @@ let testPostFlopMotivatedExt h s mono test =
   let v = handValueWithDraws s.Hand s.Board
   let t = { Streety = false; DoublePaired = false; ThreeOfKind = false; FourOfKind = false; Monoboard = mono }
 
-  let fileNameOop = System.IO.Directory.GetCurrentDirectory() + @"\PostflopOOP.xlsx"
-  use xlOop = useExcel fileNameOop
-  let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
-  use xlTricky = useExcel fileNameTricky
-  let actual = decidePostFlopOop h s v t xlOop.Workbook xlTricky.Workbook bluffy ((fun _ -> false), (fun _ -> true)) riverBetSizing
+  let xlOop = excel.GetWorkbook "PostflopOOP.xlsx"
+  let xlTricky = excel.GetWorkbook "tricky.xlsx"
+  let actual = decidePostFlopOop h s v t xlOop xlTricky bluffy ((fun _ -> false), (fun _ -> true)) riverBetSizing
   test actual
 
 let testPostFlopMotivated h s mono expected =
@@ -296,18 +296,16 @@ let ``River OOP: bet float after check-check on turn`` () =
     floatBluffCheck Turn] s 0 (Action.RaiseToAmount 85)
 
 
-let fileNameFlopTurn = System.IO.Directory.GetCurrentDirectory() + @"\PostflopIP.xlsx"
-let fileNameHandStrength = System.IO.Directory.GetCurrentDirectory() + @"\HandStrength.xlsx"
-let fileNameTricky = System.IO.Directory.GetCurrentDirectory() + @"\tricky.xlsx"
+let fileNameHandStrength = "HandStrength.xlsx"
 
 let testIPext s h test =
-  use xlFlopTurn = useExcel fileNameFlopTurn
-  use xlHandStrength = useExcel fileNameHandStrength
-  use xlTricky = useExcel fileNameTricky
-  let riverHistoryPatterns = importRiverPatterns xlHandStrength.Workbook
+  let xlFlopTurn = excel.GetWorkbook "PostflopIP.xlsx"
+  let xlHandStrength = excel.GetWorkbook fileNameHandStrength
+  let xlTricky = excel.GetWorkbook "tricky.xlsx"
+  let riverHistoryPatterns = importRiverPatterns xlHandStrength
   let v = handValueWithDraws s.Hand s.Board
   let t = boardTexture s.Board
-  let actual = decidePostFlop h s v t xlFlopTurn.Workbook xlHandStrength.Workbook xlTricky.Workbook riverBetSizing riverHistoryPatterns
+  let actual = decidePostFlop h s v t xlFlopTurn xlHandStrength xlTricky riverBetSizing riverHistoryPatterns
   test actual
 
 let testIP s h expected =
@@ -327,21 +325,21 @@ let testIPSource s h a source =
 
 [<Fact>]
 let ``decideFlopCbetMixup check on flop`` () =
-  use xlHandStrength = useExcel fileNameHandStrength
+  let xlHandStrength = excel.GetWorkbook fileNameHandStrength
   let s = { Hand = parseSuitedHand "2cQh"; Board = parseBoard "2s2dAs"; Pot = 80; VillainStack = 460; HeroStack = 460; VillainBet = 0; HeroBet = 0; BB = 20 }
   let h = [notMotivated PreFlop 20 (RaiseToAmount 40)]
-  let actual = decideFlopCbetMixup xlHandStrength.Workbook h s defaultValue ()
+  let actual = decideFlopCbetMixup xlHandStrength h s defaultValue ()
   Assert.Equal(Action.Check |> Some, actual |> Option.map (fun x -> x.Action))
   Assert.Equal("HandStrength -> cbet mix up -> E14", actual.Value.Source)
 
 [<Fact>]
 let ``decideFlopCbetMixup call check/raise on flop`` () =
-  use xlHandStrength = useExcel fileNameHandStrength
+  let xlHandStrength = excel.GetWorkbook fileNameHandStrength
   let s = { Hand = parseSuitedHand "KcTh"; Board = parseBoard "TsQdQs"; Pot = 220; VillainStack = 360; HeroStack = 420; VillainBet = 100; HeroBet = 40; BB = 20 }
   let h = [
     notMotivated PreFlop 20 (RaiseToAmount 40)
     { notMotivated Flop 0 (RaiseToAmount 40) with Source = "HandStrength -> cbet mix up -> E14" }]
-  let actual = decideFlopCbetMixup xlHandStrength.Workbook h s (handValueWithDraws s.Hand s.Board) ()
+  let actual = decideFlopCbetMixup xlHandStrength h s (handValueWithDraws s.Hand s.Board) ()
   Assert.Equal(Action.Call |> Some, actual |> Option.map (fun x -> x.Action))
   Assert.Equal("HandStrength -> flop hand strength -> B14", actual.Value.Source)
 
@@ -473,6 +471,3 @@ let ``River IP All In if nut str8 on board`` () =
 let ``River IP Call if nut str8 on 3-spade board`` () =
   let s = { Hand = parseSuitedHand "Qc4h"; Board = parseBoard "AhKhQdJsTh"; Pot = 140; VillainStack = 390; HeroStack = 610; VillainBet = 40; HeroBet = 0; BB = 20 }
   testIPSource s [] Action.Call "Nut Str8 on board"
-
-
-adxl.Dispose()

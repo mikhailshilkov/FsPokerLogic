@@ -11,6 +11,7 @@ open Cards.HandValues
 open Excel.Import
 open Decision
 open PostFlop.Parsing
+open Excel
 
 module Import =
   type ExcelOptions = {
@@ -90,12 +91,12 @@ module Import =
       else [13-x..12] |> Seq.map (fun y -> [1..y] |> Seq.sum) |> Seq.sum)
     |> Seq.sum 
 
-  let importOptions (xlWorkBook : Workbook) (hand: SuitedHand) (board: Board) limpedPot =
+  let importOptions (xlWorkBook : IWorkbook) (hand: SuitedHand) (board: Board) limpedPot =
     let h = toHand hand
     let worksheetName = [h.Face1; h.Face2] |> List.sortByDescending faceValue |> List.map faceToChar |> String.Concat
-    let xlWorkSheet = xlWorkBook.Worksheets.[worksheetName] :?> Worksheet
+    let xlWorkSheet = xlWorkBook.GetWorksheet worksheetName
     let index = board |> rowIndex |> (+) 6 |> string
-    let cellValues = getCellValues xlWorkSheet ("F" + index) ("R" + index)
+    let cellValues = xlWorkSheet.GetCellValues ("F" + index) ("R" + index)
     { CbetFactor = parseCBet cellValues.[0]
       CheckRaise = parseCheckRaise2 cellValues.[1] cellValues.[2]
       Donk = parseDonk cellValues.[3] cellValues.[4]
@@ -334,7 +335,7 @@ module Import =
        | _ -> noDrawRow
     (row + offset - 6) |> string
 
-  let importTurnDonk (xlWorkBook : Workbook) handValue texture s h =
+  let importTurnDonk (xlWorkBook : IWorkbook) handValue texture s h =
     let villain3betPre = h |> List.tryHead |> Option.filter (fun x -> x.VsVillainBet >= s.BB * 4) |> Option.isSome
     let historyFlop = h |> List.filter (fun x -> x.Street = Flop)
     let sheetName = 
@@ -351,7 +352,7 @@ module Import =
         -> "vill xr F + dbT or dbF-c + dbT"
       | _ -> failwith "Could not pick turn donkbet sheet"
 
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let betSize = relativeDonkSize s h
     let hasFlush = match handValue.Made with | Flush(_) | StraightFlush -> true | _ -> false
     let row = turnDonkOrFloatOopRow 6 handValue s texture
@@ -375,7 +376,7 @@ module Import =
         if texture.Streety then "H" elif texture.DoublePaired then "I" 
         elif texture.ThreeOfKind && (match handValue.Made with | FullHouse(_) -> false | _ -> true) then "J" 
         elif betSize <= 25 then "C" elif betSize < 50 then "D" elif betSize = 50 then "E" else "F"
-    let cellValue = getCellValue xlWorkSheet (column + row)
+    let cellValue = xlWorkSheet.GetCellValue (column + row)
     let scenarioParts = cellValue.Split([|'*'|], 2)
     let scenario = if scenarioParts.Length > 1 then scenarioParts.[1] else null
     let (t1, t2) = parseTurnDonk scenarioParts.[0]
@@ -553,26 +554,26 @@ module Import =
     then "3bet" 
     else flopTurnPattern + "+" + if donkedOnThisStreet s h then "db" else "x"
 
-  let importRiverPatterns (xlWorkBook : Workbook) = 
+  let importRiverPatterns (xlWorkBook : IWorkbook) = 
     [for sheetName in ["river - villain check"; "river - villain donkbet to 30%"; "river - villain donkbet 31%+"] do
-       let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet 
-       let headers = getCellValues xlWorkSheet "AF1" "AZ1"
+       let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
+       let headers = xlWorkSheet.GetCellValues "AF1" "AZ1"
        let startIndex = headers |> Array.findIndex (fun x -> x = "PATHS") |> (+) 31
        for index in [0..4] do
          let column = excelColumns.[startIndex + index]
          yield!
-           getCellValues xlWorkSheet (column + "3") (column + "29")
+           xlWorkSheet.GetCellValues (column + "3") (column + "29")
            |> Array.filter (String.IsNullOrEmpty >> not)
            |> Array.map (fun x -> sheetName + " - " + x.Replace(" ", "").ToLowerInvariant(), index)
     ] |> Map.ofList
 
-  let importRiverIP (xlWorkBook : Workbook) patterns value s h texture =
+  let importRiverIP (xlWorkBook : IWorkbook) patterns value s h texture =
     let relativeBet = relativeDonkSize s h
     let sheetName = 
       if donkedOnThisStreet s h |> not then "river - villain check"
       elif relativeBet <= 30 then "river - villain donkbet to 30%"
       else "river - villain donkbet 31%+"
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet 
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
     let isRiverAce = (Array.last s.Board).Face = Ace
     let turn = s.Board |> Array.take 4
@@ -705,13 +706,13 @@ module Import =
       |> (+) (columnShift * 10)
       |> List.item <| excelColumns
 
-    let cellValue = getCellValue xlWorkSheet (column + row)
+    let cellValue = xlWorkSheet.GetCellValue (column + row)
     let optionToParse = if relativeBet > 0 && cellValue <> "" then "ch/" + cellValue else cellValue
     parseOopOption optionToParse ""
     |> Option.add (fun _ -> sheetName + " -> " + column + row)
 
-  let importOopFlop (xlWorkBook : Workbook) sheetName handValue texture =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let importOopFlop (xlWorkBook : IWorkbook) sheetName handValue texture =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let row = 
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 21
@@ -753,7 +754,7 @@ module Import =
         | NoFD, GutShot -> 23
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("B" + row) ("H" + row)
+    let cellValues = xlWorkSheet.GetCellValues ("B" + row) ("H" + row)
     let (column, specialRulesColumn) = 
       match texture.Monoboard, handValue.FD with
       | 3, NoFD -> (2, 4)
@@ -763,8 +764,8 @@ module Import =
     parseOopOption cellValues.[column] cellValues.[specialRulesColumn]
     |> Option.add (fun _ -> sheetName + " -> " + excelColumns.[column + 1] + "/" + excelColumns.[specialRulesColumn + 1] + row)
 
-  let importOopTurn (xlWorkBook : Workbook) sheetName handValue texture =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let importOopTurn (xlWorkBook : IWorkbook) sheetName handValue texture =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let row = 
       (match handValue.Made with
       | StraightFlush | FourOfKind -> 24
@@ -812,7 +813,7 @@ module Import =
         | NoFD, GutShot -> 26
         | NoFD, NoSD -> 6
       )|> string
-    let cellValues = getCellValues xlWorkSheet ("K" + row) ("AB" + row)
+    let cellValues = xlWorkSheet.GetCellValues ("K" + row) ("AB" + row)
 
     let specialConditionsColumn = 
       match texture.Monoboard with
@@ -836,7 +837,7 @@ module Import =
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] specialRules
     |> Option.add (fun _ -> sheetName + " -> " + (if sc then excelColumns.[specialColumn + 10] else excelColumns.[column + 10]) + row)
 
-  let importOopRiver (xlWorkBook : Workbook) sheetName handValue texture s =
+  let importOopRiver (xlWorkBook : IWorkbook) sheetName handValue texture s =
     let defaultMapping () =
 
       let turnCard = s.Board.[3]
@@ -933,14 +934,14 @@ module Import =
       | Flush(_) -> (54, 3)
       | _ -> (6, 0)
 
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     
     let (index, column) =
       if texture.Monoboard = 5 then monoMapping ()
       else defaultMapping ()
 
     let row = index |> string
-    let cellValues = getCellValues xlWorkSheet ("AE" + row) ("AL" + row)
+    let cellValues = xlWorkSheet.GetCellValues ("AE" + row) ("AL" + row)
 
     let (specialConditionsColumn, specialColumn, specialRulesColumn) = 
       match texture.Monoboard with
@@ -958,27 +959,27 @@ module Import =
     parseOopOptionWithSpecialBoard cellValues.[column] sc cellValues.[specialColumn] sr
     |> Option.add source
 
-  let importFlopList sheetName (xlWorkBook : Workbook) =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
-    getCellValues xlWorkSheet "D2" "D150" 
+  let importFlopList sheetName (xlWorkBook : IWorkbook) =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
+    xlWorkSheet.GetCellValues "D2" "D150" 
     |> List.ofArray
     |> List.takeWhile (String.IsNullOrEmpty >> not)
     |> List.map (fun x -> x.Split(' ') |> List.ofArray |> List.map (fun c -> parseFace c.[0]))
 
-  let importRange sheetName row (xlWorkBook : Workbook) =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let importRange sheetName row (xlWorkBook : IWorkbook) =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let rowString = row |> string
-    (getCellValues xlWorkSheet ("A" + rowString) ("B" + rowString) ).[0]
+    (xlWorkSheet.GetCellValues ("A" + rowString) ("B" + rowString) ).[0]
 
-  let importRiverBetSizes (xlWorkBook : Workbook) = 
+  let importRiverBetSizes (xlWorkBook : IWorkbook) = 
     let parsePercentage s =
       match s with
       | Decimal d -> d * 100m |> int
       | _ -> failwith ("Failed parsing river bet size " + s)
     let importr8r9 () =
-      let xlWorkSheet = xlWorkBook.Worksheets.["r8 & r9  riv bet sizings"] :?> Worksheet
+      let xlWorkSheet = xlWorkBook.GetWorksheet "r8 & r9  riv bet sizings"
       [3..10]
-      |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("K" + row.ToString()))
+      |> Seq.map (fun row -> xlWorkSheet.GetCellValues ("A" + row.ToString()) ("K" + row.ToString()))
       |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
       |> Seq.map (fun vs ->  
          let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
@@ -1000,9 +1001,9 @@ module Import =
       |> List.ofSeq
       |> List.unzip
     let importf1rrrtv () =
-      let xlWorkSheet = xlWorkBook.Worksheets.["F1RR & RTV bez sizings"] :?> Worksheet
+      let xlWorkSheet = xlWorkBook.GetWorksheet "F1RR & RTV bez sizings"
       [3..20]
-      |> Seq.map (fun row -> getCellValues xlWorkSheet ("A" + row.ToString()) ("F" + row.ToString()))
+      |> Seq.map (fun row -> xlWorkSheet.GetCellValues ("A" + row.ToString()) ("F" + row.ToString()))
       |> Seq.takeWhile (fun vs -> not(String.IsNullOrEmpty(vs.[0])))
       |> Seq.map (fun vs ->  
          let potParts = vs.[0].Split([|'-'; '+'|], StringSplitOptions.RemoveEmptyEntries)
@@ -1017,10 +1018,10 @@ module Import =
     match importr8r9() with | (a, b) -> a, b, importf1rrrtv()
 
 
-  let importFloatFlopOptions (xlWorkBook : Workbook) sheet rangesToCompare s =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheet] :?> Worksheet
+  let importFloatFlopOptions (xlWorkBook : IWorkbook) sheet rangesToCompare s =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheet
     let row = s.Board |> rowIndex |> (+) 5 |> string
-    let cellValues = getCellValues xlWorkSheet ("F" + row) ("H" + row)
+    let cellValues = xlWorkSheet.GetCellValues ("F" + row) ("H" + row)
     let columns = ["F"; "G"; "H"]
     
     rangesToCompare
@@ -1029,7 +1030,7 @@ module Import =
     |> Seq.map (fun (_, m, s) -> (m, s))
     |> Seq.tryHead
 
-  let importFloatFlopOopOptions (xlWorkBook : Workbook) s =    
+  let importFloatFlopOopOptions xlWorkBook s =    
     let villainBetSize = relativeBet s
     let rangesToCompare = seq {
       if villainBetSize = 0 || (villainBetSize >= 26 && villainBetSize <= 57) then yield (0, BluffFloat)
@@ -1038,7 +1039,7 @@ module Import =
     importFloatFlopOptions xlWorkBook "float OOP" rangesToCompare s
     |> Option.map (fun (m, source) -> { defaultOopOptions with Then = OopOnCBet.Call }, Some(Float m), source)
 
-  let importFloatFlopIpOptions (xlWorkBook : Workbook) s =
+  let importFloatFlopIpOptions xlWorkBook s =
     let villainBetSize = relativeBet s
     let rangesToCompare = seq {
       if villainBetSize = 0 || (villainBetSize >= 26 && villainBetSize <= 57) then yield (0, BluffFloat)
@@ -1140,7 +1141,7 @@ module Import =
 
     yellowColumnDonk, greenColumnDonk
 
-  let importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn) =
+  let importFloatTurnOptions (xlWorkSheet: IWorksheet) value texture s h (yellowColumn, greenColumn) =
     let villainBet = relativeBet s
     let row = turnDonkOrFloatOopRow 5 value s texture
 
@@ -1163,11 +1164,11 @@ module Import =
       else flopFloatMotivation
 
     column
-    |> Option.map (fun col -> col + row, getCellValue xlWorkSheet (col + row))
+    |> Option.map (fun col -> col + row, xlWorkSheet.GetCellValue (col + row))
     |> Option.map (fun (source, cell) -> (cell, motivation cell, source))
 
-  let importFloatTurnOopOptions (xlWorkBook : Workbook) value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["float OOP"] :?> Worksheet
+  let importFloatTurnOopOptions (xlWorkBook : IWorkbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "float OOP"
     let yellowColumn, greenColumn = floatTurnOopColumns value texture s
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
     |> Option.bind (fun (cell, motivation, source) -> 
@@ -1175,8 +1176,8 @@ module Import =
       | Some o -> Some (o, motivation, "tricky -> float OOP -> " + source)
       | None -> None)
 
-  let importFloatTurnIpCheckOptions (xlWorkBook : Workbook) value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["float IP"] :?> Worksheet
+  let importFloatTurnIpCheckOptions (xlWorkBook : IWorkbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "float IP"
     let yellowColumn, greenColumn = floatTurnIpCheckColumns value texture s h
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
     |> Option.bind (fun (cell, motivation, source) -> 
@@ -1185,14 +1186,14 @@ module Import =
       | Some o -> Some (o, motiv o, "tricky -> float IP -> " + source)
       | None -> None)
 
-  let importFloatTurnIpDonkOptions (xlWorkBook : Workbook) value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["float IP"] :?> Worksheet
+  let importFloatTurnIpDonkOptions (xlWorkBook : IWorkbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "float IP"
     let yellowColumn, greenColumn = floatTurnIpDonkColumns value texture s
     importFloatTurnOptions xlWorkSheet value texture s h (yellowColumn, greenColumn)
     |> Option.map (fun (cell, motivation, source) -> (parseTurnDonk cell, motivation, "tricky -> float IP -> " + source))
 
-  let importFloatRiverOptions (xlWorkBook : Workbook) sheetName column value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.[sheetName] :?> Worksheet
+  let importFloatRiverOptions (xlWorkBook : IWorkbook) sheetName column value texture s h =
+    let xlWorkSheet = xlWorkBook.GetWorksheet sheetName
     let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
     let isRiverAce = (Array.last s.Board).Face = Ace
     let turn = s.Board |> Array.take 4
@@ -1295,13 +1296,13 @@ module Import =
       else Some column
 
     let readColumn () =      
-      let special = specialColumn |> Option.map (fun x -> getCellValue xlWorkSheet (x + row))
+      let special = specialColumn |> Option.map (fun x -> xlWorkSheet.GetCellValue (x + row))
       column 
-      |> Option.map (fun col -> getCellValue xlWorkSheet (col + row), defaultArg special "", col + row)
+      |> Option.map (fun col -> xlWorkSheet.GetCellValue (col + row), defaultArg special "", col + row)
 
     continuation |> orElse readColumn
 
-  let importFloatRiverOopOptions (xlWorkBook : Workbook) value texture s h =
+  let importFloatRiverOopOptions xlWorkBook value texture s h =
     let column = 
       match texture.Monoboard, value with
       | 4, Flush(_) -> "AX"
@@ -1314,7 +1315,7 @@ module Import =
     importFloatRiverOptions xlWorkBook "float OOP" column value texture s h
     |> Option.bind (fun (c1, c2, source) -> parseOopOption c1 c2 |> Option.map (fun x -> x, "tricky -> float OOP -> " + source))
 
-  let importFloatRiverIpCheckOptions (xlWorkBook : Workbook) value texture s h =
+  let importFloatRiverIpCheckOptions xlWorkBook value texture s h =
     let column = 
       match texture.Monoboard, value with
       | 4, Flush(_) -> "CP"
@@ -1328,7 +1329,7 @@ module Import =
     |> Option.bind (fun (c1, c2, source) -> 
       parseOopOption c1 c2 |> Option.map (fun x -> x, "tricky -> float IP -> " + source))
 
-  let importFloatRiverIpDonkOptions (xlWorkBook : Workbook) value texture s h =
+  let importFloatRiverIpDonkOptions xlWorkBook value texture s h =
     let column = 
       match texture.Monoboard, value with
       | 4, Flush(_) -> "CZ"
@@ -1341,8 +1342,8 @@ module Import =
     importFloatRiverOptions xlWorkBook "float IP" column value texture s h
     |> Option.map (fun (c1, _, source) -> parseTurnDonk c1, "tricky -> float IP -> " + source)
 
-  let importIPTurnBooster (xlWorkBook : Workbook) value texture s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["postflop IP turn booster"] :?> Worksheet
+  let importIPTurnBooster (xlWorkBook : IWorkbook) value texture s h =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "postflop IP turn booster"
     let row = turnDonkOrFloatOopRow 5 value s texture
     let extra = match h with | { Action = Action.Call; VsVillainBet = v } :: _ when v > s.BB -> 7 | _ -> 0
     let column =
@@ -1352,12 +1353,12 @@ module Import =
       else 2
       |> (+) extra
       |> List.item <| excelColumns
-    let cellValue = getCellValue xlWorkSheet (column + row)
+    let cellValue = xlWorkSheet.GetCellValue (column + row)
     parseOopOption cellValue ""
     |> Option.addValue ("HandStrength -> postflop IP turn booster -> " + column + row)
 
-  let importTurnChoco (xlWorkBook : Workbook) value texture s =
-    let xlWorkSheet = xlWorkBook.Worksheets.["choco"] :?> Worksheet
+  let importTurnChoco (xlWorkBook : IWorkbook) value texture s =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "choco"
     let isPairedBoard = isPaired s.Board
     let highKicker k = k = Ace || k = King || k = Queen || k = Jack
     let row = 
@@ -1401,20 +1402,20 @@ module Import =
     row
     |> Option.bind (fun r ->
       let rowString = r |> string
-      let cellValue = getCellValue xlWorkSheet (column + rowString)
+      let cellValue = xlWorkSheet.GetCellValue (column + rowString)
       parseOopOption cellValue "" 
       |> Option.add (fun _ -> "HandStrength -> choco -> " + column + rowString)
     )
     
-  let importFlopCbetMixup (xlWorkBook : Workbook) s h =
-    let xlWorkSheet = xlWorkBook.Worksheets.["cbet mix up"] :?> Worksheet
+  let importFlopCbetMixup (xlHandStrength: IWorkbook) s h =
+    let xlWorkSheet = xlHandStrength.GetWorksheet "cbet mix up"
     let row = rowIndex s.Board + 2 |> string
     let isInRanged r = toHand s.Hand |> Ranges.isHandInRanges r
     let noCbet r = if isInRanged r then Some defaultIpOptions else None
     let isMonoboard = monoboardLength s.Board >= 3
     let bettingRange column r = 
       if isInRanged r then 
-        getCellValue xlWorkSheet (column + "459")
+        xlWorkSheet.GetCellValue (column + "459")
         |> parseDecimal
         |> Option.map (fun d -> { defaultIpOptions with CbetFactor = Always d })
       else Some defaultIpOptions
@@ -1429,14 +1430,14 @@ module Import =
       Some ("H", bettingRange "H")
     | _ -> None
     |> Option.mapFst (fun c -> c + row)
-    |> Option.map (fun (cell, f) -> (cell, getCellValue xlWorkSheet cell, f))
+    |> Option.map (fun (cell, f) -> (cell, xlWorkSheet.GetCellValue cell, f))
     |> Option.bind (fun (cell, cellValue, f) -> 
       Ranges.parseRanges cellValue 
       |> f 
       |> Option.add (fun _ -> "HandStrength -> cbet mix up -> " + cell))
 
-  let importCbetMixupCheckRaise (xlWorkBook : Workbook) s handValue =
-    let xlWorkSheet = xlWorkBook.Worksheets.["flop hand strength"] :?> Worksheet
+  let importCbetMixupCheckRaise (xlWorkBook: IWorkbook) s handValue =
+    let xlWorkSheet = xlWorkBook.GetWorksheet "flop hand strength"
     let overs = overcards s.Hand s.Board
     let handHasAce = s.Hand.Card1.Face = Ace || s.Hand.Card2.Face = Ace
     let aceOnFlop = s.Board |> Array.exists (fun x -> x.Face = Ace)
@@ -1517,6 +1518,6 @@ module Import =
       | StraightFlush | FourOfKind -> 32
       )|> string
     let column = if s.VillainStack = 0 then "C" else "B"
-    let cellValue = getCellValue xlWorkSheet (column + row)
+    let cellValue = xlWorkSheet.GetCellValue (column + row)
     
     { defaultIpOptions with CheckRaise = parseCheckRaise cellValue }, "HandStrength -> flop hand strength -> " + column + row

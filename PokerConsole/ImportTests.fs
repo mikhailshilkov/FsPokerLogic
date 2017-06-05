@@ -6,10 +6,12 @@ open Import
 open Xunit
 open FsCheck
 open FsCheck.Xunit
+open Excel
 open Excel.Import
 
-let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
+let excel = new MemoryWorkstore(Serialization.loadRules())
+
+let rulesIP = importRulesByStack importRulesIP (excel.GetWorkbook "IPinput.xlsx") |> List.ofSeq
 let decideIP = decideOnRules rulesIP
 
 type BigBets25 =
@@ -90,8 +92,7 @@ let ``decide on imported / reraise`` handString stack raiseSize expected =
 let ``decide on imported / raise allin`` handString stack expected =
   decideOnImported decideIP handString stack [WasRaise(2m); WasRaiseAllIn] expected
 
-let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+let rulesOOP = importRulesByStack importRulesOOP (excel.GetWorkbook "OOPinput.xlsx") |> List.ofSeq
 let decideOOP = decideOnRules rulesOOP
 
 [<Theory>]
@@ -148,8 +149,9 @@ let ``decide on imported / allin on 4bet`` () =
 let ``decide on imported / call 4bet allin`` () =
   decideOnImported decideOOP "99" 6.66m [WasRaise(2m); WasRaise(4m); WasRaiseAllIn] "Call"
 
-let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-let (rulesAdvancedOOPStruct, hudData) = importExcel (fun x -> (importOopAdvanced x, importHudData x)) fileNameAdvancedOOP
+let workbookPart2 = excel.GetWorkbook "PostflopPART2.xlsx"
+let rulesAdvancedOOPStruct = importOopAdvanced workbookPart2
+let hudData = importHudData workbookPart2
 let rulesAdvancedOOPLow = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldLow]
 let rulesAdvancedOOPBig = List.concat [rulesAdvancedOOPStruct.Always; rulesAdvancedOOPStruct.LimpFoldBig]
 let decideAdvancedOOP x = decideOnRules rulesAdvancedOOPLow x
@@ -268,45 +270,40 @@ let ``importOopAdvanced imports 3Bet shove ranges correctly`` () =
 [<Fact>]
 let ``importHudData imports player stats from excel`` () =
   let length = List.length hudData
-  Assert.Equal(16, length)
+  Assert.Equal(15, length)
   let sample = List.filter (fun (x: VillainStats) -> x.VillainName = "Peterkoven") hudData |> List.head
   Assert.Equal(31, sample.OpenRaise20_25)
   Assert.Equal(21, sample.OpenRaise16_19)
   Assert.Equal(14, sample.OpenRaise14_15)
   Assert.Equal(59, sample.LimpFold)
 
-let beaversFileName = System.IO.Directory.GetCurrentDirectory() + @"\mfck beavers.xlsx"
+let beaverXL = excel.GetWorkbook "mfck beavers.xlsx"
 
 [<Fact>]
 let ``importRegs imports regs from excel`` () =  
-  use xl = useExcel beaversFileName
-  let result = importRegs (xl.Workbook)
+  let result = importRegs beaverXL
   Assert.Equal(3, result |> List.length)
 
 [<Fact>]
 let ``importRegWarIPRanges imports correct range for a sample IP reg`` () =
-  use xl = useExcel beaversFileName
-  let result, source = importRegWarIPRanges (xl.Workbook) 0 22
+  let result, source = importRegWarIPRanges beaverXL 0 22
   Assert.Equal(8, result |> Seq.length) // 66+, A5s+, K9s+, Q9s+, JTs, ATo+, KTo+, QTo+
   Assert.Equal("mfck beavers -> regwar IP -> E3", source)
 
 [<Fact>]
 let ``importRegWarOOPLimpRanges imports correct range for a sample OOP limp reg`` () =
-  use xl = useExcel beaversFileName
-  let result, source = importRegWarOOPLimpRanges (xl.Workbook) 0 22
+  let result, source = importRegWarOOPLimpRanges beaverXL 0 22
   Assert.Equal(3, result |> Seq.length) // 99-22,A2s+,A7o+
   Assert.Equal("mfck beavers -> OOP 22bb shove -> C3", source)
 
 [<Fact>]
 let ``importRegWarOOPRaiseRanges imports correct range for a sample OOP raise reg`` () =
-  use xl = useExcel beaversFileName
-  let result, source = importRegWarOOPRaiseRanges (xl.Workbook) 0 22
+  let result, source = importRegWarOOPRaiseRanges beaverXL 0 22
   Assert.Equal(12, result |> Seq.length) // 99-22, A2s+, J2s, T4s-T2s, 94s-92s, 84s-82s, 74s-72s, 63s+, 52s+, 42s+, 32s, A2o+
   Assert.Equal("mfck beavers -> OOP 22bb shove -> B18", source)
 
 [<Fact>]
 let ``importRegWarOOPAIRanges imports correct range for a sample OOP AI reg`` () =
-  use xl = useExcel beaversFileName
-  let result, source = importRegWarOOPAIRanges (xl.Workbook) 0 22
+  let result, source = importRegWarOOPAIRanges beaverXL 0 22
   Assert.Equal(8, result |> Seq.length) // 66+, A5s+, K9s+, Q9s+, JTs, ATo+, KTo+, QTo+
   Assert.Equal("mfck beavers -> OOP 22bb stats -> H5", source)

@@ -91,30 +91,47 @@ namespace Interaction
         {
             foreach (var extractor in tableNameExtractors)
             {
-                var windows = HwndObject
-                    .GetWindows()
+                var ws = HwndObject
+                    .GetWindows();
+                var windows = ws
                     .Select(w => new { Room = extractor.Name, Window = w, TableName = extractor.Extractor(w.Title) })
                     .Where(w => !string.IsNullOrEmpty(w.TableName));                    
                 foreach (var window in windows)
                 {
-                    if (targetSize != window.Window.Size)
+                    var size = window.Window.Size;
+                    if (targetSize != size)
                     {
+                        Console.WriteLine($"Current size {size.Width}x{size.Height}, resizing to {targetSize.Width}x{targetSize.Height}");
                         HwndObject.GetWindowByTitle(window.Window.Title).Size = targetSize;
                         continue;
                     }                    
 
-                    Bitmap bitmap = new Bitmap(screenSize.Width, screenSize.Height);
+                    Bitmap bitmap = new Bitmap(size.Width, size.Height);
                     Graphics memoryGraphics = Graphics.FromImage(bitmap);
                     IntPtr dc = memoryGraphics.GetHdc();
                     bool success = Win32.PrintWindow(window.Window.Hwnd, dc, 0);
                     memoryGraphics.ReleaseHdc(dc);
+
+                    if (true)
+                    {
+                        RECT rect = new RECT();
+                        if (Win32.GetWindowRect(window.Window.Hwnd, ref rect))
+                        {
+                            int width = rect.right - rect.left;
+                            int height = rect.bottom - rect.top;
+
+                            bitmap = new Bitmap(width, height);
+                            Graphics graphics = Graphics.FromImage(bitmap);
+                            graphics.CopyFromScreen(rect.left, rect.top, 0, 0, new Size(width, height), CopyPixelOperation.SourceCopy);
+                        }
+                    }
 
                     yield return new WindowInfo
                     {
                         Room = window.Room,
                         Title = window.Window.Title,
                         TableName = window.TableName,
-                        Size = window.Window.Size,
+                        Size = size,
                         Bitmap = bitmap
                     };
                 }

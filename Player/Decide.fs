@@ -16,25 +16,24 @@ open Recognition.ScreenRecognition
 open PostFlop.HandValue
 open PostFlop.Decision
 open PostFlop.Facade
+open Excel
 open Excel.Import
 
 module Decide =
   open Interaction
 
-  let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP
-  let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP
-  let fileNameAdvancedOOP = System.IO.Directory.GetCurrentDirectory() + @"\PostflopPART2.xlsx"
-  let (rulesAdvancedOOP, hudData, bluffyCheckRaiseFlopsLimp, bluffyCheckRaiseFlopsMinr, bluffyOvertaking, bluffyHandsForFlopCheckRaise, notOvertakyHandsInLimpedPot, riverBetSizes) = 
-    importExcel (fun x -> (importOopAdvanced x, 
-                                   importHudData x, 
-                                   importFlopList "bluffy hero ch-r flop vs limp" x,
-                                   importFlopList "bluffy hero ch-r flop vs minr" x,
-                                   importFlopList "bluffy overtaking, vill ch b fl" x,
-                                   importRange "herBLUF ch-r flop vsCALL minrPR" 2 x,
-                                   importRange "extras" 1 x,
-                                   importRiverBetSizes x)) fileNameAdvancedOOP
+  let excel = new MemoryWorkstore(Serialization.loadRules())
+  let rulesIP = importRulesByStack importRulesIP (excel.GetWorkbook "IPinput.xlsx")
+  let rulesOOP = importRulesByStack importRulesOOP (excel.GetWorkbook "OOPinput.xlsx")
+  let part2XL = excel.GetWorkbook "PostflopPART2.xlsx"
+  let rulesAdvancedOOP = importOopAdvanced part2XL
+  let hudData = importHudData part2XL 
+  let bluffyCheckRaiseFlopsLimp = importFlopList "bluffy hero ch-r flop vs limp" part2XL 
+  let bluffyCheckRaiseFlopsMinr = importFlopList "bluffy hero ch-r flop vs minr" part2XL 
+  let bluffyOvertaking = importFlopList "bluffy overtaking, vill ch b fl" part2XL 
+  let bluffyHandsForFlopCheckRaise = importRange "herBLUF ch-r flop vsCALL minrPR" 2 part2XL 
+  let notOvertakyHandsInLimpedPot = importRange "extras" 1 part2XL 
+  let riverBetSizes = importRiverBetSizes part2XL
   let isHandBluffyForFlopCheckRaise hand = 
     let ranges = Ranges.parseRanges bluffyHandsForFlopCheckRaise
     Ranges.isHandInRanges ranges (toHand hand)

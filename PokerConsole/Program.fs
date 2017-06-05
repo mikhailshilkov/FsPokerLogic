@@ -4,6 +4,7 @@ open Hands
 open Ranges
 open Preflop.Decide
 open Import
+open Excel
 open Excel.Import
 
 let (|Int|_|) str =
@@ -52,10 +53,9 @@ let rec enterPosition () =
 [<EntryPoint>]
 let main argv =   
   Console.Write "Importing excel files..."
-  let fileNameIP = System.IO.Directory.GetCurrentDirectory() + @"\IPinput.xlsx"
-  let rulesIP = importExcel (importRulesByStack importRulesIP) fileNameIP |> List.ofSeq
-  let fileNameOOP = System.IO.Directory.GetCurrentDirectory() + @"\OOPinput.xlsx"
-  let rulesOOP = importExcel (importRulesByStack importRulesOOP) fileNameOOP |> List.ofSeq
+  let excel = new MemoryWorkstore(Serialization.loadRules())
+  let rulesIP = importRulesByStack importRulesIP (excel.GetWorkbook "IPinput.xlsx") |> List.ofSeq
+  let rulesOOP = importRulesByStack importRulesOOP (excel.GetWorkbook "OOPinput.xlsx") |> List.ofSeq
   let rules = List.concat [|rulesIP;rulesOOP|]
   let decide = decideOnRules rules
   Console.Write " done!\n\n"

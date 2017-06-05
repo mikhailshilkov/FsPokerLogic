@@ -2,6 +2,8 @@
 
 open Microsoft.FSharp.Core
 open Hands
+open Excel
+open Cards.Actions
 open Cards.HandValues
 open Decision
 open Options
@@ -12,7 +14,6 @@ open HandValue
 open SpecialRules
 
 module Facade =
-  open Cards.Actions
 
   let defaultArgLazy o p = match o with | Some v -> v | None -> p()
   let orElse b a = match a with | Some _ -> a | None -> b()
@@ -35,7 +36,7 @@ module Facade =
     |> Option.bind (fun o -> decideOop ([],[],[]) s o)
     |> Option.map (fun a -> { Action = a; Motivation = None; VsVillainBet = s.VillainBet; Street = street s; Source = "Nut Str8 on board" })
 
-  let decideFlopCbetMixup xlHandStrength history s value () = 
+  let decideFlopCbetMixup (xlHandStrength: IWorkbook) history s value () = 
     let mixupedBefore = 
       history 
       |> List.tryLast 
@@ -118,7 +119,7 @@ module Facade =
       |> Option.bind (toMotivated s)
     | _ -> None
 
-  let decidePostFlopNormal riverBetSizes history s value texture xlFlopTurn xlTurnDonkRiver eo =
+  let decidePostFlopNormal riverBetSizes history s value texture xlTurnDonkRiver eo =
     let historyTuples = List.map (fun x -> (x.Action, x.Motivation)) history
     let historySimple = List.map fst historyTuples
 
@@ -163,7 +164,7 @@ module Facade =
       decidePostFlopTurnBooster history s value texture xlHandStrength riverBetSizes eo;
       decidePostFlopRiver history s value.Made texture xlHandStrength riverBetSizes riverHistoryPatterns;
       fun () -> 
-        decidePostFlopNormal (riverBetSizes |> Tuple.thrd3) history s value texture xlFlopTurn xlHandStrength eo
+        decidePostFlopNormal (riverBetSizes |> Tuple.thrd3) history s value texture xlHandStrength eo
         |> Option.map (fun (a, m, source) -> { Action = a; Motivation = m; VsVillainBet = s.VillainBet; Street = street s; Source = source })
     ]
     rules |> Seq.choose apply |> Seq.tryHead

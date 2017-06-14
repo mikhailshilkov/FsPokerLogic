@@ -62,6 +62,8 @@
     <Compile Include="ScreenRecognitionTests.fs" />
     <Compile Include="WinamaxRecognition.fs" />
     <Compile Include="WinamaxRecognitionTests.fs" />
+    <Compile Include="PartyRecognition.fs" />
+    <Compile Include="PartyRecognitionTests.fs" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

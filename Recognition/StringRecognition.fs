@@ -168,6 +168,8 @@ module StringRecognition =
     { Char = 'k'; Pattern = [[W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;W;B;B;B;B;B]; [B;B;B;W;B;W;B;B;B;B]; [B;B;W;B;B;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B]] }
     { Char = '4'; Pattern = [[B;B;B;W;W;B;B];[B;B;W;B;W;B;B];[B;W;B;B;W;B;B];[W;W;W;W;W;W;W];[B;B;B;B;W;B;B]] }
     { Char = '-'; Pattern = [[B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]; [B;B;B;B;B;W;B;B;B]] } // winamax
+    { Char = '4'; Pattern = [[B;B;B;B;B;W;B;B]; [B;B;B;B;W;W;B;B]; [B;B;W;W;B;W;B;B]; [B;W;W;B;B;W;B;B]; [W;W;W;W;W;W;W;W]; [B;B;B;B;B;W;B;B]] } // party
+    { Char = '0'; Pattern = [[B;B;B;W;B;B;B;B]; [B;W;B;B;B;W;W;B]; [W;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;W]; [W;W;B;B;B;B;W;B]; [B;B;B;W;W;B;B;B]] } // party
   |]
 
 
@@ -241,6 +243,77 @@ module StringRecognition =
   let winamaxBet = [[W;W;W;W;W]; [W;B;W;B;W]; [W;W;W;W;W]; [B;B;B;B;B]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;W;B;W]; [W;B;B;B;B]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;B]]
   let winamaxRaiseTo = [[W;W;W;W;W]; [W;B;W;W;B]; [W;W;W;W;W]; [B;B;B;B;W]; [W;W;W;W;W]; [W;W;W;W;B]; [B;B;W;W;W]; [B;B;B;B;W]; [W;W;W;W;W]; [B;W;B;B;B]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;B;W;W]; [W;W;W;W;W]; [W;B;W;B;W]; [W;B;W;B;W]; [B;B;B;B;B]; [B;B;B;B;B]; [W;B;B;B;B]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;B]; [W;W;W;W;W]; [W;B;B;B;W]; [W;B;B;B;W]; [W;W;W;W;W]]
 
+  let partyNumberPotPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;B;W;W;W;W;W;W;B;B;B]; [B;W;W;W;W;W;W;W;W;W;W;B]; [B;W;W;W;W;W;W;W;W;W;W;B]; [W;W;B;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;B;B;W]; [W;W;W;B;B;B;B;B;W;W;W;W]; [B;W;W;W;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;W;W;W;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;B;B;B;B;W]; [B;W;B;B;B;B;B;B;B;B;B;W]; [B;W;B;B;B;B;B;B;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;B;W]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;W;W;W;W]; [W;B;B;B;B;B;B;W;W;W;W;W]; [W;B;B;B;B;W;W;W;W;W;B;W]; [W;W;W;W;W;W;W;W;W;B;B;W]; [B;W;W;W;W;W;W;W;B;B;B;W]; [B;B;W;W;W;W;B;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[W;W;B;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;W;B;W;W;W;W;W;B]; [B;B;W;W;B;B;W;W;W;W;B;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;W;W;B;W;B;B;B;B]; [B;B;W;W;W;B;B;W;B;B;B;B]; [B;W;W;W;B;B;B;W;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;W;B;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;W;B;B;B;B;B;W;W]; [W;W;W;W;W;B;B;B;B;B;B;W]; [W;W;W;W;W;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;B;W]; [W;B;B;B;W;W;W;W;W;W;W;W]; [W;B;B;B;B;W;W;W;W;W;W;B]; [W;B;B;B;B;B;W;W;W;W;B;B]] }
+    { Char = '6'; Pattern = [[B;B;B;B;B;W;W;W;B;B;B;B]; [B;B;W;W;W;W;W;W;W;W;W;B]; [B;W;W;W;W;W;W;W;W;W;W;B]; [B;W;W;B;B;W;B;B;B;B;W;W]; [W;W;B;B;W;B;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;B;W;W]; [W;B;B;B;W;W;W;W;W;W;W;B]; [B;B;B;B;B;W;W;W;W;W;B;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;W;W;W]; [W;B;B;B;B;B;B;W;W;W;W;W]; [W;B;B;B;B;W;W;W;W;W;W;B]; [W;B;B;W;W;W;W;W;W;B;B;B]; [W;W;W;W;W;W;W;B;B;B;B;B]; [W;W;W;W;B;B;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;B;B;W;B;B;B;W;W;W;B;B]; [B;W;W;W;W;B;W;W;W;W;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;W;W;B;B;B;B;W;W]; [W;B;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;B;W;W;B;B;B;B;W]; [W;W;W;W;W;W;W;W;B;B;W;W]; [B;W;W;W;W;B;W;W;W;W;W;B]; [B;W;W;W;B;B;W;W;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;B;W;W;W;W;B;B;B;B;B;B]; [B;W;W;W;W;W;W;B;B;B;B;W]; [W;W;W;W;W;W;W;W;B;B;B;W]; [W;W;B;B;B;B;W;W;B;B;B;W]; [W;B;B;B;B;B;B;W;B;B;B;W]; [W;B;B;B;B;B;B;W;B;B;W;W]; [W;W;W;W;W;W;W;W;W;W;W;B]; [B;W;W;W;W;W;W;W;W;W;B;B]; [B;B;W;W;W;W;W;W;W;B;B;B]] }
+  |]
+
+  let partyNumberStackPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;B;W;W;W;W;W;B;B;B]; [B;W;W;W;W;W;W;W;W;W;B]; [W;W;W;W;B;B;B;W;W;W;W]; [W;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;B;W]; [W;W;B;B;B;B;B;B;B;W;W]; [B;W;W;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;W;W;B;B]] }
+    { Char = '1'; Pattern = [[B;W;B;B;B;B;B;B;B;B;W]; [B;W;B;B;B;B;B;B;B;B;W]; [B;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;W]] }
+    { Char = '2'; Pattern = [[W;W;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;W;W;W]; [W;B;B;B;B;B;B;W;W;W;W]; [W;B;B;B;B;B;W;W;W;B;W]; [W;W;W;W;W;W;W;W;B;B;W]; [B;W;W;W;W;W;W;B;B;B;W]; [B;B;W;W;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;B;B;B;B;B;B;B;W;W;B]; [W;W;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;W]; [W;W;B;B;W;W;W;B;B;W;W]; [B;W;W;W;W;B;W;W;W;W;B]; [B;W;W;W;B;B;W;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;W;B;B;B]; [B;B;B;B;B;W;W;W;B;B;B]; [B;B;B;W;W;W;B;W;B;B;B]; [B;B;W;W;B;B;B;W;B;B;B]; [W;W;W;B;B;B;B;W;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W]; [W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;W;B;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;W;B;B;B;B;W;W]; [W;W;W;W;W;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;W;W]; [W;B;B;B;W;W;W;W;W;W;B]; [W;B;B;B;B;W;W;W;W;B;B]] }
+    { Char = '6'; Pattern = [[B;B;B;B;W;W;W;W;B;B;B]; [B;B;W;W;W;W;W;W;W;W;B]; [B;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;W;W]; [W;B;B;B;W;W;W;W;W;W;W]; [B;B;B;B;B;W;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;W;W;W]; [W;B;B;B;B;B;W;W;W;W;W]; [W;B;B;B;W;W;W;W;W;B;B]; [W;B;W;W;W;W;W;B;B;B;B]; [W;W;W;W;W;B;B;B;B;B;B]; [W;W;W;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;B;W;W;B;B;B;W;W;B;B]; [B;W;W;W;W;B;W;W;W;W;B]; [W;W;W;W;W;W;W;B;B;W;W]; [W;B;B;B;W;W;B;B;B;B;W]; [W;B;B;B;B;W;W;B;B;B;W]; [W;W;B;B;B;W;W;B;B;B;W]; [W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;W;B;B;W;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;B;W;W;W;B;B;B;B;B;B]; [B;W;W;W;W;W;B;B;B;B;W]; [W;W;W;B;W;W;W;B;B;B;W]; [W;B;B;B;B;B;W;B;B;B;W]; [W;B;B;B;B;B;W;B;B;W;W]; [W;W;B;B;B;B;W;B;W;W;B]; [B;W;W;W;W;W;W;W;W;W;B]; [B;B;W;W;W;W;W;W;B;B;B]] }
+  |]
+
+  let partyNumberBetPatterns = [|  
+    { Char = '0'; Pattern = [[B;W;W;W;W;W;B]; [W;W;B;B;B;W;W]; [W;B;B;B;B;B;W]; [W;B;B;B;B;B;W]; [W;W;B;B;B;W;W]; [B;W;W;W;W;B;B]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B]; [B;W;W;B;B;B;B]; [W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;W;B;B;B;B;W]; [W;B;B;B;B;W;W]; [W;B;B;B;W;B;W]; [W;B;B;W;B;B;W]; [B;W;W;B;B;B;W]; [B;B;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[W;B;B;B;B;B;W]; [W;B;B;B;B;B;W]; [W;B;B;W;B;B;W]; [W;B;B;W;B;B;W]; [B;W;W;B;W;W;W]] }
+    { Char = '4'; Pattern = [[B;B;B;B;W;B;B]; [B;B;B;W;W;B;B]; [B;B;W;B;W;B;B]; [B;W;W;B;W;B;B]; [W;W;W;W;W;W;W]; [B;B;B;B;W;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;B;B;B;W]; [W;B;W;B;B;B;W]; [W;B;W;B;B;B;W]; [W;B;W;W;W;W;W]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;W;B]; [B;W;W;W;B;B;W]; [W;W;B;W;B;B;W]; [W;W;B;W;B;B;W]; [B;B;B;W;W;W;W]; [B;B;B;B;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B]; [W;B;B;B;B;B;W]; [W;B;B;B;W;W;B]; [W;B;W;W;B;B;B]; [W;W;W;B;B;B;B]; [W;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;W;B;B;W;W;B]; [W;W;W;W;B;W;W]; [W;B;B;W;B;B;W]; [W;B;B;W;B;B;W]; [B;W;W;W;W;W;W]; [B;B;B;B;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;B;B;B;B]; [W;B;B;W;B;B;W]; [W;B;B;W;B;B;W]; [W;B;B;W;B;W;B]; [W;W;W;W;W;B;B]; [B;B;W;W;B;B;B]] }
+  |]
+
+  let partyNumberBlindPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;B;W;B;B;B;B]; [B;W;B;B;B;W;W;B]; [W;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;W]; [W;W;B;B;B;B;W;B]; [B;B;B;W;W;B;B;B]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B;B]; [B;W;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[W;B;B;B;B;B;W;W]; [W;B;B;B;B;W;B;W]; [W;B;B;W;W;B;B;W]; [B;W;W;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[W;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;W]; [W;B;B;W;B;B;B;W]; [B;W;W;B;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;W;B;B]; [B;B;B;B;W;W;B;B]; [B;B;W;W;B;W;B;B]; [B;W;W;B;B;W;B;B]; [W;W;W;W;W;W;W;W]; [B;B;B;B;B;W;B;B]] }
+    { Char = '5'; Pattern = [[W;W;W;W;W;B;B;W]; [W;B;B;W;B;B;B;W]; [W;B;B;W;B;B;B;W]; [W;B;B;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;B;W;W;W;B;W;B]; [B;W;B;W;B;B;B;W]; [W;B;B;W;B;B;B;W]; [B;B;B;W;W;W;W;B]] }
+    { Char = '8'; Pattern = [[B;W;W;B;W;W;W;W]; [W;B;B;W;B;B;B;W]; [W;B;B;W;B;B;B;W]; [W;W;W;B;W;B;W;W]] }
+    { Char = '/'; Pattern = [[B;B;B;B;B;B;B;W]; [B;B;B;B;W;W;W;B]; [B;B;W;W;B;B;B;B]; [W;B;B;B;B;B;B;B]] }
+  |]
+
+  let partyNumberBetInputPatterns = [|  
+    { Char = '0'; Pattern = [[B;B;B;W;W;W;W;W;W;B;B]; [B;W;B;B;B;B;B;B;B;W;B]; [W;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;W;B]; [B;B;W;W;W;W;W;W;W;B;B]] }
+    { Char = '1'; Pattern = [[B;B;W;B;B;B;B;B;B;B;B]; [B;W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '2'; Pattern = [[B;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;B;B;B;W;W;W]; [W;B;B;B;B;B;B;W;B;B;W]; [W;B;B;B;B;W;W;B;B;B;W]; [B;W;W;W;W;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;W]] }
+    { Char = '3'; Pattern = [[B;B;B;B;B;B;B;B;B;W;B]; [W;B;B;B;B;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;W]; [W;W;W;W;W;B;W;B;B;W;W]; [B;W;W;W;B;B;W;W;W;W;B]] }
+    { Char = '4'; Pattern = [[B;B;B;B;B;B;W;W;B;B;B]; [B;B;B;B;B;W;B;W;B;B;B]; [B;B;B;B;B;B;B;W;B;B;B]; [B;B;W;B;B;B;B;W;B;B;B]; [B;W;W;W;W;W;W;W;W;W;W]] }
+    { Char = '5'; Pattern = [[W;W;W;W;B;B;B;B;B;B;W]; [W;B;B;W;B;B;B;B;B;B;W]; [W;B;B;W;B;B;B;B;B;B;W]; [W;B;B;W;W;B;B;B;B;W;W]; [W;B;B;B;W;W;W;W;W;W;B]] }
+    { Char = '6'; Pattern = [[B;B;B;B;W;W;W;W;W;B;B]; [B;B;W;W;W;W;B;B;B;B;B]; [B;W;B;B;W;B;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;W;W;W;W;B]] }
+    { Char = '7'; Pattern = [[W;B;B;B;B;B;B;B;B;B;B]; [W;B;B;B;B;B;B;B;B;W;W]; [W;B;B;B;B;B;B;W;W;B;B]; [W;B;B;B;W;W;B;B;B;B;B]; [W;B;W;W;B;B;B;B;B;B;B]; [W;W;B;B;B;B;B;B;B;B;B]] }
+    { Char = '8'; Pattern = [[B;B;W;B;B;B;W;W;W;W;B]; [B;B;B;W;W;W;B;B;B;B;W]; [W;B;B;B;W;B;B;B;B;B;W]; [W;B;B;B;B;W;B;B;B;B;W]; [W;B;B;B;W;W;B;B;B;B;W]; [B;B;W;B;B;B;W;W;W;W;B]] }
+    { Char = '9'; Pattern = [[B;W;W;W;W;W;B;B;B;B;B]; [W;B;B;B;B;B;W;B;B;B;B]; [W;B;B;B;B;B;W;B;B;B;W]; [W;B;B;B;B;B;W;B;B;W;B]; [B;B;B;B;B;B;W;W;W;B;B]; [B;B;W;W;W;W;W;B;B;B;B]] }
+  |]
+
+  let partyFold = [[B;W;W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;W;W;B;B;B;W;W;B;B;B;B;B;B;B]; [B;W;W;B;B;B;W;W;B;B;B;B;B;B;B]; [B;W;W;B;B;B;W;W;B;B;B;B;B;B;B]; [B;W;W;B;B;B;W;W;B;B;B;B;B;B;B]; [B;W;W;B;B;B;W;W;B;B;B;B;B;B;B]; [B;W;W;B;B;B;B;B;B;B;B;B;B;B;B]; [B;W;W;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;B;W;W;B;B;B;B;W;W;B]; [B;B;B;B;B;B;W;B;B;B;B;B;B;W;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;W;B;B;B;B;B;B;W;B]; [B;B;B;B;B;B;W;W;B;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;W;W;B;B;B;B;B;W;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;W]]
+  let partyCheck = [[B;B;B;B;B;B;W;W;W;W;B;B;B;B;B]; [B;B;B;B;W;W;W;B;B;B;W;W;B;B;B]; [B;B;W;W;B;B;B;B;B;B;B;B;W;W;B]; [B;B;W;W;B;B;B;B;B;B;B;B;B;W;B]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;W;W;B;B;B;B;B;B;B;B;B;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;W;W;B;B;B;B;B;B;B]; [B;B;B;B;B;B;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;B;W;W;B;W;W;B;W;W;B]; [B;B;B;B;B;B;W;B;B;W;W;B;B;W;B]; [B;B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;B;W;W;B;W;W;B;B;W;B]; [B;B;B;B;B;B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;B;W;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;W;B;B;B;B;B;B;W;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;W;W;B;B;B;B]; [B;B;B;B;B;B;B;B;B;W;B;B;B;B;B]; [B;B;B;B;B;B;B;W;W;W;B;B;B;B;B]; [B;B;B;B;B;B;W;W;B;B;W;W;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;W;B;B]; [B;B;B;B;B;W;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]]
+  let partyCall = [[B;B;B;B;B;B;W;W;W;W;B;B;B;B;B]; [B;B;B;B;W;W;W;B;B;B;W;W;W;B;B]; [B;B;W;W;B;B;B;B;B;B;B;B;W;W;B]; [B;B;W;W;B;B;B;B;B;B;B;B;W;W;B]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;W;W;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;W;W;B;B;B;B;B;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;B;W;W;B;B;W;W;B;W;W;B]; [B;B;B;B;B;W;W;B;B;W;B;B;B;W;W]; [B;B;B;B;B;W;W;B;W;W;B;B;B;W;W]; [B;B;B;B;B;W;W;B;W;W;B;B;B;W;W]; [B;B;B;B;B;W;W;B;W;W;B;B;B;W;B]; [B;B;B;B;B;B;W;B;W;W;B;B;B;W;B]; [B;B;B;B;B;B;B;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]]
+  let partyBet = [[W;W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;W;W;B;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;B;W;W]; [W;W;B;B;B;W;W;B;B;B;B;B;W;W]; [B;W;B;B;W;B;W;B;B;B;B;B;W;B]; [B;W;W;W;B;B;W;W;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;W;W;W;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;W;W;B;W;W;B;W;W;B]; [B;B;B;B;B;W;B;B;W;W;B;B;W;B]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;W;W;B;W;W;B;B;W;B]; [B;B;B;B;B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;W;W;W;W;W;W;W;W;B;B]; [B;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W]]
+  let partyRaiseTo = [[W;W;W;W;W;W;W;W;W;W;W;W;W;W]; [W;W;B;B;B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;W;W;B;B;B;B;B;B]; [W;W;B;B;B;B;W;W;W;B;B;B;B;B]; [W;W;B;B;B;B;W;B;W;W;B;B;B;B]; [B;W;W;B;B;W;W;B;B;B;W;W;B;B]; [B;B;W;W;W;W;B;B;B;B;B;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;W;W;B;B]; [B;B;B;B;W;W;B;B;W;W;B;W;W;B]; [B;B;B;B;W;W;B;B;W;B;B;B;W;W]; [B;B;B;B;W;W;B;W;W;B;B;B;W;W]; [B;B;B;B;W;W;B;W;W;B;B;B;W;W]; [B;B;B;B;W;W;B;W;W;B;B;B;W;B]; [B;B;B;B;B;W;B;W;W;B;B;B;W;B]; [B;B;B;B;B;B;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [W;W;B;B;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;W;B;B;B;B;W;W]; [B;B;B;B;W;W;B;B;W;B;B;B;W;W]; [B;B;B;B;W;W;B;B;W;B;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;B;W;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;W;W;B;W;W;B;W;W;B]; [B;B;B;B;B;W;B;B;W;W;B;B;W;B]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;W;W;B;B;W;W;B;B;W;W]; [B;B;B;B;B;W;W;B;W;W;B;B;W;B]; [B;B;B;B;B;B;B;W;W;W;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;W;W;W;W;W;W;W;W;W;W;B;B]; [B;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;W;W;B]; [B;B;B;B;B;W;B;B;B;B;B;B;W;B]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;W;W;B;B;B;B;B;B;W;W]; [B;B;B;B;B;W;B;B;B;B;B;B;W;B]; [B;B;B;B;B;W;W;B;B;B;W;W;W;B]; [B;B;B;B;B;B;B;W;W;W;W;B;B;B]]
+  let partyAllIn = [[B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;W;W;W;W;B]; [B;B;B;B;B;B;B;B;W;W;W;W;B;B;B]; [B;B;B;B;B;W;W;W;B;B;W;W;B;B;B]; [B;B;B;W;W;B;B;B;B;B;W;W;B;B;B]; [B;B;W;W;W;B;B;B;B;B;W;W;B;B;B]; [B;B;B;B;B;W;W;B;B;B;W;W;B;B;B]; [B;B;B;B;B;B;B;W;W;W;W;W;B;B;B]; [B;B;B;B;B;B;B;B;B;B;W;W;W;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [W;W;W;W;W;W;W;W;W;W;W;W;W;W;B]; [B;B;B;B;B;B;B;B;B;B;B;B;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;B;B;B;B;B]; [B;B;B;B;B;B;B;B;W;W;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;W;W;B;B;W;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;B;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;W;W;W;W;W;W;W;W;W]; [B;B;B;B;B;B;W;W;B;B;B;B;B;B;B]; [B;B;B;B;B;B;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;W;W;B;B;B;B;B;B;B;B]; [B;B;B;B;B;B;W;W;W;W;W;W;W;W;W];]
+
   let getChar allowDirtySymbols patterns bws =
     let samePatterns h p =
       Seq.zip h p
@@ -290,12 +363,24 @@ module StringRecognition =
     if c.B > 180uy && c.G > 180uy && c.R > 180uy then W
     else B
 
+  let isPaleWhite (c : Color) =
+    if c.B > 100uy && c.G > 100uy && c.R > 100uy then W
+    else B
+
+  let isSuperWhite (c : Color) =
+    if c.B > 180uy && c.G > 180uy && c.R > 180uy && (c.B > 240uy || c.G > 240uy || c.R > 240uy) then W
+    else B
+
   let isYellow (c : Color) =
     if c.B < 100uy && c.G > 127uy && c.R > 160uy then W
     else B
 
   let isShadeYellow (c : Color) =
     if c.B < 50uy && c.G > 74uy && c.G < 90uy && c.R > 90uy && c.R < 105uy then W
+    else B
+
+  let isBlack (c : Color) =
+    if c.B < 120uy && c.G < 120uy && c.R < 120uy then W
     else B
 
   let recognizeString isWhite (matchSymbol: BW list list -> char) upThreshold downThreshold minHeight getPixel width height =
@@ -384,11 +469,11 @@ module StringRecognition =
     let s = recognizeString isWhite (getChar false blindNumberPatterns) 3 3 8 x y z
     s.Replace("?", "")
 
-  let parseStringPattern getPixel width height =
+  let parseStringPattern getPixel check width height =
     let a = 
       [0 .. width - 1]
       |> Seq.map (fun x -> 
-        let b = [0 .. height - 1] |> Seq.map (fun y -> if isYellow (getPixel x y) = B then "B" else "W") |> String.concat ";"
+        let b = [0 .. height - 1] |> Seq.map (fun y -> if check (getPixel x y) = B then "B" else "W") |> String.concat ";"
         "[" + b + "]")
       |> String.concat "; "
     "{ Char = '?'; Pattern = [" + a + "] }\n"
@@ -419,3 +504,40 @@ module StringRecognition =
         || (c.R |> int) + (c.G |> int) + (c.B |> int) > 450
       then W else B
     recognizeString isWhite (getCharApproximate false winamaxNumberBetInputPatterns) 2 2 10 x y z
+
+
+  let recognizePartyPotNumber x =
+    recognizeString isYellow (getCharApproximate false partyNumberPotPatterns) 1 1 12 x
+
+  let recognizePartyStackNumber x =
+    recognizeString isYellow (getCharApproximate false partyNumberStackPatterns) 1 1 11 x
+
+  let recognizePartyBetNumber x =
+    recognizeString isSuperWhite (getChar false partyNumberBetPatterns) 1 1 7 x
+
+  let recognizePartyBlinds x y z =
+    let s = recognizeString isPaleWhite (getChar false partyNumberBlindPatterns) 2 2 8 x y z
+    s.Replace("?", "")
+
+  let recognizePartyBetSize getPixel width height =
+    let isBlue (c : Color) = c.B > 250uy && c.R < 100uy
+    let invertSelection (c: Color) = 
+      let offset x = 
+        let target = (255 - (x |> int)) * 13 / 10
+        if target > 255 then 255 else target
+      Color.FromArgb(255, offset c.R, offset c.G, offset c.B)
+    let getPixelInverted min max x y =
+      let color = getPixel x y
+      if x >= min && x <= max then invertSelection color else color
+      
+    let blues =
+      [0..width]
+      |> List.map (fun x -> getPixel x 1)
+      |> List.mapi (fun i (c: Color) -> isBlue c, i)
+      |> List.filter fst
+      |> List.map snd
+    let getPixel' =
+      match blues with
+      | [] | [_] -> getPixel
+      | list -> getPixelInverted (List.head list) (List.last list)
+    recognizeString isBlack (getCharApproximate false partyNumberBetInputPatterns) 2 2 11 getPixel' width height

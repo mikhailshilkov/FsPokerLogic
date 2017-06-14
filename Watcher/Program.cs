@@ -35,20 +35,20 @@ namespace Watcher
                     var tableNumber = window.TableName;
                     Console.WriteLine($"\n{tableNumber} ({window.Size.Width}x{window.Size.Height})");
 
-                    //try
-                    //{
-                    //    var result = WinamaxRecognition.recognizeScreenWinamax(window.Bitmap, window.Title);
-                    //    foreach (var s in ScreenRecognition.print(result))
-                    //        Console.WriteLine(s);
-                    //    var result2 = WinamaxRecognition.recognizeBetSizeWinamax(window.Bitmap);
-                    //    Console.WriteLine($"Hero entered bet size: {result2}");
-                    //}
-                    //catch (Exception ex)
-                    //{
-                    //    Console.WriteLine(ex.Message);
-                    //    Console.WriteLine(ex.StackTrace);
-                    //    Dumper.SaveBitmap(window.Bitmap, tableNumber, false);
-                    //}
+                    try
+                    {
+                        var result = PartyRecognition.recognizeScreenParty(window.Bitmap, window.Title);
+                        foreach (var s in ScreenRecognition.print(result))
+                            Console.WriteLine(s);
+                        var result2 = PartyRecognition.recognizeBetSizeParty(window.Bitmap);
+                        Console.WriteLine($"Hero entered bet size: {result2}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                        Console.WriteLine(ex.StackTrace);
+                        Dumper.SaveBitmap(window.Bitmap, tableNumber, false);
+                    }
                 }
                 Console.Write("\n\n");
                 Console.Write("Press S to save images or any key to get the list of open tables...");

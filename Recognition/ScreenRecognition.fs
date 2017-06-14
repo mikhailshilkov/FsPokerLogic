@@ -22,6 +22,7 @@ module ScreenRecognition =
   type Room = 
     | IPoker
     | Winamax
+    | Party
 
   type Screen = {
     Room: Room
@@ -44,6 +45,17 @@ module ScreenRecognition =
     if not(String.IsNullOrEmpty s) then
       let (s, r) = Int32.TryParse(s, NumberStyles.AllowThousands, CultureInfo.InvariantCulture)
       if s then Some r else None
+    else None
+
+  let parseBlinds (separator : char) (s : string) =
+    if not(String.IsNullOrEmpty s) then
+      try
+        let parts = s.Split separator
+        let sb = parseNumber parts.[0]
+        let bb = if parts.Length > 1 then parseNumber parts.[1] else None
+        Option.bind (fun v -> Option.map (fun vb -> { SB = v; BB = vb }) bb ) sb
+      with
+        | e -> None
     else None
 
   let print screen =
@@ -88,7 +100,6 @@ module ScreenRecognition =
     let villainBet = 
       chooseGoodNumber 2 [recognizeNumber (getPixel 462 301) 50 15; recognizeNumber (getPixel 517 231) 50 15] 
     let villainName = recognizeText (getPixel 493) 327 90 10
-    let mask = (parseStringPattern (getPixel 513 328) 4 10)
     
     let actions = 
       [(360, 433, 70, 20); (450, 427, 70, 17); (450, 433, 70, 20); (540, 427, 70, 17)]

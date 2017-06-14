@@ -13,17 +13,6 @@ module WinamaxRecognition =
     let getPixel offsetX offsetY x y = 
       bitmap.GetPixel(offsetX + x, offsetY + y)
 
-    let parseBlinds (s : string) =
-      if not(String.IsNullOrEmpty s) then
-        try
-          let parts = s.Split('-')
-          let sb = parseNumber parts.[0]
-          let bb = if parts.Length > 1 then parseNumber parts.[1] else None
-          Option.bind (fun v -> Option.map (fun vb -> { SB = v; BB = vb }) bb ) sb
-        with
-          | e -> None
-      else None
-
     let chooseGoodNumber minLength (ss : string list) =
       ss 
       |> List.filter (fun (s : string) -> s <> null && s.Length >= minLength && not(s.Contains("?")))
@@ -37,7 +26,7 @@ module WinamaxRecognition =
     let getTitleBlinds (title: string) =
       let parts = title.Split([|" / "; " NL "|], StringSplitOptions.RemoveEmptyEntries)
       let blinds = if parts.Length > 2 then Some(parts.[1]) else None
-      blinds |> Option.bind parseBlinds
+      blinds |> Option.bind (parseBlinds '-')
 
     let chooseBlinds titleBlinds cornerBlinds (hasFlop, heroBet, villainBet) =
       match titleBlinds, cornerBlinds, heroBet, villainBet with
@@ -55,8 +44,6 @@ module WinamaxRecognition =
     
     let heroBet = recognizeWinamaxNumber (getPixel 310 315) 30 13 |> parseNumber
     let heroStack = recognizeWinamaxStackNumber (getPixel 310 381) 30 15 |> parseNumber
-
-    let s = parseStringPattern (getPixel 315 382) 4 13
 
     let villainBet = recognizeWinamaxNumber (getPixel 310 159) 30 13 |> parseNumber
     let villainStackSitout = recognizeWinamaxStackSitoutNumber (getPixel 310 109) 30 15 |> parseNumber
@@ -87,7 +74,7 @@ module WinamaxRecognition =
     let blinds = 
       chooseBlinds
         (getTitleBlinds title) 
-        (recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds)
+        (recognizeWinamaxBlinds (getPixel 462 28) 45 14  |> parseBlinds '-')
         (hasFlop, heroBet, villainBet)
 
     let actions = 

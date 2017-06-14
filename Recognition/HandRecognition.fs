@@ -327,6 +327,165 @@ module HandRecognition =
       B;B;W;W;W;W;B;B;B;B;B;B;B;B;B|] }
   |]
 
+  let partyPatterns = [|  
+    { Card = "2"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;B;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;
+      B;B;B;W;W;W;W;W;W;W;W;W;W;B;B;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;W;W;
+      B;B;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;
+      B;B;W;W;W;W;W;W;W;B;B;B;B;B;B;W;W;
+      B;B;W;W;W;W;W;W;B;B;B;B;W;B;B;W;W;
+      B;B;B;W;W;B;B;B;B;B;B;W;W;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;W;W;W;W;B;B;W;W;
+      W;B;B;B;B;B;B;B;W;W;W;W;W;B;B;W;W;
+      W;W;W;B;B;W;W;W;W;W;W;W;W;B;B;W;W|] }
+    { Card = "3"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;
+      B;B;W;W;W;W;W;B;W;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;B;B;B;B;W;W;W;W;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;W;W;B;B;B;W;W;
+      B;B;B;B;B;B;W;B;B;B;B;B;B;B;B;W;W;
+      W;B;B;B;B;W;W;W;B;B;B;B;B;B;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W|] }
+    { Card = "4"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;B;B;B;B;W;W;W;W;W;
+      W;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;
+      W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;
+      W;W;W;B;B;B;B;W;W;W;B;B;W;W;W;W;W;
+      W;W;B;B;B;W;W;W;W;W;B;B;W;W;W;W;W;
+      B;B;B;B;W;W;W;W;W;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W|] }
+    { Card = "5"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;B;B;B;B;B;B;W;W;W;W;W;W;B;B;W;W;
+      B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;W;W;
+      B;B;B;B;B;B;B;W;W;W;W;W;W;B;B;W;W;
+      B;B;W;W;W;B;B;W;W;W;W;W;W;B;B;W;W;
+      B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;W;W;
+      B;B;W;W;W;B;B;B;B;W;W;B;B;B;B;W;W;
+      B;B;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;W;W;W;W;W;B;B;B;B;B;B;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;B;B;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "6"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;
+      W;W;W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      W;W;W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;
+      W;W;B;B;B;B;W;B;B;W;W;W;W;B;B;B;W;
+      W;B;B;B;W;W;W;B;B;W;W;W;W;W;B;B;B;
+      W;B;B;B;W;W;W;B;B;W;W;W;W;W;B;B;B;
+      B;B;B;W;W;W;W;B;B;W;W;W;W;W;B;B;W;
+      B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;W;
+      B;B;B;W;W;W;W;B;B;B;B;B;B;B;B;B;W;
+      W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;W|] }
+    { Card = "7"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;
+      B;B;W;W;W;W;W;W;W;B;B;B;B;B;B;B;W;
+      B;B;W;W;W;W;W;B;B;B;B;B;B;B;W;W;W;
+      B;B;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;
+      B;B;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;
+      B;B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "8"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;B;B;B;W;W;W;W;B;B;B;B;B;W;W;W;
+      B;B;B;B;B;B;W;W;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;W;W;B;B;B;B;B;B;W;W;W;B;B;B;W;
+      B;B;W;W;W;B;B;B;B;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;B;B;B;B;W;W;W;W;B;B;B;W;
+      B;B;W;W;B;B;B;B;B;B;W;W;W;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;W;W;B;B;B;B;B;B;B;W;W|] }
+    { Card = "9"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;B;B;B;B;B;W;W;W;W;W;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;W;W;W;W;W;B;B;B;W;
+      B;B;B;B;B;B;B;B;B;W;W;W;W;B;B;B;W;
+      B;B;B;W;W;W;B;B;B;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;W;W;B;B;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;W;W;B;B;W;W;W;B;B;B;W;W;
+      B;B;W;W;W;W;W;B;B;W;W;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;
+      W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W|] }
+    { Card = "T"; Pattern = [|
+      B;B;B;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;B;B;B;B;B;B;B;W;W;W;W;W;W;
+      W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;B;B;W;W;W;W;W;W;B;B;B;B;B;W;W;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;W;W|] }
+    { Card = "J"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;B;B;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W|] }
+    { Card = "Q"; Pattern = [|
+      W;W;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;
+      B;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;
+      B;B;W;W;W;W;W;W;W;W;W;W;W;B;B;B;B;
+      B;B;B;W;W;W;W;W;W;W;W;W;B;B;B;B;B;
+      B;B;B;B;W;W;W;W;W;W;W;B;B;B;B;W;W;
+      W;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;W|] }
+    { Card = "K"; Pattern = [|
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;B;B;B;W;W;
+      W;W;W;W;W;B;B;B;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;B;B;B;B;B;B;W;W;W;W;W;W;W;
+      W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;W;W;
+      W;B;B;B;B;B;W;W;B;B;B;B;B;W;W;W;W;
+      B;B;B;B;W;W;W;W;W;B;B;B;B;B;W;W;W;
+      B;B;B;W;W;W;W;W;W;W;W;B;B;B;B;W;W;
+      B;B;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;B;W;W|] }
+    { Card = "A"; Pattern = [|
+      W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;W;
+      W;W;W;W;W;W;W;W;W;W;W;W;B;B;B;W;W;
+      W;W;W;W;W;W;W;W;W;W;B;B;B;B;B;W;W;
+      W;W;W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;
+      W;W;W;W;W;B;B;B;B;B;B;B;B;W;W;W;W;
+      W;W;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;W;W;B;B;W;W;W;W;W;
+      B;B;B;B;B;W;W;W;W;W;B;B;W;W;W;W;W;
+      B;B;B;B;W;W;W;W;W;W;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;W;W;W;W;B;B;W;W;W;W;W;
+      B;B;B;B;B;B;B;B;B;B;B;B;W;W;W;W;W|] }
+  |]
+
   let findCardStart getPixel width height = 
     let isWhite (c : Color) = c.B > 160uy && c.G > 160uy && c.R > 160uy
     let firstX = [0..width] |> Seq.tryFindIndex (fun x -> [0..height] |> List.map (fun y -> getPixel x y |> isWhite)  |> Seq.exists id)
@@ -419,24 +578,22 @@ module HandRecognition =
     let isRed (c : Color) = c.B < 127uy && c.G < 127uy && c.R > 127uy
     hasSpecialColor isRed x
 
+  let countIn isWhite xmin ymin xmax ymax =
+    seq { for x in xmin .. xmax do
+            for y in ymin .. ymax do
+              yield isWhite x y}
+    |> Seq.sumBy (fun x -> if x then 1 else 0)    
+
   let isHeroSitout getPixel width height =
     let isWhite (c : Color) = c.B > 127uy && c.G > 127uy && c.R > 127uy
     let isBrown (c : Color) = c.R > 127uy && c.R > c.G + 10uy && c.G > c.B + 15uy
     let checkbox = findCardStart getPixel 5 5
     match checkbox with
     | Some dx, Some dy ->
-      let whitePixels =
-        seq { for x in dx - 1 .. dx + 4 do
-                for y in dy - 1 .. dy + 4 do
-                  yield isWhite (getPixel x y)}
-        |> Seq.sumBy (fun x -> if x then 1 else 0)    
+      let whitePixels = countIn (fun x y -> isWhite (getPixel x y)) (dx - 1) (dy - 1) (dx + 4) (dy + 4)
       whitePixels >= 20 && whitePixels <= 28
     | _ -> 
-      let brownPixels =
-        seq { for x in 0 .. width-1 do
-                for y in 0 .. height-1 do
-                  yield isBrown (getPixel x y)}
-        |> Seq.sumBy (fun x -> if x then 1 else 0)    
+      let brownPixels = countIn (fun x y -> isBrown (getPixel x y)) 0 0 (width-1) (height-1)
       brownPixels >= 35
 
 
